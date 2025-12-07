@@ -7,41 +7,41 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-950 text-slate-100 min-h-screen">
     <div class="max-w-5xl mx-auto px-3 md:px-4 py-4 md:py-6">
         <div class="flex items-center justify-between mb-4">
-            <h1 class="text-xl md:text-3xl font-bold text-slate-800">
+            <h1 class="text-xl md:text-3xl font-bold text-slate-50">
                 Ödeme Takip Uygulaması
             </h1>
         </div>
 
         <!-- Özet Kartları -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
-            <div class="bg-white rounded-xl shadow p-3 md:p-4">
-                <div class="text-xs md:text-sm text-slate-500">Toplam Borç (Çıkış)</div>
-                <div id="total-outgoing" class="text-lg md:text-xl font-semibold text-red-600 mt-1">0 ₺</div>
+            <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
+                <div class="text-xs md:text-sm text-slate-400">Toplam Borç (Çıkış)</div>
+                <div id="total-outgoing" class="text-lg md:text-xl font-semibold text-red-400 mt-1">0 ₺</div>
             </div>
-            <div class="bg-white rounded-xl shadow p-3 md:p-4">
-                <div class="text-xs md:text-sm text-slate-500">Toplam Alacak (Giriş)</div>
-                <div id="total-incoming" class="text-lg md:text-xl font-semibold text-emerald-600 mt-1">0 ₺</div>
+            <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
+                <div class="text-xs md:text-sm text-slate-400">Toplam Alacak (Giriş)</div>
+                <div id="total-incoming" class="text-lg md:text-xl font-semibold text-emerald-400 mt-1">0 ₺</div>
             </div>
-            <div class="bg-white rounded-xl shadow p-3 md:p-4">
-                <div id="total-unpaid-label" class="text-xs md:text-sm text-slate-500">Ödenmemiş Toplam</div>
-                <div id="total-unpaid" class="text-lg md:text-xl font-semibold mt-1 text-slate-700">0 ₺</div>
+            <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
+                <div id="total-unpaid-label" class="text-xs md:text-sm text-slate-400">Ödenmemiş Toplam</div>
+                <div id="total-unpaid" class="text-lg md:text-xl font-semibold mt-1 text-slate-100">0 ₺</div>
             </div>
         </div>
 
         <!-- Liste + Kompakt Filtreler -->
-        <div class="bg-white rounded-xl shadow overflow-hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl shadow overflow-hidden">
             <!-- Başlık + Yeni Ödeme Butonu -->
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 px-3 md:px-4 py-3 border-b">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 px-3 md:px-4 py-3 border-b border-slate-800">
                 <div class="flex items-center gap-2">
-                    <h2 class="text-base md:text-lg font-semibold text-slate-800">Ödeme Listesi</h2>
-                    <span id="count-info" class="text-[11px] md:text-xs text-slate-500"></span>
+                    <h2 class="text-base md:text-lg font-semibold text-slate-50">Ödeme Listesi</h2>
+                    <span id="count-info" class="text-[11px] md:text-xs text-slate-400"></span>
                 </div>
                 <button
                     id="btn-open-modal"
-                    class="self-start md:self-auto inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-medium px-3 py-2 rounded-lg"
+                    class="self-start md:self-auto inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-medium px-3 py-2 rounded-lg"
                     type="button"
                 >
                     Yeni Ödeme
@@ -49,40 +49,40 @@
             </div>
 
             <!-- Kompakt Filtre Barı -->
-            <div class="px-3 md:px-4 py-3 border-b bg-slate-50">
+            <div class="px-3 md:px-4 py-3 border-b border-slate-800 bg-slate-950/60">
                 <div class="flex flex-col md:flex-row md:items-end gap-2 md:gap-3">
                     <div class="flex-1 md:max-w-[150px]">
-                        <label class="block text-[11px] md:text-xs text-slate-600 mb-1">Durum</label>
-                        <select id="status-filter" class="w-full border rounded-lg px-2 py-1.5 text-xs md:text-sm">
+                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Durum</label>
+                        <select id="status-filter" class="w-full border border-slate-700 bg-slate-900 text-slate-100 rounded-lg px-2 py-1.5 text-xs md:text-sm">
                             <option value="all">Tümü</option>
                             <option value="unpaid">Sadece ödenmemiş</option>
                             <option value="paid">Sadece ödenmiş</option>
                         </select>
                     </div>
                     <div class="flex-1 md:max-w-[170px]">
-                        <label class="block text-[11px] md:text-xs text-slate-600 mb-1">Tür</label>
-                        <select id="type-filter" class="w-full border rounded-lg px-2 py-1.5 text-xs md:text-sm">
+                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Tür</label>
+                        <select id="type-filter" class="w-full border border-slate-700 bg-slate-900 text-slate-100 rounded-lg px-2 py-1.5 text-xs md:text-sm">
                             <option value="all">Hepsi</option>
                             <option value="outgoing">Sadece borç (çıkış)</option>
                             <option value="incoming">Sadece alacak (giriş)</option>
                         </select>
                     </div>
                     <div class="flex-1">
-                        <label class="block text-[11px] md:text-xs text-slate-600 mb-1">Ara (başlık/kategori)</label>
+                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Ara (başlık/kategori)</label>
                         <input
                             type="text"
                             id="search-filter"
                             placeholder="kira, elektrik, okul..."
-                            class="w-full border rounded-lg px-2 py-1.5 text-xs md:text-sm"
+                            class="w-full border border-slate-700 bg-slate-900 text-slate-100 rounded-lg px-2 py-1.5 text-xs md:text-sm placeholder:text-slate-500"
                         />
                     </div>
                     <div class="flex-shrink-0">
-                        <label class="block text-[11px] md:text-xs text-slate-600 mb-1 invisible md:visible md:h-4">
+                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1 invisible md:visible md:h-4">
                             &nbsp;
                         </label>
                         <button
                             id="clear-all"
-                            class="w-full border border-red-200 text-red-600 text-[11px] md:text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-red-50"
+                            class="w-full border border-red-500/40 text-red-300 text-[11px] md:text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-red-500/10"
                         >
                             Tüm Kayıtları Sil
                         </button>
@@ -93,21 +93,21 @@
             <!-- Tablo -->
             <div class="overflow-x-auto">
                 <table class="min-w-full text-xs md:text-sm">
-                    <thead class="bg-slate-50">
+                    <thead class="bg-slate-900/80">
                         <tr>
-                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-500">Tarih</th>
-                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-500">Başlık</th>
-                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-500">Kategori</th>
-                            <th class="px-3 py-2 text-right text-[11px] md:text-xs font-semibold text-slate-500">Tutar</th>
-                            <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-500">Tür</th>
-                            <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-500">Durum</th>
-                            <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-500">İşlem</th>
+                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Tarih</th>
+                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Başlık</th>
+                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Kategori</th>
+                            <th class="px-3 py-2 text-right text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Tutar</th>
+                            <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Tür</th>
+                            <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Durum</th>
+                            <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">İşlem</th>
                         </tr>
                     </thead>
-                    <tbody id="payments-body" class="divide-y divide-slate-100"></tbody>
+                    <tbody id="payments-body" class="divide-y divide-slate-800"></tbody>
                 </table>
             </div>
-            <div id="empty-state" class="px-3 md:px-4 py-4 text-xs md:text-sm text-slate-500 hidden">
+            <div id="empty-state" class="px-3 md:px-4 py-4 text-xs md:text-sm text-slate-400 hidden">
                 Henüz bir kayıt yok. Sağ üstten “Yeni Ödeme” butonuna basarak ekleyebilirsin.
             </div>
         </div>
@@ -116,17 +116,17 @@
     <!-- Ödeme Modalı -->
     <div
         id="payment-modal"
-        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70"
     >
-        <div class="bg-white rounded-2xl shadow-lg w-full max-w-lg mx-3">
-            <div class="flex items-center justify-between border-b px-4 py-3">
-                <h2 id="modal-title" class="text-base md:text-lg font-semibold text-slate-800">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-xl w-full max-w-lg mx-3">
+            <div class="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+                <h2 id="modal-title" class="text-base md:text-lg font-semibold text-slate-50">
                     Yeni Ödeme Ekle
                 </h2>
                 <button
                     id="modal-close"
                     type="button"
-                    class="text-slate-400 hover:text-slate-600 text-xl leading-none"
+                    class="text-slate-400 hover:text-slate-200 text-xl leading-none"
                 >
                     &times;
                 </button>
@@ -135,50 +135,75 @@
                 <form id="payment-form" class="space-y-3">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs md:text-sm text-slate-600 mb-1">Tarih</label>
-                            <input type="date" id="date" class="w-full border rounded-lg px-3 py-2 text-sm" required />
+                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Tarih</label>
+                            <input
+                                type="date"
+                                id="date"
+                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm"
+                                required
+                            />
                         </div>
                         <div>
-                            <label class="block text-xs md:text-sm text-slate-600 mb-1">Tutar (₺)</label>
-                            <input type="number" step="0.01" id="amount" class="w-full border rounded-lg px-3 py-2 text-sm" required />
+                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Tutar (₺)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                id="amount"
+                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm"
+                                required
+                            />
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs md:text-sm text-slate-600 mb-1">Başlık</label>
-                            <input type="text" id="title" placeholder="Kira, fatura, taksit..." class="w-full border rounded-lg px-3 py-2 text-sm" required />
+                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Başlık</label>
+                            <input
+                                type="text"
+                                id="title"
+                                placeholder="Kira, fatura, taksit..."
+                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm placeholder:text-slate-500"
+                                required
+                            />
                         </div>
                         <div>
-                            <label class="block text-xs md:text-sm text-slate-600 mb-1">Kategori (opsiyonel)</label>
-                            <input type="text" id="category" placeholder="Ev, okul, kredi kartı..." class="w-full border rounded-lg px-3 py-2 text-sm" />
+                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Kategori (opsiyonel)</label>
+                            <input
+                                type="text"
+                                id="category"
+                                placeholder="Ev, okul, kredi kartı..."
+                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm placeholder:text-slate-500"
+                            />
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                         <div>
-                            <label class="block text-xs md:text-sm text-slate-600 mb-1">Tür</label>
-                            <select id="type" class="w-full border rounded-lg px-3 py-2 text-sm">
+                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Tür</label>
+                            <select
+                                id="type"
+                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm"
+                            >
                                 <option value="outgoing">Borç / Ödeme (Çıkış)</option>
                                 <option value="incoming">Alacak / Tahsilat (Giriş)</option>
                             </select>
                         </div>
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="isPaid" class="w-4 h-4" />
-                            <label for="isPaid" class="text-xs md:text-sm text-slate-700">Ödendi olarak işaretle</label>
+                            <label for="isPaid" class="text-xs md:text-sm text-slate-200">Ödendi olarak işaretle</label>
                         </div>
                         <div class="flex justify-end gap-2">
                             <button
                                 type="button"
                                 id="btn-cancel"
-                                class="border border-slate-200 text-slate-600 text-xs md:text-sm px-3 py-2 rounded-lg hover:bg-slate-50"
+                                class="border border-slate-600 text-slate-200 text-xs md:text-sm px-3 py-2 rounded-lg hover:bg-slate-800"
                             >
                                 İptal
                             </button>
                             <button
                                 id="submit-btn"
                                 type="submit"
-                                class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-medium px-4 py-2 rounded-lg"
+                                class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-medium px-4 py-2 rounded-lg"
                             >
                                 Kaydet
                             </button>
@@ -189,53 +214,32 @@
         </div>
     </div>
 
-    <!-- Firebase + Uygulama Scripti -->
-    <script type="module">
-        // 1) Firebase SDK importları
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import {
-            getFirestore,
-            collection,
-            addDoc,
-            doc,
-            updateDoc,
-            deleteDoc,
-            onSnapshot
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-       // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+    <script>
+        // Senin verdiğin config burada, modül importları olmadan kullanılıyor
+        const firebaseConfig = {
+          apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
+          authDomain: "gezi-5b54b.firebaseapp.com",
+          projectId: "gezi-5b54b",
+          storageBucket: "gezi-5b54b.firebasestorage.app",
+          messagingSenderId: "926426747002",
+          appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
+          measurementId: "G-KB8SKRCQ9X"
+        };
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
-  authDomain: "gezi-5b54b.firebaseapp.com",
-  projectId: "gezi-5b54b",
-  storageBucket: "gezi-5b54b.firebasestorage.app",
-  messagingSenderId: "926426747002",
-  appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
-  measurementId: "G-KB8SKRCQ9X"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
-        // 3) Firebase başlat
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const paymentsCol = collection(db, "payments");
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const paymentsCol = db.collection("payments");
 
         let payments = [];
         let editingId = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             bindEvents();
-            subscribePayments(); // Firestore'dan gerçek zamanlı dinleme
+            subscribePayments();
         });
 
         function bindEvents() {
@@ -250,7 +254,7 @@ const analytics = getAnalytics(app);
                 if (payments.length === 0) return;
                 if (!confirm("Tüm kayıtları silmek istediğine emin misin?")) return;
                 for (const p of payments) {
-                    await deleteDoc(doc(db, "payments", p.id));
+                    await paymentsCol.doc(p.id).delete();
                 }
             });
 
@@ -302,8 +306,8 @@ const analytics = getAnalytics(app);
             document.getElementById("modal-title").textContent = "Yeni Ödeme Ekle";
             const submitBtn = document.getElementById("submit-btn");
             submitBtn.textContent = "Kaydet";
-            submitBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-700");
-            submitBtn.classList.add("bg-indigo-600", "hover:bg-indigo-700");
+            submitBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-500");
+            submitBtn.classList.add("bg-indigo-600", "hover:bg-indigo-500");
             showModal();
         }
 
@@ -323,8 +327,8 @@ const analytics = getAnalytics(app);
             document.getElementById("modal-title").textContent = "Ödemeyi Düzenle";
             const submitBtn = document.getElementById("submit-btn");
             submitBtn.textContent = "Güncelle";
-            submitBtn.classList.remove("bg-indigo-600", "hover:bg-indigo-700");
-            submitBtn.classList.add("bg-emerald-600", "hover:bg-emerald-700");
+            submitBtn.classList.remove("bg-indigo-600", "hover:bg-indigo-500");
+            submitBtn.classList.add("bg-emerald-600", "hover:bg-emerald-500");
 
             showModal();
         }
@@ -382,8 +386,7 @@ const analytics = getAnalytics(app);
 
             try {
                 if (editingId) {
-                    const ref = doc(db, "payments", editingId);
-                    await updateDoc(ref, {
+                    await paymentsCol.doc(editingId).update({
                         date,
                         amount,
                         title,
@@ -392,7 +395,7 @@ const analytics = getAnalytics(app);
                         isPaid
                     });
                 } else {
-                    await addDoc(paymentsCol, {
+                    await paymentsCol.add({
                         date,
                         amount,
                         title,
@@ -404,14 +407,13 @@ const analytics = getAnalytics(app);
                 closeModal();
             } catch (err) {
                 console.error("Kayıt hatası:", err);
-                alert("Kaydetme sırasında bir hata oluştu. Konsolu kontrol et.");
+                alert("Kaydetme sırasında bir hata oluştu. Tarayıcı konsoluna bakabilirsin.");
             }
         }
 
         async function togglePaid(id, checked) {
             try {
-                const ref = doc(db, "payments", id);
-                await updateDoc(ref, { isPaid: checked });
+                await paymentsCol.doc(id).update({ isPaid: checked });
             } catch (err) {
                 console.error("Durum güncelleme hatası:", err);
                 alert("Durum güncellenemedi.");
@@ -421,7 +423,7 @@ const analytics = getAnalytics(app);
         async function deletePayment(id) {
             if (!confirm("Bu kaydı silmek istediğine emin misin?")) return;
             try {
-                await deleteDoc(doc(db, "payments", id));
+                await paymentsCol.doc(id).delete();
             } catch (err) {
                 console.error("Silme hatası:", err);
                 alert("Silme sırasında bir hata oluştu.");
@@ -429,15 +431,18 @@ const analytics = getAnalytics(app);
         }
 
         function subscribePayments() {
-            onSnapshot(paymentsCol, (snapshot) => {
-                payments = snapshot.docs.map(docSnap => ({
-                    id: docSnap.id,
-                    ...docSnap.data()
-                }));
-                render();
-            }, (err) => {
-                console.error("Firestore dinleme hatası:", err);
-            });
+            paymentsCol.onSnapshot(
+                (snapshot) => {
+                    payments = snapshot.docs.map(docSnap => ({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    }));
+                    render();
+                },
+                (err) => {
+                    console.error("Firestore dinleme hatası:", err);
+                }
+            );
         }
 
         function formatCurrency(value) {
@@ -484,22 +489,22 @@ const analytics = getAnalytics(app);
 
             filtered.forEach(p => {
                 const tr = document.createElement("tr");
-                tr.className = "hover:bg-slate-50";
+                tr.className = "hover:bg-slate-900/60";
 
                 const typeBadgeClass =
                     p.type === "outgoing"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-emerald-100 text-emerald-700";
+                        ? "bg-red-500/15 text-red-300 border border-red-500/30"
+                        : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30";
 
                 const statusBadgeClass = p.isPaid
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-700";
+                    ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                    : "bg-amber-500/15 text-amber-300 border border-amber-500/30";
 
                 tr.innerHTML = `
-                    <td class="px-3 py-2 whitespace-nowrap text-[11px] md:text-xs text-slate-700">${formatDate(p.date)}</td>
-                    <td class="px-3 py-2 text-[11px] md:text-xs text-slate-800">${p.title}</td>
-                    <td class="px-3 py-2 text-[11px] md:text-xs text-slate-500">${p.category || "-"}</td>
-                    <td class="px-3 py-2 text-[11px] md:text-xs text-right font-semibold ${p.type === "outgoing" ? "text-red-600" : "text-emerald-600"}">
+                    <td class="px-3 py-2 whitespace-nowrap text-[11px] md:text-xs text-slate-200">${formatDate(p.date)}</td>
+                    <td class="px-3 py-2 text-[11px] md:text-xs text-slate-50">${p.title}</td>
+                    <td class="px-3 py-2 text-[11px] md:text-xs text-slate-400">${p.category || "-"}</td>
+                    <td class="px-3 py-2 text-[11px] md:text-xs text-right font-semibold ${p.type === "outgoing" ? "text-red-300" : "text-emerald-300"}">
                         ${formatCurrency(p.amount)}
                     </td>
                     <td class="px-3 py-2 text-[11px] md:text-xs text-center">
@@ -522,13 +527,13 @@ const analytics = getAnalytics(app);
                     </td>
                     <td class="px-3 py-2 text-[11px] md:text-xs text-center space-x-2">
                         <button
-                            class="text-slate-500 hover:text-slate-700 btn-edit"
+                            class="text-slate-300 hover:text-slate-50 btn-edit"
                             data-id="${p.id}"
                         >
                             Düzenle
                         </button>
                         <button
-                            class="text-red-500 hover:text-red-700 btn-delete"
+                            class="text-red-300 hover:text-red-200 btn-delete"
                             data-id="${p.id}"
                         >
                             Sil
@@ -562,13 +567,13 @@ const analytics = getAnalytics(app);
 
             if (totalIncoming > totalOutgoing) {
                 unpaidLabelEl.textContent = "Alacak";
-                unpaidEl.className = "text-lg md:text-xl font-semibold mt-1 text-emerald-600";
+                unpaidEl.className = "text-lg md:text-xl font-semibold mt-1 text-emerald-300";
             } else if (totalOutgoing > totalIncoming) {
                 unpaidLabelEl.textContent = "Borç";
-                unpaidEl.className = "text-lg md:text-xl font-semibold mt-1 text-red-600";
+                unpaidEl.className = "text-lg md:text-xl font-semibold mt-1 text-red-300";
             } else {
                 unpaidLabelEl.textContent = "Ödenmemiş Toplam";
-                unpaidEl.className = "text-lg md:text-xl font-semibold mt-1 text-slate-700";
+                unpaidEl.className = "text-lg md:text-xl font-semibold mt-1 text-slate-100";
             }
 
             unpaidEl.textContent = formatCurrency(Math.abs(netUnpaid));
