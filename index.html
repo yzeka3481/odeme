@@ -101,27 +101,27 @@
         <!-- Özet Kartları -->
         <div class="space-y-3 md:space-y-4 mb-3 md:mb-4">
             <!-- Toplam Borç / Alacak / Fark - Yanyana -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-                <div class="bg-gradient-to-r from-rose-950 to-red-900 border border-red-500/40 rounded-xl shadow p-2.5 md:p-4">
-                    <div class="text-[11px] md:text-sm text-rose-100/80">Toplam Borç (Çıkış)</div>
-                    <div id="total-outgoing" class="text-sm md:text-2xl font-semibold text-rose-50 mt-1">
+            <div class="grid grid-cols-3 gap-2 md:gap-4">
+                <div class="bg-gradient-to-r from-rose-950 to-red-900 border border-red-500/40 rounded-xl shadow p-2 md:p-3">
+                    <div class="text-[10px] md:text-sm text-rose-100/80 text-center">Toplam Borç (Çıkış)</div>
+                    <div id="total-outgoing" class="text-xs md:text-2xl font-semibold text-rose-50 mt-1 text-center">
                         0 ₺
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-r from-emerald-950 to-teal-900 border border-emerald-500/40 rounded-xl shadow p-2.5 md:p-4">
-                    <div class="text-[11px] md:text-sm text-emerald-100/80">Toplam Alacak (Giriş)</div>
-                    <div id="total-incoming" class="text-sm md:text-2xl font-semibold text-emerald-50 mt-1">
+                <div class="bg-gradient-to-r from-emerald-950 to-teal-900 border border-emerald-500/40 rounded-xl shadow p-2 md:p-3">
+                    <div class="text-[10px] md:text-sm text-emerald-100/80 text-center">Toplam Alacak (Giriş)</div>
+                    <div id="total-incoming" class="text-xs md:text-2xl font-semibold text-emerald-50 mt-1 text-center">
                         0 ₺
                     </div>
                 </div>
 
                 <!-- Borç / Alacak Farkı -->
-                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
-                    <div id="total-unpaid-label" class="text-xs md:text-sm text-slate-400">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-2 md:p-3">
+                    <div id="total-unpaid-label" class="text-[10px] md:text-sm text-slate-400 text-center">
                         Borç / Alacak Farkı
                     </div>
-                    <div id="total-unpaid" class="text-lg md:text-xl font-semibold mt-1 text-slate-100">
+                    <div id="total-unpaid" class="text-xs md:text-xl font-semibold mt-1 text-slate-100 text-center">
                         0 ₺
                     </div>
                 </div>
@@ -998,7 +998,7 @@
                     searchSpan = t.substring(start, liraIndex);
                 }
 
-                let numMatch = searchSpan.match(/(\d[\d.,]*)/);
+            let numMatch = searchSpan.match(/(\d[\d.,]*)/);
                 if (numMatch) {
                     let n = numMatch[1].trim();
 
@@ -1578,13 +1578,13 @@
 
             if (diff > 0.01) {
                 unpaidLabelEl.textContent = "Borç Fazlası";
-                unpaidEl.className = "text-lg md:text-xl font-semibold mt-1 text-red-300";
+                unpaidEl.className = "text-xs md:text-xl font-semibold mt-1 text-red-300 text-center";
             } else if (diff < -0.01) {
                 unpaidLabelEl.textContent = "Alacak Fazlası";
-                unpaidEl.className = "text-lg md:text-xl font-semibold mt-1 text-emerald-300";
+                unpaidEl.className = "text-xs md:text-xl font-semibold mt-1 text-emerald-300 text-center";
             } else {
                 unpaidLabelEl.textContent = "Dengede";
-                unpaidEl.className = "text-lg md:text-xl font-semibold mt-1 text-slate-100";
+                unpaidEl.className = "text-xs md:text-xl font-semibold mt-1 text-slate-100 text-center";
             }
 
             unpaidEl.textContent = formatCurrency(Math.abs(diff));
