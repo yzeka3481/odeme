@@ -905,7 +905,6 @@
             modal.classList.add("hidden");
             modal.classList.remove("flex");
             editingId = null;
-            // form modu kapatırken payment’a dönmesin, sonradan butona göre set ediliyor
             resetFormFields();
         }
 
@@ -1443,6 +1442,12 @@
                     ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
                     : "bg-amber-500/15 text-amber-300 border border-amber-500/30";
 
+                // BURASI DÜZELTİLEN KISIM:
+                const statusText =
+                    p.type === "incoming"
+                        ? (p.isPaid ? "Alındı" : "Alınmadı")
+                        : (p.isPaid ? "Ödendi" : "Ödenmedi");
+
                 const recurringBadge = p.isRecurring
                     ? `<span class="inline-flex w-fit px-2 py-0.5 rounded-full text-[10px] md:text-[11px] font-medium bg-sky-500/15 text-sky-300 border border-sky-500/30">
                             Aylık
@@ -1470,7 +1475,7 @@
                                 ${p.isPaid ? "checked" : ""}
                             />
                             <span class="inline-flex px-2 py-1 rounded-full text-[10px] md:text-[11px] font-medium ${statusBadgeClass}">
-                                ${p.isPaid ? "Ödendi" : "Ödenmedi"}
+                                ${statusText}
                             </span>
                         </label>
                     </td>
