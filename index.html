@@ -266,11 +266,20 @@
                         />
                     </div>
 
-                    <!-- Tüm Kayıtları Sil -->
-                    <div class="col-span-2 flex justify-end">
+                    <!-- Tüm Kayıtları Sil + Yeni Aya Geç -->
+                    <div class="col-span-2 flex justify-between gap-2">
+                        <button
+                            id="next-month"
+                            class="w-1/2 md:w-auto border border-sky-500/40 text-sky-300 text-[11px] md:text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-sky-500/10"
+                            type="button"
+                        >
+                            Yeni Aya Geç
+                        </button>
+
                         <button
                             id="clear-all"
-                            class="w-full md:w-auto border border-red-500/40 text-red-300 text-[11px] md:text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-red-500/10"
+                            class="w-1/2 md:w-auto border border-red-500/40 text-red-300 text-[11px] md:text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-red-500/10"
+                            type="button"
                         >
                             Tüm Kayıtları Sil
                         </button>
@@ -615,6 +624,8 @@
                     await paymentsCol.doc(p.id).delete();
                 }
             });
+
+            document.getElementById("next-month").addEventListener("click", goToNextMonth);
 
             document.getElementById("btn-open-modal").addEventListener("click", openNewModal);
             document.getElementById("modal-close").addEventListener("click", closeModal);
@@ -993,6 +1004,89 @@
             if (!dateStr) return "";
             const [y, m, d] = dateStr.split("-");
             return `${d}.${m}.${y}`;
+        }
+
+        // DÖNEM HESAPLARI
+        function getCurrentPeriod() {
+            // Dönem filtresi seçiliyse onu kullan
+            const monthFilter = document.getElementById("month-filter").value;
+            if (monthFilter) return monthFilter;
+
+            // Yoksa bugünün ayı
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = String(today.getMonth() + 1).padStart(2, "0");
+            return `${y}-${m}`;
+        }
+
+        function getNextPeriod(period) {
+            let [y, m] = period.split("-");
+            let year = parseInt(y, 10);
+            let month = parseInt(m, 10) + 1;
+
+            if (month === 13) {
+                month = 1;
+                year++;
+            }
+            return `${year}-${String(month).padStart(2, "0")}`;
+        }
+
+        async function goToNextMonth() {
+            if (!currentUserId) {
+                alert("Önce giriş yapmanız gerekiyor.");
+                return;
+            }
+
+            const currentPeriod = getCurrentPeriod();      // örn: 2025-02
+            const nextPeriod = getNextPeriod(currentPeriod); // örn: 2025-03
+
+            // Bu ay için hâlâ ödenmemiş var mı?
+            const unpaidExists = payments.some(
+                p => !p.isPaid && p.date && p.date.startsWith(currentPeriod)
+            );
+
+            if (unpaidExists) {
+                const ok = confirm(
+                    "Bu ay için hâlâ ödenmemiş kayıtlar var. Yine de yeni aya geçilsin mi?"
+                );
+                if (!ok) return;
+            }
+
+            // Bu ayki TEKRARLAYAN ödemeler (isRecurring = true)
+            const recurringThisMonth = payments.filter(
+                p => p.isRecurring && p.date && p.date.startsWith(currentPeriod)
+            );
+
+            // Her biri için, aynı günle bir SONRAKİ ay kaydı aç
+            for (const p of recurringThisMonth) {
+                const [ny, nm] = nextPeriod.split("-");
+                const yearNum = parseInt(ny, 10);
+                const monthNum = parseInt(nm, 10); // 1-12
+
+                const originalDay = parseInt(p.date.split("-")[2], 10);
+                const lastDayOfNext = new Date(yearNum, monthNum, 0).getDate();
+                const safeDay = String(Math.min(originalDay, lastDayOfNext)).padStart(2, "0");
+
+                const newDate = `${nextPeriod}-${safeDay}`;
+
+                await paymentsCol.add({
+                    date: newDate,
+                    amount: p.amount,
+                    title: p.title,
+                    category: p.category,
+                    type: p.type,
+                    isPaid: false,       // yeni ayda henüz ödenmemiş
+                    isRecurring: true,   // yine tekrarlayan
+                    userId: currentUserId
+                });
+            }
+
+            // Ekrandaki dönem filtresini yeni aya al
+            const monthInput = document.getElementById("month-filter");
+            monthInput.value = nextPeriod;
+
+            // Yeni dönemi göster
+            render();
         }
 
         // Yeni grafik bloğunu güncelle
