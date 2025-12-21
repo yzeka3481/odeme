@@ -197,6 +197,20 @@
                     </div>
                 </div>
             </div>
+
+            <!-- YAKLAŞAN ÖDEMELER -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h3 class="text-xs md:text-sm font-semibold text-slate-100">
+                        Yaklaşan Ödemeler
+                    </h3>
+                    <span class="text-[10px] md:text-[11px] text-slate-400">
+                        Önümüzdeki 7 gün
+                    </span>
+                </div>
+                <p id="upcoming-info" class="text-[11px] md:text-xs text-slate-400 mb-2"></p>
+                <div id="upcoming-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+            </div>
         </div>
 
         <!-- Liste + Filtreler -->
@@ -1089,6 +1103,75 @@
             render();
         }
 
+        // Yaklaşan ödemeleri güncelle
+        function updateUpcomingPayments(days = 7) {
+            const container = document.getElementById("upcoming-list");
+            const infoEl = document.getElementById("upcoming-info");
+            if (!container) return;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const end = new Date(today);
+            end.setDate(end.getDate() + days);
+
+            const endStr = `${String(end.getDate()).padStart(2, "0")}.${String(end.getMonth() + 1).padStart(2, "0")}`;
+
+            if (infoEl) {
+                infoEl.textContent =
+                    `Bugünden ${endStr} tarihine kadar, ödenmemiş borç ve alacaklar listelenir.`;
+            }
+
+            const upcoming = payments
+                .filter(p => {
+                    if (!p.date || p.isPaid) return false;
+                    const [y, m, d] = p.date.split("-");
+                    const dt = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+                    dt.setHours(0, 0, 0, 0);
+                    return dt >= today && dt <= end;
+                })
+                .sort((a, b) => a.date.localeCompare(b.date));
+
+            container.innerHTML = "";
+
+            if (upcoming.length === 0) {
+                container.innerHTML = `
+                    <p class="text-[11px] md:text-xs text-slate-400">
+                        Önümüzdeki 7 gün için bekleyen ödeme yok.
+                    </p>
+                `;
+                return;
+            }
+
+            upcoming.forEach(p => {
+                const [y, m, d] = p.date.split("-");
+                const shortDate = `${d}.${m}`;
+
+                const typeLabel = p.type === "outgoing" ? "Borç" : "Alacak";
+                const typeClass = p.type === "outgoing"
+                    ? "bg-red-500/15 text-red-300 border-red-500/30"
+                    : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+
+                const row = document.createElement("div");
+                row.className = "flex items-center justify-between gap-2 text-[11px] md:text-xs bg-slate-950/40 border border-slate-800 rounded-lg px-2 py-1.5";
+
+                row.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="font-semibold text-slate-100">${p.title}</span>
+                        <span class="text-slate-400">${shortDate} · ${p.category || "-"}</span>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="font-semibold ${p.type === "outgoing" ? "text-red-300" : "text-emerald-300"}">
+                            ${formatCurrency(p.amount)}
+                        </span>
+                        <span class="inline-flex px-2 py-0.5 rounded-full border ${typeClass}">
+                            ${typeLabel}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
         // Yeni grafik bloğunu güncelle
         function updateStatusCharts(stats) {
             const {
@@ -1355,6 +1438,9 @@
                 totalOutgoing,
                 totalIncoming
             });
+
+            // Yaklaşan ödemeleri güncelle (tüm payments üzerinden)
+            updateUpcomingPayments(7);
         }
     </script>
 </body>
