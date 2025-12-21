@@ -8,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-      /* Mobilde month ve date alanlarını normalize et */
       input[type="month"],
       input[type="date"] {
         -webkit-appearance: none;
@@ -16,7 +15,7 @@
         width: 100%;
       }
 
-      /* iOS klavye açıldığında zoom/pan sorununu azaltmak için */
+      /* iOS klavye zoom/pan azaltma */
       input,
       select,
       textarea {
@@ -100,10 +99,9 @@
         </div>
 
         <!-- Özet Kartları -->
-        <div class="space-y-3 md:space-y-4 mb-4 md:mb-6">
-            <!-- Borç & Alacak: mobilde bile yan yana -->
+        <div class="space-y-3 md:space-y-4 mb-3 md:mb-4">
+            <!-- Toplam Borç & Alacak -->
             <div class="grid grid-cols-2 gap-2 md:gap-4">
-                <!-- Toplam Borç -->
                 <div class="bg-gradient-to-r from-rose-950 to-red-900 border border-red-500/40 rounded-xl shadow p-2.5 md:p-4">
                     <div class="text-[11px] md:text-sm text-rose-100/80">Toplam Borç (Çıkış)</div>
                     <div id="total-outgoing" class="text-sm md:text-2xl font-semibold text-rose-50 mt-1">
@@ -111,7 +109,6 @@
                     </div>
                 </div>
 
-                <!-- Toplam Alacak -->
                 <div class="bg-gradient-to-r from-emerald-950 to-teal-900 border border-emerald-500/40 rounded-xl shadow p-2.5 md:p-4">
                     <div class="text-[11px] md:text-sm text-emerald-100/80">Toplam Alacak (Giriş)</div>
                     <div id="total-incoming" class="text-sm md:text-2xl font-semibold text-emerald-50 mt-1">
@@ -130,19 +127,19 @@
                 </div>
             </div>
 
-            <!-- Ödeme Durumu - YENİ GRAFİK -->
+            <!-- Ödeme Durumu (Bar grafikleri) -->
             <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
                 <div class="mb-2">
                     <h3 class="text-xs md:text-sm font-semibold text-slate-100">
                         Ödeme Durumu
                     </h3>
                     <p class="text-[11px] md:text-xs text-slate-400">
-                        Ödediğim / aldığım ve ödeyeceğim / alacağım tutarlar
+                        Ödediğim / aldığım ve ödeyeceğim / alacağım tutarlar (sadece gerçek ödemeler, planlılar hariç)
                     </p>
                 </div>
 
                 <div class="mt-2 space-y-3 md:space-y-4">
-                    <!-- BORÇ BLOĞU -->
+                    <!-- Borç Bloğu -->
                     <div>
                         <div class="flex items-center justify-between text-[11px] md:text-xs text-slate-300 mb-1">
                             <span>Borç (Ödediğim / Ödeyeceğim)</span>
@@ -166,7 +163,7 @@
                         </div>
                     </div>
 
-                    <!-- ALACAK BLOĞU -->
+                    <!-- Alacak Bloğu -->
                     <div>
                         <div class="flex items-center justify-between text-[11px] md:text-xs text-slate-300 mb-1">
                             <span>Alacak (Aldığım / Alacağım)</span>
@@ -190,32 +187,36 @@
                         </div>
                     </div>
 
-                    <!-- GENEL DURUM SATIRI -->
+                    <!-- Genel Durum -->
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between text-[11px] md:text-xs text-slate-400 pt-2 border-t border-slate-800/60">
                         <span id="status-total-text" class="mb-1 md:mb-0"></span>
                         <span id="status-total-balance"></span>
                     </div>
                 </div>
             </div>
-
-            <!-- YAKLAŞAN ÖDEMELER -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
-                <div class="flex items-center justify-between mb-1.5">
-                    <h3 class="text-xs md:text-sm font-semibold text-slate-100">
-                        Yaklaşan Ödemeler
-                    </h3>
-                    <span class="text-[10px] md:text-[11px] text-slate-400">
-                        Önümüzdeki 7 gün
-                    </span>
-                </div>
-                <p id="upcoming-info" class="text-[11px] md:text-xs text-slate-400 mb-2"></p>
-                <div id="upcoming-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
-            </div>
         </div>
 
-        <!-- Liste + Filtreler -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl shadow overflow-hidden">
-            <!-- Başlık + Yeni Ödeme Butonu -->
+        <!-- SEKME BUTONLARI -->
+        <div class="flex gap-2 mb-3">
+            <button
+                id="tab-payments"
+                type="button"
+                class="px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-slate-600 bg-slate-800 text-slate-50"
+            >
+                Ödemeler
+            </button>
+            <button
+                id="tab-scheduled"
+                type="button"
+                class="px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-slate-700 text-slate-400 hover:bg-slate-900"
+            >
+                Planlanan Ödemeler
+            </button>
+        </div>
+
+        <!-- ÖDEMELER BÖLÜMÜ -->
+        <div id="payments-section" class="bg-slate-900 border border-slate-800 rounded-xl shadow overflow-hidden">
+            <!-- Başlık + Yeni Ödeme -->
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 px-3 md:px-4 py-3 border-b border-slate-800">
                 <div class="flex items-center gap-2">
                     <h2 class="text-base md:text-lg font-semibold text-slate-50">Ödeme Listesi</h2>
@@ -230,10 +231,9 @@
                 </button>
             </div>
 
-            <!-- Kompakt Filtre Barı -->
+            <!-- Filtreler -->
             <div class="px-3 md:px-4 py-3 border-b border-slate-800 bg-slate-950/60">
                 <div class="grid grid-cols-2 gap-2 md:gap-3 items-end">
-                    <!-- Dönem -->
                     <div class="flex flex-col">
                         <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Dönem</label>
                         <input
@@ -243,7 +243,6 @@
                         />
                     </div>
 
-                    <!-- Durum -->
                     <div class="flex flex-col">
                         <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Durum</label>
                         <select
@@ -256,7 +255,6 @@
                         </select>
                     </div>
 
-                    <!-- Tür -->
                     <div class="flex flex-col">
                         <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Tür</label>
                         <select
@@ -269,7 +267,6 @@
                         </select>
                     </div>
 
-                    <!-- Ara -->
                     <div class="flex flex-col">
                         <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Ara (başlık/kategori)</label>
                         <input
@@ -280,7 +277,6 @@
                         />
                     </div>
 
-                    <!-- Tüm Kayıtları Sil + Yeni Aya Geç -->
                     <div class="col-span-2 flex justify-between gap-2">
                         <button
                             id="next-month"
@@ -322,9 +318,58 @@
                 Kayıt bulunamadı. Sağ üstten “Yeni Ödeme” butonuna basarak ekleyebilirsin.
             </div>
         </div>
+
+        <!-- PLANLANAN ÖDEMELER BÖLÜMÜ -->
+        <div id="scheduled-section" class="hidden bg-slate-900 border border-slate-800 rounded-xl shadow overflow-hidden">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 px-3 md:px-4 py-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-base md:text-lg font-semibold text-slate-50">Planlanan Ödemeler</h2>
+                    <p class="text-[11px] md:text-xs text-slate-400">
+                        Tarihli işleri takvim üzerinden planla. Tarihi gelince otomatik Ödeme Listesi’ne düşer.
+                    </p>
+                </div>
+                <button
+                    id="btn-open-scheduled"
+                    class="self-start md:self-auto inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-medium px-3 py-2 rounded-lg"
+                    type="button"
+                >
+                    Yeni Planlı Ödeme
+                </button>
+            </div>
+
+            <!-- Takvim -->
+            <div class="px-3 md:px-4 py-3 border-b border-slate-800 bg-slate-950/60">
+                <div class="flex items-center justify-between mb-2">
+                    <button
+                        id="cal-prev"
+                        type="button"
+                        class="px-2 py-1 rounded-lg border border-slate-700 text-slate-300 text-xs hover:bg-slate-800"
+                    >
+                        ‹ Önceki
+                    </button>
+                    <div class="text-xs md:text-sm font-semibold text-slate-100" id="cal-label"></div>
+                    <button
+                        id="cal-next"
+                        type="button"
+                        class="px-2 py-1 rounded-lg border border-slate-700 text-slate-300 text-xs hover:bg-slate-800"
+                    >
+                        Sonraki ›
+                    </button>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-[10px] md:text-xs text-slate-300"></div>
+            </div>
+
+            <!-- Planlı Liste -->
+            <div class="px-3 md:px-4 py-3">
+                <h3 class="text-[11px] md:text-xs font-semibold text-slate-300 mb-2">
+                    Bu aya ait planlanan ödemeler
+                </h3>
+                <div id="scheduled-list" class="space-y-1.5 max-h-56 overflow-y-auto text-[11px] md:text-xs"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Ödeme Modalı -->
+    <!-- ÖDEME / PLANLI ÖDEME MODALI (ORTAK) -->
     <div
         id="payment-modal"
         class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70"
@@ -390,7 +435,7 @@
                         </div>
                     </div>
 
-                    <!-- HIZLI KART SEÇ (ŞABLONLAR) -->
+                    <!-- Hızlı Kartlar -->
                     <div class="space-y-1">
                         <label class="block text-xs md:text-sm text-slate-300">
                             Hızlı kart seç (isteğe bağlı)
@@ -422,11 +467,11 @@
                             </button>
                         </div>
                         <p class="text-[11px] md:text-xs text-slate-500">
-                            Banka adına tıkladığında başlık, kategori, tür ve tekrar bilgisi dolar. Sadece tarih ve tutarı girmen yeterli.
+                            Banka adına tıkladığında başlık, kategori ve tür dolar. Tarih ve tutarı girmek yeterli.
                         </p>
                     </div>
 
-                    <!-- SESLİ / METİN KOMUT ALANI -->
+                    <!-- Sesli / Metin Komut -->
                     <div class="space-y-1">
                         <label class="block text-xs md:text-sm text-slate-300">
                             Sesli / Metin Komutu
@@ -447,7 +492,7 @@
                             </button>
                         </div>
                         <p class="text-[11px] md:text-xs text-slate-500">
-                            Bu alana dokunup klavye mikrofonuna basarak konuş, sonra “Dağıt” butonuna bas.
+                            Klavye mikrofonuyla komut yazdırıp “Dağıt” butonuna basabilirsin.
                         </p>
                     </div>
 
@@ -500,7 +545,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase config
         const firebaseConfig = {
           apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
           authDomain: "gezi-5b54b.firebaseapp.com",
@@ -522,7 +566,18 @@
         let currentUserEmail = null;
         let unsubscribePayments = null;
 
+        // form modu: "payment" (normal liste) veya "scheduled" (planlı)
+        let currentFormMode = "payment";
+
+        // Takvim görünümü (planlı ekran) için yıl/ay
+        let calendarYear;
+        let calendarMonth; // 0-11
+
         document.addEventListener("DOMContentLoaded", () => {
+            const today = new Date();
+            calendarYear = today.getFullYear();
+            calendarMonth = today.getMonth();
+
             bindAuthEvents();
             bindAppEvents();
 
@@ -537,7 +592,7 @@
                     currentUserEmail = null;
                     payments = [];
                     if (unsubscribePayments) unsubscribePayments();
-                    render();
+                    renderAll();
                     showAuth();
                 }
             });
@@ -618,7 +673,7 @@
             if (code === "auth/email-already-in-use") return "Bu e-posta ile zaten bir hesap var.";
             if (code === "auth/invalid-email") return "Geçersiz e-posta adresi.";
             if (code === "auth/too-many-requests") return "Çok fazla deneme yapıldı. Lütfen tekrar deneyin.";
-            if (code === "auth/operation-not-allowed") return "E-posta/şifre ile giriş projenizde henüz aktif değil. Firebase Console > Authentication > Sign-in method kısmından açmanız gerekiyor.";
+            if (code === "auth/operation-not-allowed") return "E-posta/şifre ile giriş projenizde aktif değil (Firebase Console > Authentication).";
             return "Hata: " + code;
         }
 
@@ -626,22 +681,29 @@
             const form = document.getElementById("payment-form");
             form.addEventListener("submit", handleSubmit);
 
-            document.getElementById("month-filter").addEventListener("change", render);
-            document.getElementById("status-filter").addEventListener("change", render);
-            document.getElementById("type-filter").addEventListener("change", render);
-            document.getElementById("search-filter").addEventListener("input", render);
+            document.getElementById("month-filter").addEventListener("change", renderAll);
+            document.getElementById("status-filter").addEventListener("change", renderAll);
+            document.getElementById("type-filter").addEventListener("change", renderAll);
+            document.getElementById("search-filter").addEventListener("input", renderAll);
 
             document.getElementById("clear-all").addEventListener("click", async () => {
-                if (payments.length === 0) return;
-                if (!confirm("Tüm kayıtları silmek istediğine emin misin?")) return;
-                for (const p of payments) {
+                const realPayments = payments.filter(p => p.mode !== "scheduled");
+                if (realPayments.length === 0) return;
+                if (!confirm("Tüm gerçek ödemeleri (planlılar hariç) silmek istediğine emin misin?")) return;
+                for (const p of realPayments) {
                     await paymentsCol.doc(p.id).delete();
                 }
             });
 
             document.getElementById("next-month").addEventListener("click", goToNextMonth);
 
-            document.getElementById("btn-open-modal").addEventListener("click", openNewModal);
+            document.getElementById("btn-open-modal").addEventListener("click", () => {
+                openNewModal("payment");
+            });
+            document.getElementById("btn-open-scheduled").addEventListener("click", () => {
+                openNewModal("scheduled");
+            });
+
             document.getElementById("modal-close").addEventListener("click", closeModal);
             document.getElementById("btn-cancel").addEventListener("click", closeModal);
 
@@ -673,7 +735,6 @@
                 }
             });
 
-            // Komutu parse eden buton
             document.getElementById("btn-parse-command").addEventListener("click", () => {
                 const cmd = document.getElementById("voice-command").value;
                 if (!cmd.trim()) {
@@ -683,7 +744,6 @@
                 fillFormFromCommand(cmd);
             });
 
-            // Hızlı kart seç (şablon butonları)
             document.querySelectorAll(".quick-bank").forEach((btn) => {
                 btn.addEventListener("click", () => {
                     const titleInput = document.getElementById("title");
@@ -704,6 +764,63 @@
                     if (isRecurring) isRecurring.checked = true;
                 });
             });
+
+            // Sekmeler
+            document.getElementById("tab-payments").addEventListener("click", () => switchTab("payments"));
+            document.getElementById("tab-scheduled").addEventListener("click", () => switchTab("scheduled"));
+
+            // Takvim navigasyonu
+            document.getElementById("cal-prev").addEventListener("click", () => {
+                calendarMonth--;
+                if (calendarMonth < 0) {
+                    calendarMonth = 11;
+                    calendarYear--;
+                }
+                renderAll();
+            });
+            document.getElementById("cal-next").addEventListener("click", () => {
+                calendarMonth++;
+                if (calendarMonth > 11) {
+                    calendarMonth = 0;
+                    calendarYear++;
+                }
+                renderAll();
+            });
+
+            // Takvim hücre tıklama (planlı ödeme ekleme)
+            document.getElementById("calendar-grid").addEventListener("click", (e) => {
+                const cell = e.target.closest("[data-date]");
+                if (!cell) return;
+                const dateStr = cell.dataset.date;
+                openNewModal("scheduled", dateStr);
+            });
+        }
+
+        function switchTab(tab) {
+            const paySec = document.getElementById("payments-section");
+            const schSec = document.getElementById("scheduled-section");
+            const tabPayments = document.getElementById("tab-payments");
+            const tabScheduled = document.getElementById("tab-scheduled");
+
+            if (tab === "payments") {
+                paySec.classList.remove("hidden");
+                schSec.classList.add("hidden");
+
+                tabPayments.classList.add("bg-slate-800", "text-slate-50", "border-slate-600");
+                tabPayments.classList.remove("text-slate-400");
+
+                tabScheduled.classList.remove("bg-slate-800", "text-slate-50");
+                tabScheduled.classList.add("text-slate-400", "border-slate-700");
+            } else {
+                paySec.classList.add("hidden");
+                schSec.classList.remove("hidden");
+
+                tabScheduled.classList.add("bg-slate-800", "text-slate-50", "border-slate-600");
+                tabScheduled.classList.remove("text-slate-400");
+
+                tabPayments.classList.remove("bg-slate-800", "text-slate-50");
+                tabPayments.classList.add("text-slate-400", "border-slate-700");
+            }
         }
 
         function setTodayAsDefaultDate() {
@@ -715,22 +832,56 @@
             input.value = `${y}-${m}-${d}`;
         }
 
-        function openNewModal() {
+        function openNewModal(mode = "payment", presetDate = null) {
+            currentFormMode = mode;
             editingId = null;
             resetFormFields();
-            document.getElementById("modal-title").textContent = "Yeni Ödeme Ekle";
+
+            const titleEl = document.getElementById("modal-title");
             const submitBtn = document.getElementById("submit-btn");
-            submitBtn.textContent = "Kaydet";
-            submitBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-500");
-            submitBtn.classList.add("bg-indigo-600", "hover:bg-indigo-500");
+            const isPaidChk = document.getElementById("isPaid");
+
+            if (mode === "payment") {
+                titleEl.textContent = "Yeni Ödeme Ekle";
+                submitBtn.textContent = "Kaydet";
+                submitBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-500");
+                submitBtn.classList.add("bg-indigo-600", "hover:bg-indigo-500");
+                isPaidChk.disabled = false;
+            } else {
+                titleEl.textContent = "Planlı Ödeme Ekle";
+                submitBtn.textContent = "Planı Kaydet";
+                submitBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-500");
+                submitBtn.classList.add("bg-indigo-600", "hover:bg-indigo-500");
+                // Planlı ödemede "ödendi" mantıksız, checkbox’ı disable edelim
+                isPaidChk.checked = false;
+                isPaidChk.disabled = true;
+            }
+
+            if (presetDate) {
+                document.getElementById("date").value = presetDate;
+            } else {
+                setTodayAsDefaultDate();
+            }
+
             showModal();
         }
 
         function openEditModal(id) {
-            const payment = payments.find(p => p.id === id);
+            const payment = payments.find(p => p.id === id && p.mode !== "scheduled");
             if (!payment) return;
 
+            currentFormMode = "payment";
             editingId = id;
+
+            const titleEl = document.getElementById("modal-title");
+            const submitBtn = document.getElementById("submit-btn");
+            const isPaidChk = document.getElementById("isPaid");
+
+            titleEl.textContent = "Ödemeyi Düzenle";
+            submitBtn.textContent = "Güncelle";
+            submitBtn.classList.remove("bg-indigo-600", "hover:bg-indigo-500");
+            submitBtn.classList.add("bg-emerald-600", "hover:bg-emerald-500");
+            isPaidChk.disabled = false;
 
             document.getElementById("date").value = payment.date;
             document.getElementById("amount").value = payment.amount;
@@ -740,12 +891,6 @@
             document.getElementById("isPaid").checked = payment.isPaid;
             document.getElementById("isRecurring").checked = !!payment.isRecurring;
 
-            document.getElementById("modal-title").textContent = "Ödemeyi Düzenle";
-            const submitBtn = document.getElementById("submit-btn");
-            submitBtn.textContent = "Güncelle";
-            submitBtn.classList.remove("bg-indigo-600", "hover:bg-indigo-500");
-            submitBtn.classList.add("bg-emerald-600", "hover:bg-emerald-500");
-
             showModal();
         }
 
@@ -753,7 +898,6 @@
             const modal = document.getElementById("payment-modal");
             modal.classList.remove("hidden");
             modal.classList.add("flex");
-            if (!editingId) setTodayAsDefaultDate();
         }
 
         function closeModal() {
@@ -761,6 +905,7 @@
             modal.classList.add("hidden");
             modal.classList.remove("flex");
             editingId = null;
+            // form modu kapatırken payment’a dönmesin, sonradan butona göre set ediliyor
             resetFormFields();
         }
 
@@ -769,6 +914,7 @@
             form.reset();
             setTodayAsDefaultDate();
             document.getElementById("isPaid").checked = false;
+            document.getElementById("isPaid").disabled = false;
             const rec = document.getElementById("isRecurring");
             if (rec) rec.checked = false;
             document.getElementById("type").value = "outgoing";
@@ -786,30 +932,26 @@
                 .join(" ");
         }
 
-        // Komut metnini çöz ve forma yaz (10 bin / 20.000 fix'li)
+        // Sesli / metin komut çözümü
         function fillFormFromCommand(text) {
             if (!text) return;
             const raw = text.trim();
             let t = raw.toLowerCase();
 
-            // --- TÜR ---
-            let type = "outgoing"; // varsayılan: borç
+            let type = "outgoing";
             if (t.includes("alacak") || t.includes("alacağım") || t.includes("tahsil")) {
                 type = "incoming";
             } else if (t.includes("borç") || t.includes("borcum") || t.includes("öde")) {
                 type = "outgoing";
             }
 
-            // --- TUTAR ---
             let amount = null;
 
-            // 1) "10 bin", "20 bin" vb. -> 10 * 1000
             let amountMatchBin = t.match(/(\d+)\s*bin/);
             if (amountMatchBin) {
                 amount = parseInt(amountMatchBin[1], 10) * 1000;
             }
 
-            // 2) Genel sayı (12500, 12.500, 12,500, 12,5...)
             if (!amount) {
                 let liraIndex = t.indexOf("lira");
                 let searchSpan = t;
@@ -835,7 +977,6 @@
                 }
             }
 
-            // --- TARİH ---
             const aylar = {
                 "ocak": "01",
                 "şubat": "02",
@@ -877,7 +1018,6 @@
                 dateStr = `${y}-${m}-${d}`;
             }
 
-            // --- BAŞLIK ---
             let title = raw;
 
             let cleaned = t
@@ -926,7 +1066,7 @@
             let title = document.getElementById("title").value.trim();
             let category = document.getElementById("category").value.trim();
             const type = document.getElementById("type").value;
-            const isPaid = document.getElementById("isPaid").checked;
+            let isPaid = document.getElementById("isPaid").checked;
             const isRecurring = document.getElementById("isRecurring").checked;
 
             if (!date || !title || isNaN(amount)) {
@@ -938,29 +1078,48 @@
             category = toTitleCase(category);
 
             try {
-                if (editingId) {
-                    await paymentsCol.doc(editingId).update({
-                        date,
-                        amount,
-                        title,
-                        category,
-                        type,
-                        isPaid,
-                        isRecurring,
-                        userId: currentUserId
-                    });
+                if (currentFormMode === "payment") {
+                    if (editingId) {
+                        await paymentsCol.doc(editingId).update({
+                            date,
+                            amount,
+                            title,
+                            category,
+                            type,
+                            isPaid,
+                            isRecurring,
+                            userId: currentUserId,
+                            mode: "payment"
+                        });
+                    } else {
+                        await paymentsCol.add({
+                            date,
+                            amount,
+                            title,
+                            category,
+                            type,
+                            isPaid,
+                            isRecurring,
+                            userId: currentUserId,
+                            mode: "payment"
+                        });
+                    }
                 } else {
+                    // Planlı ödeme: her zaman isPaid = false, isRecurring şimdilik kaydedilmiyor
+                    isPaid = false;
                     await paymentsCol.add({
                         date,
                         amount,
                         title,
                         category,
                         type,
-                        isPaid,
-                        isRecurring,
-                        userId: currentUserId
+                        isPaid: false,
+                        isRecurring: false,
+                        userId: currentUserId,
+                        mode: "scheduled"
                     });
                 }
+
                 closeModal();
             } catch (err) {
                 console.error("Kayıt hatası:", err);
@@ -993,18 +1152,55 @@
 
             unsubscribePayments = paymentsCol
                 .where("userId", "==", currentUserId)
-                .onSnapshot(
-                    (snapshot) => {
-                        payments = snapshot.docs.map(docSnap => ({
-                            id: docSnap.id,
-                            ...docSnap.data()
-                        }));
-                        render();
-                    },
-                    (err) => {
-                        console.error("Firestore dinleme hatası:", err);
+                .onSnapshot(async (snapshot) => {
+                    payments = snapshot.docs.map(docSnap => ({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    }));
+
+                    try {
+                        await releaseDueScheduled();
+                    } catch (err) {
+                        console.error("Planlıdan listeye aktarma hatası:", err);
                     }
-                );
+
+                    renderAll();
+                }, (err) => {
+                    console.error("Firestore dinleme hatası:", err);
+                });
+        }
+
+        async function releaseDueScheduled() {
+            if (!currentUserId) return;
+
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = String(today.getMonth() + 1).padStart(2, "0");
+            const d = String(today.getDate()).padStart(2, "0");
+            const todayStr = `${y}-${m}-${d}`;
+
+            const due = payments.filter(
+                p => p.mode === "scheduled" && p.date && p.date <= todayStr
+            );
+
+            for (const s of due) {
+                try {
+                    await paymentsCol.add({
+                        date: s.date,
+                        amount: s.amount,
+                        title: s.title,
+                        category: s.category,
+                        type: s.type,
+                        isPaid: false,
+                        isRecurring: false,
+                        userId: currentUserId,
+                        mode: "payment"
+                    });
+                    await paymentsCol.doc(s.id).delete();
+                } catch (err) {
+                    console.error("Planlıdan gerçek listeye kopyalama hatası:", err);
+                }
+            }
         }
 
         function formatCurrency(value) {
@@ -1020,13 +1216,10 @@
             return `${d}.${m}.${y}`;
         }
 
-        // DÖNEM HESAPLARI
         function getCurrentPeriod() {
-            // Dönem filtresi seçiliyse onu kullan
             const monthFilter = document.getElementById("month-filter").value;
             if (monthFilter) return monthFilter;
 
-            // Yoksa bugünün ayı
             const today = new Date();
             const y = today.getFullYear();
             const m = String(today.getMonth() + 1).padStart(2, "0");
@@ -1051,11 +1244,12 @@
                 return;
             }
 
-            const currentPeriod = getCurrentPeriod();      // örn: 2025-02
-            const nextPeriod = getNextPeriod(currentPeriod); // örn: 2025-03
+            const currentPeriod = getCurrentPeriod();
+            const nextPeriod = getNextPeriod(currentPeriod);
 
-            // Bu ay için hâlâ ödenmemiş var mı?
-            const unpaidExists = payments.some(
+            const realPayments = payments.filter(p => p.mode !== "scheduled");
+
+            const unpaidExists = realPayments.some(
                 p => !p.isPaid && p.date && p.date.startsWith(currentPeriod)
             );
 
@@ -1066,16 +1260,14 @@
                 if (!ok) return;
             }
 
-            // Bu ayki TEKRARLAYAN ödemeler (isRecurring = true)
-            const recurringThisMonth = payments.filter(
+            const recurringThisMonth = realPayments.filter(
                 p => p.isRecurring && p.date && p.date.startsWith(currentPeriod)
             );
 
-            // Her biri için, aynı günle bir SONRAKİ ay kaydı aç
             for (const p of recurringThisMonth) {
                 const [ny, nm] = nextPeriod.split("-");
                 const yearNum = parseInt(ny, 10);
-                const monthNum = parseInt(nm, 10); // 1-12
+                const monthNum = parseInt(nm, 10);
 
                 const originalDay = parseInt(p.date.split("-")[2], 10);
                 const lastDayOfNext = new Date(yearNum, monthNum, 0).getDate();
@@ -1089,90 +1281,19 @@
                     title: p.title,
                     category: p.category,
                     type: p.type,
-                    isPaid: false,       // yeni ayda henüz ödenmemiş
-                    isRecurring: true,   // yine tekrarlayan
-                    userId: currentUserId
+                    isPaid: false,
+                    isRecurring: true,
+                    userId: currentUserId,
+                    mode: "payment"
                 });
             }
 
-            // Ekrandaki dönem filtresini yeni aya al
             const monthInput = document.getElementById("month-filter");
             monthInput.value = nextPeriod;
 
-            // Yeni dönemi göster
-            render();
+            renderAll();
         }
 
-        // Yaklaşan ödemeleri güncelle
-        function updateUpcomingPayments(days = 7) {
-            const container = document.getElementById("upcoming-list");
-            const infoEl = document.getElementById("upcoming-info");
-            if (!container) return;
-
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const end = new Date(today);
-            end.setDate(end.getDate() + days);
-
-            const endStr = `${String(end.getDate()).padStart(2, "0")}.${String(end.getMonth() + 1).padStart(2, "0")}`;
-
-            if (infoEl) {
-                infoEl.textContent =
-                    `Bugünden ${endStr} tarihine kadar, ödenmemiş borç ve alacaklar listelenir.`;
-            }
-
-            const upcoming = payments
-                .filter(p => {
-                    if (!p.date || p.isPaid) return false;
-                    const [y, m, d] = p.date.split("-");
-                    const dt = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-                    dt.setHours(0, 0, 0, 0);
-                    return dt >= today && dt <= end;
-                })
-                .sort((a, b) => a.date.localeCompare(b.date));
-
-            container.innerHTML = "";
-
-            if (upcoming.length === 0) {
-                container.innerHTML = `
-                    <p class="text-[11px] md:text-xs text-slate-400">
-                        Önümüzdeki 7 gün için bekleyen ödeme yok.
-                    </p>
-                `;
-                return;
-            }
-
-            upcoming.forEach(p => {
-                const [y, m, d] = p.date.split("-");
-                const shortDate = `${d}.${m}`;
-
-                const typeLabel = p.type === "outgoing" ? "Borç" : "Alacak";
-                const typeClass = p.type === "outgoing"
-                    ? "bg-red-500/15 text-red-300 border-red-500/30"
-                    : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
-
-                const row = document.createElement("div");
-                row.className = "flex items-center justify-between gap-2 text-[11px] md:text-xs bg-slate-950/40 border border-slate-800 rounded-lg px-2 py-1.5";
-
-                row.innerHTML = `
-                    <div class="flex flex-col">
-                        <span class="font-semibold text-slate-100">${p.title}</span>
-                        <span class="text-slate-400">${shortDate} · ${p.category || "-"}</span>
-                    </div>
-                    <div class="flex flex-col items-end gap-1">
-                        <span class="font-semibold ${p.type === "outgoing" ? "text-red-300" : "text-emerald-300"}">
-                            ${formatCurrency(p.amount)}
-                        </span>
-                        <span class="inline-flex px-2 py-0.5 rounded-full border ${typeClass}">
-                            ${typeLabel}
-                        </span>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        // Yeni grafik bloğunu güncelle
         function updateStatusCharts(stats) {
             const {
                 paidOutgoing,
@@ -1186,13 +1307,11 @@
             const totalDebt = paidOutgoing + unpaidOutgoing;
             const totalCredit = paidIncoming + unpaidIncoming;
 
-            // Ayrı ayrı toplamlar
-            const totalPaidDebt   = paidOutgoing;    // ödediğim borçlar
-            const totalReceived   = paidIncoming;    // tahsil ettiğim alacaklar
-            const totalUnpaidDebt = unpaidOutgoing;  // ödeyeceğim borç
-            const totalUnreceived = unpaidIncoming;  // alacağım kalan
+            const totalPaidDebt   = paidOutgoing;
+            const totalReceived   = paidIncoming;
+            const totalUnpaidDebt = unpaidOutgoing;
+            const totalUnreceived = unpaidIncoming;
 
-            // BORÇ BLOĞU
             const debtSummary = document.getElementById("debt-summary");
             const labelPaidOut = document.getElementById("label-paid-outgoing");
             const labelUnpaidOut = document.getElementById("label-unpaid-outgoing");
@@ -1219,7 +1338,6 @@
             if (barPaidOut) barPaidOut.style.width = paidOutPct + "%";
             if (barUnpaidOut) barUnpaidOut.style.width = unpaidOutPct + "%";
 
-            // ALACAK BLOĞU
             const creditSummary = document.getElementById("credit-summary");
             const labelPaidIn = document.getElementById("label-paid-incoming");
             const labelUnpaidIn = document.getElementById("label-unpaid-incoming");
@@ -1246,7 +1364,6 @@
             if (barPaidIn) barPaidIn.style.width = paidInPct + "%";
             if (barUnpaidIn) barUnpaidIn.style.width = unpaidInPct + "%";
 
-            // GENEL DURUM SATIRI
             const statusTotalText = document.getElementById("status-total-text");
             const statusTotalBalance = document.getElementById("status-total-balance");
             const diff = totalOutgoing - totalIncoming;
@@ -1268,7 +1385,12 @@
             }
         }
 
-        function render() {
+        function renderAll() {
+            renderPayments();
+            renderScheduled();
+        }
+
+        function renderPayments() {
             const tbody = document.getElementById("payments-body");
             if (!tbody) return;
             tbody.innerHTML = "";
@@ -1278,7 +1400,12 @@
             const typeFilter = document.getElementById("type-filter").value;
             const searchFilter = document.getElementById("search-filter").value.toLowerCase();
 
-            let filtered = payments.slice().sort((a, b) => a.date.localeCompare(b.date));
+            const basePayments = payments
+                .filter(p => p.mode !== "scheduled")
+                .slice()
+                .sort((a, b) => a.date.localeCompare(b.date));
+
+            let filtered = basePayments;
 
             if (monthFilter) {
                 filtered = filtered.filter(p => p.date && p.date.startsWith(monthFilter));
@@ -1334,7 +1461,6 @@
                     <td class="px-3 py-2 text-[11px] md:text-xs text-right font-semibold ${p.type === "outgoing" ? "text-red-300" : "text-emerald-300"}">
                         ${formatCurrency(p.amount)}
                     </td>
-                    <!-- DURUM -->
                     <td class="px-3 py-2 text-[11px] md:text-xs text-center">
                         <label class="inline-flex items-center justify-center gap-1 cursor-pointer">
                             <input
@@ -1348,7 +1474,6 @@
                             </span>
                         </label>
                     </td>
-                    <!-- TÜR -->
                     <td class="px-3 py-2 text-[11px] md:text-xs text-center">
                         <span class="inline-flex px-2 py-1 rounded-full text-[10px] md:text-[11px] font-medium ${typeBadgeClass}">
                             ${p.type === "outgoing" ? "Borç / Çıkış" : "Alacak / Giriş"}
@@ -1374,11 +1499,9 @@
 
             document.getElementById("empty-state").classList.toggle("hidden", filtered.length !== 0);
 
-            // Özetler
-            let totalOutgoing = 0; // Toplam borç
-            let totalIncoming = 0; // Toplam alacak
+            let totalOutgoing = 0;
+            let totalIncoming = 0;
 
-            // Grafik için ödenen / bekleyen ayrımı
             let paidOutgoing = 0;
             let unpaidOutgoing = 0;
             let paidIncoming = 0;
@@ -1426,10 +1549,9 @@
             const countInfoEl = document.getElementById("count-info");
             if (countInfoEl) {
                 countInfoEl.textContent =
-                    filtered.length + " kayıt gösteriliyor (toplam: " + payments.length + ")";
+                    filtered.length + " kayıt gösteriliyor (toplam gerçek: " + basePayments.length + ")";
             }
 
-            // Yeni grafik bloğunu güncelle
             updateStatusCharts({
                 paidOutgoing,
                 unpaidOutgoing,
@@ -1438,9 +1560,132 @@
                 totalOutgoing,
                 totalIncoming
             });
+        }
 
-            // Yaklaşan ödemeleri güncelle (tüm payments üzerinden)
-            updateUpcomingPayments(7);
+        function getMonthNameTR(monthIndex) {
+            const names = [
+                "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+                "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+            ];
+            return names[monthIndex] || "";
+        }
+
+        function renderScheduled() {
+            const labelEl = document.getElementById("cal-label");
+            const gridEl = document.getElementById("calendar-grid");
+            const listEl = document.getElementById("scheduled-list");
+            if (!labelEl || !gridEl || !listEl) return;
+
+            const year = calendarYear;
+            const month = calendarMonth;
+
+            labelEl.textContent = `${getMonthNameTR(month)} ${year}`;
+
+            gridEl.innerHTML = "";
+
+            const daysShort = ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"];
+            daysShort.forEach(d => {
+                const div = document.createElement("div");
+                div.className = "font-semibold text-[10px] md:text-xs text-slate-400";
+                div.textContent = d;
+                gridEl.appendChild(div);
+            });
+
+            const first = new Date(year, month, 1);
+            let startDay = first.getDay(); // 0=Pazar
+            if (startDay === 0) startDay = 7;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const scheduledPayments = payments.filter(p => p.mode === "scheduled");
+
+            const byDate = {};
+            scheduledPayments.forEach(p => {
+                if (!p.date) return;
+                if (!byDate[p.date]) byDate[p.date] = [];
+                byDate[p.date].push(p);
+            });
+
+            for (let i = 1; i < startDay; i++) {
+                const empty = document.createElement("div");
+                empty.className = "h-8 md:h-9";
+                gridEl.appendChild(empty);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dStr = String(day).padStart(2, "0");
+                const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${dStr}`;
+
+                const hasItems = !!byDate[dateStr];
+
+                const cell = document.createElement("div");
+                cell.className =
+                    "relative h-8 md:h-9 flex flex-col items-center justify-center rounded-lg border text-[10px] md:text-xs cursor-pointer " +
+                    (hasItems
+                        ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-100"
+                        : "border-slate-800 hover:bg-slate-800/60 text-slate-100");
+                cell.dataset.date = dateStr;
+                cell.innerHTML = `
+                    <span>${day}</span>
+                    ${
+                        hasItems
+                            ? `<span class="absolute bottom-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400"></span>`
+                            : ""
+                    }
+                `;
+                gridEl.appendChild(cell);
+            }
+
+            listEl.innerHTML = "";
+
+            const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
+            const monthItems = scheduledPayments
+                .filter(p => p.date && p.date.startsWith(monthStr))
+                .sort((a, b) => a.date.localeCompare(b.date));
+
+            if (monthItems.length === 0) {
+                listEl.innerHTML = `
+                    <p class="text-[11px] md:text-xs text-slate-400">
+                        Bu ay için planlı ödeme yok. Takvimden bir gün seçerek veya “Yeni Planlı Ödeme” ile ekleyebilirsin.
+                    </p>
+                `;
+                return;
+            }
+
+            monthItems.forEach(p => {
+                const row = document.createElement("div");
+                row.className = "flex items-center justify-between gap-2 bg-slate-950/40 border border-slate-800 rounded-lg px-2 py-1.5";
+
+                const [y, m, d] = p.date.split("-");
+                const shortDate = `${d}.${m}`;
+                const typeLabel = p.type === "outgoing" ? "Borç" : "Alacak";
+                const typeClass = p.type === "outgoing"
+                    ? "bg-red-500/15 text-red-300 border-red-500/30"
+                    : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+
+                row.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="font-semibold text-slate-100">${p.title}</span>
+                        <span class="text-slate-400">${shortDate} · ${p.category || "-"}</span>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="font-semibold ${p.type === "outgoing" ? "text-red-300" : "text-emerald-300"}">
+                            ${formatCurrency(p.amount)}
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <span class="inline-flex px-2 py-0.5 rounded-full border ${typeClass}">
+                                ${typeLabel}
+                            </span>
+                            <button
+                                class="text-[10px] text-red-300 hover:text-red-200"
+                                onclick="deletePayment('${p.id}')"
+                            >
+                                Sil
+                            </button>
+                        </div>
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
         }
     </script>
 </body>
