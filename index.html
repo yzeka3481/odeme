@@ -127,28 +127,51 @@
                 </div>
             </div>
 
-            <div class="mb-2 space-y-1">
-    <h3 class="text-xs md:text-sm font-semibold text-slate-100">
-        Ödeme Durumu
-    </h3>
-    <p class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-slate-800/90 border border-sky-500/60 text-[10px] md:text-[11px] font-semibold text-sky-200">
-        <span class="w-4 h-4 flex items-center justify-center rounded-full bg-sky-500/20 border border-sky-500/70 text-[9px]">
-            i
-        </span>
-        <span>
-            Ödediğim / aldığım ve ödeyeceğim / alacağım tutarlar (sadece gerçek ödemeler, planlılar hariç)
-        </span>
-    </p>
-</div>
+            <!-- ÖDEME DURUMU (YENİ TASARIM) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
+                <!-- Başlık + Genel Özet -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+                    <div class="space-y-1">
+                        <h3 class="text-sm md:text-base font-semibold text-slate-50">
+                            Ödeme Durumu
+                        </h3>
+                        <span class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-slate-800/90 border border-sky-500/60 text-[10px] md:text-xs font-medium text-sky-100">
+                            <span class="w-4 h-4 flex items-center justify-center rounded-full bg-sky-500/20 border border-sky-500/70 text-[9px]">
+                                i
+                            </span>
+                            <span>
+                                Ödediğim / aldığım ve ödeyeceğim / alacağım tutarlar (sadece gerçek ödemeler, planlılar hariç)
+                            </span>
+                        </span>
+                    </div>
 
-                <div class="mt-2 space-y-3 md:space-y-4">
-                    <!-- Borç Bloğu -->
-                    <div>
-                        <div class="flex items-center justify-between text-[11px] md:text-xs text-slate-300 mb-1">
-                            <span>Borç (Ödediğim / Ödeyeceğim)</span>
-                            <span id="debt-summary" class="font-medium text-slate-100"></span>
+                    <!-- Genel toplama dair kısa özet (ID'ler aynı) -->
+                    <div class="text-right text-[11px] md:text-xs space-y-0.5">
+                        <div id="status-total-text" class="font-medium text-slate-100">
+                            <!-- JS dolduruyor -->
                         </div>
-                        <div class="flex w-full h-3 rounded-full bg-slate-800 overflow-hidden">
+                        <div id="status-total-balance" class="text-[10px] md:text-xs text-slate-400">
+                            <!-- JS dolduruyor -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İki kolonlu net görünüm: Borç ve Alacak -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                    <!-- BORÇ BLOĞU -->
+                    <div class="rounded-xl bg-slate-950/80 border border-red-500/30 p-3 space-y-2">
+                        <div class="flex items-center justify-between text-[11px] md:text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                                <span class="font-semibold text-rose-100">Borç (Çıkış)</span>
+                            </div>
+                            <span id="debt-summary" class="text-rose-200 font-medium">
+                                <!-- JS: Toplam: xx ₺ -->
+                            </span>
+                        </div>
+
+                        <!-- Bar -->
+                        <div class="flex w-full h-3.5 rounded-full bg-slate-800 overflow-hidden">
                             <div
                                 id="bar-paid-outgoing"
                                 class="h-full bg-emerald-500 transition-all duration-300 ease-out"
@@ -160,19 +183,32 @@
                                 style="width: 0%"
                             ></div>
                         </div>
-                        <div class="flex justify-between mt-1 text-[10px] md:text-[11px] text-slate-400">
-                            <span id="label-paid-outgoing">Ödediğim: 0 ₺</span>
-                            <span id="label-unpaid-outgoing">Ödeyeceğim: 0 ₺</span>
+
+                        <!-- Etiketler -->
+                        <div class="flex justify-between mt-1 text-[10px] md:text-[11px] text-slate-200">
+                            <span id="label-paid-outgoing" class="flex-1 text-left">
+                                Ödediğim: 0 ₺
+                            </span>
+                            <span id="label-unpaid-outgoing" class="flex-1 text-right">
+                                Ödeyeceğim: 0 ₺
+                            </span>
                         </div>
                     </div>
 
-                    <!-- Alacak Bloğu -->
-                    <div>
-                        <div class="flex items-center justify-between text-[11px] md:text-xs text-slate-300 mb-1">
-                            <span>Alacak (Aldığım / Alacağım)</span>
-                            <span id="credit-summary" class="font-medium text-slate-100"></span>
+                    <!-- ALACAK BLOĞU -->
+                    <div class="rounded-xl bg-slate-950/80 border border-emerald-500/30 p-3 space-y-2">
+                        <div class="flex items-center justify-between text-[11px] md:text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                <span class="font-semibold text-emerald-100">Alacak (Giriş)</span>
+                            </div>
+                            <span id="credit-summary" class="text-emerald-200 font-medium">
+                                <!-- JS: Toplam: xx ₺ -->
+                            </span>
                         </div>
-                        <div class="flex w-full h-3 rounded-full bg-slate-800 overflow-hidden">
+
+                        <!-- Bar -->
+                        <div class="flex w-full h-3.5 rounded-full bg-slate-800 overflow-hidden">
                             <div
                                 id="bar-paid-incoming"
                                 class="h-full bg-sky-400 transition-all duration-300 ease-out"
@@ -180,20 +216,20 @@
                             ></div>
                             <div
                                 id="bar-unpaid-incoming"
-                                class="h-full bg-emerald-500/70 transition-all duration-300 ease-out"
+                                class="h-full bg-emerald-500/80 transition-all duration-300 ease-out"
                                 style="width: 0%"
                             ></div>
                         </div>
-                        <div class="flex justify-between mt-1 text-[10px] md:text-[11px] text-slate-400">
-                            <span id="label-paid-incoming">Aldığım: 0 ₺</span>
-                            <span id="label-unpaid-incoming">Alacağım: 0 ₺</span>
-                        </div>
-                    </div>
 
-                    <!-- Genel Durum -->
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between text-[11px] md:text-xs text-slate-400 pt-2 border-t border-slate-800/60">
-                        <span id="status-total-text" class="mb-1 md:mb-0"></span>
-                        <span id="status-total-balance"></span>
+                        <!-- Etiketler -->
+                        <div class="flex justify-between mt-1 text-[10px] md:text-[11px] text-slate-200">
+                            <span id="label-paid-incoming" class="flex-1 text-left">
+                                Aldığım: 0 ₺
+                            </span>
+                            <span id="label-unpaid-incoming" class="flex-1 text-right">
+                                Alacağım: 0 ₺
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1445,7 +1481,7 @@
                     ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
                     : "bg-amber-500/15 text-amber-300 border border-amber-500/30";
 
-                // BURASI DÜZELTİLEN KISIM:
+                // Alacak için "Alındı / Alınmadı", borç için "Ödendi / Ödenmedi"
                 const statusText =
                     p.type === "incoming"
                         ? (p.isPaid ? "Alındı" : "Alınmadı")
