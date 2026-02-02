@@ -100,7 +100,7 @@
 
         <!-- Özet Kartları -->
         <div class="space-y-3 md:space-y-4 mb-3 md:mb-4">
-            <!-- Toplam Borç / Alacak / Fark - Yanyana -->
+            <!-- Toplam Borç / Alacak / Fark - Yanyana (her ekranda 3 kolon) -->
             <div class="grid grid-cols-3 gap-2 md:gap-4">
                 <div class="bg-gradient-to-r from-rose-950 to-red-900 border border-red-500/40 rounded-xl shadow p-2 md:p-3">
                     <div class="text-[10px] md:text-sm text-rose-100/80 text-center">Toplam Borç (Çıkış)</div>
@@ -129,7 +129,34 @@
 
             <!-- ÖDEME DURUMU (YENİ TASARIM) -->
             <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
-                               <!-- İki kolonlu net görünüm: Borç ve Alacak -->
+                <!-- Başlık + Genel Özet -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+                    <div class="space-y-1">
+                        <h3 class="text-sm md:text-base font-semibold text-slate-50">
+                            Ödeme Durumu
+                        </h3>
+                        <span class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-slate-800/90 border border-sky-500/60 text-[10px] md:text-xs font-medium text-sky-100">
+                            <span class="w-4 h-4 flex items-center justify-center rounded-full bg-sky-500/20 border border-sky-500/70 text-[9px]">
+                                i
+                            </span>
+                            <span>
+                                Ödediğim / aldığım ve ödeyeceğim / alacağım tutarlar (sadece gerçek ödemeler, planlılar hariç)
+                            </span>
+                        </span>
+                    </div>
+
+                    <!-- Genel toplama dair kısa özet -->
+                    <div class="text-right text-[11px] md:text-xs space-y-0.5">
+                        <div id="status-total-text" class="font-medium text-slate-100">
+                            <!-- JS dolduruyor -->
+                        </div>
+                        <div id="status-total-balance" class="text-[10px] md:text-xs text-slate-400">
+                            <!-- JS dolduruyor -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İki kolonlu net görünüm: Borç ve Alacak -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <!-- BORÇ BLOĞU -->
                     <div class="rounded-xl bg-slate-950/80 border border-red-500/30 p-3 space-y-2">
@@ -139,7 +166,7 @@
                                 <span class="font-semibold text-rose-100">Borç (Çıkış)</span>
                             </div>
                             <span id="debt-summary" class="text-rose-200 font-medium">
-                                <!-- JS: Toplam: xx ₺ -->
+                                <!-- JS dolduruyor -->
                             </span>
                         </div>
 
@@ -176,7 +203,7 @@
                                 <span class="font-semibold text-emerald-100">Alacak (Giriş)</span>
                             </div>
                             <span id="credit-summary" class="text-emerald-200 font-medium">
-                                <!-- JS: Toplam: xx ₺ -->
+                                <!-- JS dolduruyor -->
                             </span>
                         </div>
 
@@ -280,7 +307,7 @@
                     </div>
 
                     <div class="flex flex-col">
-                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Ara (başlık/kategori)</label>
+                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Ara (başlık/açıklama)</label>
                         <input
                             type="text"
                             id="search-filter"
@@ -316,7 +343,7 @@
                         <tr>
                             <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Tarih</th>
                             <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Başlık</th>
-                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Kategori</th>
+                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Açıklama</th>
                             <th class="px-3 py-2 text-right text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Tutar</th>
                             <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Durum</th>
                             <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Tür</th>
@@ -437,11 +464,11 @@
                             />
                         </div>
                         <div>
-                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Kategori (opsiyonel)</label>
+                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Açıklama (opsiyonel)</label>
                             <input
                                 type="text"
                                 id="category"
-                                placeholder="Ev, okul, kredi kartı..."
+                                placeholder="Ev, okul, kredi kartı, not..."
                                 class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm placeholder:text-slate-500"
                             />
                         </div>
@@ -479,7 +506,7 @@
                             </button>
                         </div>
                         <p class="text-[11px] md:text-xs text-slate-500">
-                            Banka adına tıkladığında başlık, kategori ve tür dolar. Tarih ve tutarı girmek yeterli.
+                            Banka adına tıkladığında başlık, açıklama ve tür dolar. Tarih ve tutarı girmek yeterli.
                         </p>
                     </div>
 
@@ -519,16 +546,37 @@
                                 <option value="incoming">Alacak / Tahsilat (Giriş)</option>
                             </select>
                         </div>
-                        <div class="flex flex-col gap-1">
-                            <label class="inline-flex items-center gap-2 text-xs md:text-sm text-slate-200">
-                                <input type="checkbox" id="isPaid" class="w-4 h-4" />
-                                <span>Ödendi olarak işaretle</span>
-                            </label>
-                            <label class="inline-flex items-center gap-2 text-xs md:text-sm text-slate-200">
-                                <input type="checkbox" id="isRecurring" class="w-4 h-4" />
-                                <span>Her ay tekrarlayan ödeme</span>
-                            </label>
+
+                        <div class="flex flex-col gap-2">
+                            <div class="flex flex-col gap-1">
+                                <label class="inline-flex items-center gap-2 text-xs md:text-sm text-slate-200">
+                                    <input type="checkbox" id="isPaid" class="w-4 h-4" />
+                                    <span>Ödendi olarak işaretle</span>
+                                </label>
+                                <label class="inline-flex items-center gap-2 text-xs md:text-sm text-slate-200">
+                                    <input type="checkbox" id="isRecurring" class="w-4 h-4" />
+                                    <span>Her ay tekrarlayan ödeme</span>
+                                </label>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] md:text-xs text-slate-300 mb-1">
+                                    Tekrar sayısı (ay)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="repeatMonths"
+                                    min="1"
+                                    max="60"
+                                    class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-2 py-1.5 text-xs md:text-sm"
+                                    placeholder="Örn: 6"
+                                />
+                                <p class="text-[10px] md:text-[11px] text-slate-500 mt-1">
+                                    Sadece “Her ay tekrarlayan ödeme” işaretliyse dikkate alınır.
+                                </p>
+                            </div>
                         </div>
+
                         <div class="flex justify-end gap-2">
                             <button
                                 type="button"
@@ -592,6 +640,7 @@
 
             bindAuthEvents();
             bindAppEvents();
+            setDefaultMonthFilterToCurrent();
 
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -610,6 +659,16 @@
             });
         });
 
+        function setDefaultMonthFilterToCurrent() {
+            const input = document.getElementById("month-filter");
+            if (!input) return;
+            if (input.value) return; // kullanıcı değiştirdiyse bozma
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = String(today.getMonth() + 1).padStart(2, "0");
+            input.value = `${y}-${m}`;
+        }
+
         function showAuth() {
             document.getElementById("auth-section").classList.remove("hidden");
             document.getElementById("app-section").classList.add("hidden");
@@ -622,6 +681,7 @@
             document.getElementById("app-section").classList.remove("hidden");
             const emailLabel = document.getElementById("user-email-label");
             if (emailLabel) emailLabel.textContent = currentUserEmail || "(E-posta yok)";
+            setDefaultMonthFilterToCurrent();
         }
 
         function bindAuthEvents() {
@@ -888,6 +948,7 @@
             const titleEl = document.getElementById("modal-title");
             const submitBtn = document.getElementById("submit-btn");
             const isPaidChk = document.getElementById("isPaid");
+            const repeatInput = document.getElementById("repeatMonths");
 
             titleEl.textContent = "Ödemeyi Düzenle";
             submitBtn.textContent = "Güncelle";
@@ -902,6 +963,14 @@
             document.getElementById("type").value = payment.type;
             document.getElementById("isPaid").checked = payment.isPaid;
             document.getElementById("isRecurring").checked = !!payment.isRecurring;
+
+            if (repeatInput) {
+                if (payment.isRecurring && typeof payment.repeatMonthsRemaining === "number" && payment.repeatMonthsRemaining >= 0) {
+                    repeatInput.value = String(payment.repeatMonthsRemaining + 1);
+                } else {
+                    repeatInput.value = "";
+                }
+            }
 
             showModal();
         }
@@ -931,6 +1000,8 @@
             document.getElementById("type").value = "outgoing";
             const vc = document.getElementById("voice-command");
             if (vc) vc.value = "";
+            const repeatInput = document.getElementById("repeatMonths");
+            if (repeatInput) repeatInput.value = "";
         }
 
         function toTitleCase(str) {
@@ -971,7 +1042,7 @@
                     searchSpan = t.substring(start, liraIndex);
                 }
 
-            let numMatch = searchSpan.match(/(\d[\d.,]*)/);
+                let numMatch = searchSpan.match(/(\d[\d.,]*)/);
                 if (numMatch) {
                     let n = numMatch[1].trim();
 
@@ -1079,6 +1150,8 @@
             const type = document.getElementById("type").value;
             let isPaid = document.getElementById("isPaid").checked;
             const isRecurring = document.getElementById("isRecurring").checked;
+            const repeatInput = document.getElementById("repeatMonths");
+            let repeatMonthsRemaining = 0;
 
             if (!date || !title || isNaN(amount)) {
                 alert("Lütfen tarih, başlık ve tutar alanlarını doldurun.");
@@ -1087,6 +1160,16 @@
 
             title = toTitleCase(title);
             category = toTitleCase(category);
+
+            if (isRecurring && repeatInput) {
+                const rawVal = repeatInput.value.trim();
+                if (rawVal) {
+                    const num = parseInt(rawVal, 10);
+                    if (!isNaN(num) && num > 1) {
+                        repeatMonthsRemaining = num - 1; // bu ay dahil, gelecekteki tekrar sayısı
+                    }
+                }
+            }
 
             try {
                 if (currentFormMode === "payment") {
@@ -1099,6 +1182,7 @@
                             type,
                             isPaid,
                             isRecurring,
+                            repeatMonthsRemaining: isRecurring ? repeatMonthsRemaining : 0,
                             userId: currentUserId,
                             mode: "payment"
                         });
@@ -1111,12 +1195,13 @@
                             type,
                             isPaid,
                             isRecurring,
+                            repeatMonthsRemaining: isRecurring ? repeatMonthsRemaining : 0,
                             userId: currentUserId,
                             mode: "payment"
                         });
                     }
                 } else {
-                    // Planlı ödeme: her zaman isPaid = false, isRecurring şimdilik kaydedilmiyor
+                    // Planlı ödeme: her zaman isPaid = false, tekrarsız
                     isPaid = false;
                     await paymentsCol.add({
                         date,
@@ -1126,6 +1211,7 @@
                         type,
                         isPaid: false,
                         isRecurring: false,
+                        repeatMonthsRemaining: 0,
                         userId: currentUserId,
                         mode: "scheduled"
                     });
@@ -1204,6 +1290,7 @@
                         type: s.type,
                         isPaid: false,
                         isRecurring: false,
+                        repeatMonthsRemaining: 0,
                         userId: currentUserId,
                         mode: "payment"
                     });
@@ -1271,8 +1358,13 @@
                 if (!ok) return;
             }
 
+            // Bu ayki tekrarlayan ödemeleri al (kalan tekrar sayısı > 0 ise, ya da eski kayıtsa alan yoksa sonsuz kabul et)
             const recurringThisMonth = realPayments.filter(
-                p => p.isRecurring && p.date && p.date.startsWith(currentPeriod)
+                p =>
+                    p.isRecurring &&
+                    p.date &&
+                    p.date.startsWith(currentPeriod) &&
+                    (p.repeatMonthsRemaining === undefined || p.repeatMonthsRemaining > 0)
             );
 
             for (const p of recurringThisMonth) {
@@ -1286,6 +1378,14 @@
 
                 const newDate = `${nextPeriod}-${safeDay}`;
 
+                let newRemaining;
+                if (typeof p.repeatMonthsRemaining === "number" && p.repeatMonthsRemaining > 0) {
+                    newRemaining = p.repeatMonthsRemaining - 1;
+                } else {
+                    // Eski kayıtlar için (repeatMonthsRemaining yoksa) sonsuz gibi davran
+                    newRemaining = p.repeatMonthsRemaining;
+                }
+
                 await paymentsCol.add({
                     date: newDate,
                     amount: p.amount,
@@ -1294,6 +1394,7 @@
                     type: p.type,
                     isPaid: false,
                     isRecurring: true,
+                    repeatMonthsRemaining: newRemaining,
                     userId: currentUserId,
                     mode: "payment"
                 });
