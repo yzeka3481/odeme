@@ -100,7 +100,7 @@
 
         <!-- Özet Kartları -->
         <div class="space-y-3 md:space-y-4 mb-3 md:mb-4">
-            <!-- Toplam Borç / Alacak / Fark - Yanyana (her ekranda 3 kolon) -->
+            <!-- Toplam Borç / Alacak / Fark - Yanyana (3 kolon) -->
             <div class="grid grid-cols-3 gap-2 md:gap-4">
                 <div class="bg-gradient-to-r from-rose-950 to-red-900 border border-red-500/40 rounded-xl shadow p-2 md:p-3">
                     <div class="text-[10px] md:text-sm text-rose-100/80 text-center">Toplam Borç (Çıkış)</div>
@@ -127,7 +127,7 @@
                 </div>
             </div>
 
-            <!-- ÖDEME DURUMU (YENİ TASARIM) -->
+            <!-- ÖDEME DURUMU (Gelişmiş görünüm) -->
             <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
                 <!-- Başlık + Genel Özet -->
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
@@ -662,7 +662,7 @@
         function setDefaultMonthFilterToCurrent() {
             const input = document.getElementById("month-filter");
             if (!input) return;
-            if (input.value) return; // kullanıcı değiştirdiyse bozma
+            if (input.value) return; // kullanıcı zaten seçtiyse bozma
             const today = new Date();
             const y = today.getFullYear();
             const m = String(today.getMonth() + 1).padStart(2, "0");
@@ -1315,13 +1315,17 @@
         }
 
         function getCurrentPeriod() {
-            const monthFilter = document.getElementById("month-filter").value;
-            if (monthFilter) return monthFilter;
-
-            const today = new Date();
-            const y = today.getFullYear();
-            const m = String(today.getMonth() + 1).padStart(2, "0");
-            return `${y}-${m}`;
+            const monthFilterInput = document.getElementById("month-filter");
+            let monthFilter = monthFilterInput.value;
+            if (!monthFilter) {
+                // Eğer boşsa, şu anki ayı set et
+                const today = new Date();
+                const y = today.getFullYear();
+                const m = String(today.getMonth() + 1).padStart(2, "0");
+                monthFilter = `${y}-${m}`;
+                monthFilterInput.value = monthFilter;
+            }
+            return monthFilter;
         }
 
         function getNextPeriod(period) {
@@ -1342,11 +1346,12 @@
                 return;
             }
 
-            const currentPeriod = getCurrentPeriod();
-            const nextPeriod = getNextPeriod(currentPeriod);
+            const currentPeriod = getCurrentPeriod();     // örn: 2026-02
+            const nextPeriod = getNextPeriod(currentPeriod); // örn: 2026-03
 
             const realPayments = payments.filter(p => p.mode !== "scheduled");
 
+            // Bu ayda ödenmemiş var mı (sadece bilgi amaçlı uyarı için)
             const unpaidExists = realPayments.some(
                 p => !p.isPaid && p.date && p.date.startsWith(currentPeriod)
             );
@@ -1358,7 +1363,7 @@
                 if (!ok) return;
             }
 
-            // Bu ayki tekrarlayan ödemeleri al (kalan tekrar sayısı > 0 ise, ya da eski kayıtsa alan yoksa sonsuz kabul et)
+            // Bu ayki tekrarlayan ödemeleri al
             const recurringThisMonth = realPayments.filter(
                 p =>
                     p.isRecurring &&
@@ -1367,6 +1372,7 @@
                     (p.repeatMonthsRemaining === undefined || p.repeatMonthsRemaining > 0)
             );
 
+            // Her bir tekrarlayan ödemeyi bir sonraki aya taşı
             for (const p of recurringThisMonth) {
                 const [ny, nm] = nextPeriod.split("-");
                 const yearNum = parseInt(ny, 10);
@@ -1378,6 +1384,22 @@
 
                 const newDate = `${nextPeriod}-${safeDay}`;
 
+                // *** ÖNEMLİ: Aynı kullanıcı için aynı tarih+başlık+tutar+tür kombinasyonu zaten varsa
+                // yeni kopya oluşturma -> tekrar tekrar "Yeni Aya Geç" tıklayınca çoğalmayı engeller
+                const duplicate = realPayments.find(q =>
+                    q.mode !== "scheduled" &&
+                    q.userId === currentUserId &&
+                    q.date === newDate &&
+                    q.title === p.title &&
+                    q.amount === p.amount &&
+                    q.type === p.type &&
+                    q.isRecurring === true
+                );
+                if (duplicate) {
+                    // Bu kayıt için daha önce aynı ayda kopya oluşturulmuş, atla
+                    continue;
+                }
+
                 let newRemaining;
                 if (typeof p.repeatMonthsRemaining === "number" && p.repeatMonthsRemaining > 0) {
                     newRemaining = p.repeatMonthsRemaining - 1;
@@ -1386,22 +1408,32 @@
                     newRemaining = p.repeatMonthsRemaining;
                 }
 
-                await paymentsCol.add({
-                    date: newDate,
-                    amount: p.amount,
-                    title: p.title,
-                    category: p.category,
-                    type: p.type,
-                    isPaid: false,
-                    isRecurring: true,
-                    repeatMonthsRemaining: newRemaining,
-                    userId: currentUserId,
-                    mode: "payment"
-                });
+                try {
+                    await paymentsCol.add({
+                        date: newDate,
+                        amount: p.amount,
+                        title: p.title,
+                        category: p.category,
+                        type: p.type,
+                        isPaid: false,
+                        isRecurring: true,
+                        repeatMonthsRemaining: newRemaining,
+                        userId: currentUserId,
+                        mode: "payment"
+                    });
+                } catch (err) {
+                    console.error("Tekrarlayan ödeme kopyalama hatası:", err);
+                }
             }
 
+            // Ekrandaki dönem filtresini de bir ay ileri al
             const monthInput = document.getElementById("month-filter");
             monthInput.value = nextPeriod;
+
+            // Planlı ödemelerin takvimine de yansısın diye calendarYear/Month'u senkronla
+            const [ny, nm] = nextPeriod.split("-");
+            calendarYear = parseInt(ny, 10);
+            calendarMonth = parseInt(nm, 10) - 1; // 0-11
 
             renderAll();
         }
@@ -1507,7 +1539,7 @@
             if (!tbody) return;
             tbody.innerHTML = "";
 
-            const monthFilter = document.getElementById("month-filter").value;
+            const monthFilter = document.getElementById("month-filter").value || getCurrentPeriod();
             const statusFilter = document.getElementById("status-filter").value;
             const typeFilter = document.getElementById("type-filter").value;
             const searchFilter = document.getElementById("search-filter").value.toLowerCase();
