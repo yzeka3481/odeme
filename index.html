@@ -506,8 +506,8 @@
       --shadow: 0 18px 46px rgba(15,23,42,.10);
     }
     body.light .tabbarWrap{
-      background: linear-gradient(180deg, rgba(246,247,251,0), rgba(246,247,251,.86) 22%, rgba(246,247,251,.98));
-      border-top:1px solid rgba(15,23,42,.10);
+      background: linear-gradient(180deg, rgba(238,242,255,0), rgba(238,242,255,.78) 22%, rgba(238,242,255,.96));
+      border-top:1px solid rgba(11,18,32,.10);
     }
     body.light .tab{
       background: rgba(255,255,255,.78);
@@ -546,18 +546,16 @@
     body.light .expHead{ color:#8b1e33; background: rgba(251,113,133,.18); }
 
 
-    /* --- Tabbar: no horizontal scrolling --- */
-    .tabbar{ display:flex; justify-content:space-between; }
-    .tab{ flex:1; justify-content:center; }
-    @media (max-width: 420px){
-      .tab{ padding:8px 6px; }
-      .tab .label{ display:none; }
+    /* --- Tabbar: fit small screens (no horizontal scroll) --- */
+    .tabbar{ display:flex; justify-content:space-between; gap:8px; overflow:hidden; }
+    .tab{ flex:1; min-width:0; justify-content:center; padding:10px 8px; font-size:11px; }
+    .tab .ico{ font-size:18px; }
+    @media (max-width: 380px){
+      .tab{ padding:9px 6px; font-size:10px; }
+      .tab .ico{ font-size:18px; }
     }
 
-
-body.light .btn{ background: rgba(255,255,255,.92); border-color: rgba(15,23,42,.12); color: var(--txt);} 
-body.light .btn.primary{ background: rgba(79,124,255,.92); color:white; border-color: rgba(79,124,255,.0);} 
-
+</style>
 </head>
 <body>
   <div class="app">
@@ -730,11 +728,11 @@ body.light .btn.primary{ background: rgba(79,124,255,.92); color:white; border-c
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-  const APP_VERSION = "v9.3";
+  const APP_VERSION = "v9.3a";
   const BUILD_DATE = "2026-03-05";
   (function(){
     var firebaseConfig = {
-     apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
+      apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
           authDomain: "gezi-5b54b.firebaseapp.com",
           projectId: "gezi-5b54b",
           storageBucket: "gezi-5b54b.firebasestorage.app",
@@ -923,17 +921,7 @@ function toast(msg){
     var editingId = null; // doc id
     var editingRow = null;
 
-    
-    function applyRecurringUI(){
-      var cb = $("fRecurring");
-      var box = $("fRecurringBox");
-      var months = $("fRecurringMonths");
-      if(!cb || !box || !months) return;
-      box.style.display = cb.checked ? "block" : "none";
-      months.disabled = !cb.checked;
-      if(!cb.checked) months.value = "";
-    }
-function openAddModalForCreate(){
+    function openAddModalForCreate(){
       editingId = null;
       editingRow = null;
       $("addTitle").textContent = "Yeni Kayıt";
@@ -1447,12 +1435,14 @@ function openAddModalForCreate(){
 
       var cx = 90, cy = 90, r = 78;
       var start = -Math.PI/2;
+
       function arcPath(a0, a1){
         var x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
         var x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
         var large = (a1-a0) > Math.PI ? 1 : 0;
         return "M "+cx+" "+cy+" L "+x0.toFixed(2)+" "+y0.toFixed(2)+" A "+r+" "+r+" 0 "+large+" 1 "+x1.toFixed(2)+" "+y1.toFixed(2)+" Z";
       }
+
       var paths = "";
       slices.forEach(function(s){
         var frac = s.amount/total;
@@ -1551,7 +1541,7 @@ function openAddModalForCreate(){
           : '<span class="miniPill unpaid">'+(dir==="income" ? "Bekliyor" : "Ödenmedi")+'</span>';
 
         return ''+
-          '<div class=\"rowCard\" data-open=\"item\" data-id=\"'+escapeHtml(r.id)+'\" style=\"background:'+hexToRgba(colorForCategory(r.category), (document.body.classList.contains('light')?0.16:0.10))+'; border-color:'+hexToRgba(colorForCategory(r.category), (document.body.classList.contains('light')?0.20:0.14))+'\">'+
+          '<div class=\"rowCard\" data-open=\"item\" data-id=\"'+escapeHtml(r.id)+'\" style=\"background:'+hexToRgba(colorForCategory(r.category), 0.10)+'; border-color:'+hexToRgba(colorForCategory(r.category), 0.14)+'\">'+
             '<div class="rowMain">'+
               '<div class="rowTitle">'+title+'</div>'+
               '<div class="rowMeta">'+dot+'<span>'+cat+'</span></div>'+
