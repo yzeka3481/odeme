@@ -196,15 +196,13 @@ import { getFirestore, collection, query, where, onSnapshot, addDoc, doc, setDoc
 
 // 1) BURAYI DOLDUR (senin config)
 const firebaseConfig = {
-  const firebaseConfig = {
-          apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
-          authDomain: "gezi-5b54b.firebaseapp.com",
-          projectId: "gezi-5b54b",
-          storageBucket: "gezi-5b54b.firebasestorage.app",
-          messagingSenderId: "926426747002",
-          appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
-          measurementId: "G-KB8SKRCQ9X"
-        };
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+  projectId: "PASTE_YOUR_PROJECT_ID",
+  storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+  messagingSenderId: "PASTE_YOUR_SENDER_ID",
+  appId: "PASTE_YOUR_APP_ID"
+};
 
 const $ = (id) => document.getElementById(id);
 const fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
