@@ -482,6 +482,69 @@
       .heroGrid{ grid-template-columns: 1fr 1fr auto; }
     }
 
+
+    /* --- Tabbar mobile fit --- */
+    @media (max-width: 420px){
+      .tabbar{ gap:7px; }
+      .tab{ padding:8px 6px; font-size:10px; border-radius:14px; }
+      .ico{ font-size:18px; }
+    }
+    @media (max-width: 360px){
+      .tabbar{ gap:6px; }
+      .tab{ padding:7px 5px; font-size:10px; }
+    }
+
+
+    /* --- Theme (Dark/Light) --- */
+    body.light{
+      --bg: #eef2ff;
+      --panel: rgba(255,255,255,.82);
+      --panel2: rgba(255,255,255,.72);
+      --txt: #0b1220;
+      --muted: rgba(11,18,32,.62);
+      --line: rgba(11,18,32,.12);
+      --shadow: 0 18px 50px rgba(11,18,32,.12);
+    }
+    body.light .tabbarWrap{
+      background: linear-gradient(180deg, rgba(238,242,255,0), rgba(238,242,255,.78) 22%, rgba(238,242,255,.96));
+      border-top:1px solid rgba(11,18,32,.10);
+    }
+    body.light .tab{
+      background: rgba(255,255,255,.78);
+      border-color: rgba(11,18,32,.10);
+    }
+    body.light .card, body.light .modal{
+      background: rgba(255,255,255,.86);
+      border-color: rgba(11,18,32,.12);
+    }
+
+
+    /* --- Section headers (income/expense) --- */
+    .secHead{
+      width:100%;
+      padding:7px 10px;
+      border-radius: 14px;
+      font-weight:900;
+      letter-spacing:.6px;
+      font-size:11px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .incHead{
+      background: rgba(45,212,191,.14);
+      border-color: rgba(45,212,191,.24);
+      color: #b9fff4;
+    }
+    .expHead{
+      background: rgba(251,113,133,.14);
+      border-color: rgba(251,113,133,.24);
+      color: #ffd0d8;
+    }
+    body.light .incHead{ color:#056b60; background: rgba(45,212,191,.18); }
+    body.light .expHead{ color:#8b1e33; background: rgba(251,113,133,.18); }
+
 </style>
 </head>
 <body>
@@ -634,6 +697,20 @@
     </div>
   </div>
 
+
+  <div class="modalBg" id="policyBg">
+    <div class="modal">
+      <div class="modalTop">
+        <strong>Gizlilik Politikası & Aydınlatma Metni</strong>
+        <button class="btn small" id="policyClose">✕</button>
+      </div>
+      <div class="modalBody" id="policyBody"></div>
+      <div class="actions">
+        <button class="btn primary" id="policyOk" style="flex:1;">Kapat</button>
+      </div>
+    </div>
+  </div>
+
 <div id="toast" class="toast"></div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -641,23 +718,22 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-  const APP_VERSION = "v9.1";
+  const APP_VERSION = "v9.2";
   const BUILD_DATE = "2026-03-05";
   (function(){
     var firebaseConfig = {
-      apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
-          authDomain: "gezi-5b54b.firebaseapp.com",
-          projectId: "gezi-5b54b",
-          storageBucket: "gezi-5b54b.firebasestorage.app",
-          messagingSenderId: "926426747002",
-          appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
-          measurementId: "G-KB8SKRCQ9X"
-        };
-
+      apiKey: "PASTE_YOUR_API_KEY",
+      authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+      projectId: "PASTE_YOUR_PROJECT_ID",
+      storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+      messagingSenderId: "PASTE_YOUR_SENDER_ID",
+      appId: "PASTE_YOUR_APP_ID"
+    };
 
     function $(id){ return document.getElementById(id); }
     var __verEl = document.getElementById("appVer");
     if(__verEl){ __verEl.textContent = APP_VERSION + " • " + BUILD_DATE; }
+    initTheme();
     var fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
 
     var CATEGORY_COLORS = {
@@ -680,7 +756,109 @@
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
     }
-    function toast(msg){
+    
+    // --- Theme ---
+    function setTheme(mode){
+      try{
+        localStorage.setItem("ot_theme", mode);
+        document.body.classList.toggle("light", mode==="light");
+        toast(mode==="light" ? "Açık tema" : "Koyu tema");
+      }catch(e){}
+    }
+    function initTheme(){
+      var m = "dark";
+      try{ m = localStorage.getItem("ot_theme") || "dark"; }catch(e){}
+      document.body.classList.toggle("light", m==="light");
+    }
+
+    // --- Export / Import ---
+    function exportData(){
+      if(!user){ toast("Önce giriş yap."); return; }
+      var data = allRows.filter(function(r){ return r.userId === user.uid; });
+      var payload = { version: APP_VERSION, exportedAt: new Date().toISOString(), userId: user.uid, items: data };
+      var blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "odeme-takip-backup-"+selectedMonth+"-"+APP_VERSION+".json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      toast("Dışa aktarıldı.");
+    }
+
+    function importData(file){
+      if(!user){ toast("Önce giriş yap."); return; }
+      var reader = new FileReader();
+      reader.onload = function(){
+        try{
+          var payload = JSON.parse(String(reader.result||"{}"));
+          var items = payload.items || payload || [];
+          if(!Array.isArray(items)) throw new Error("JSON formatı hatalı.");
+          if(!items.length){ toast("İçe aktarılacak kayıt yok."); return; }
+
+          // normalize + write with batched chunks
+          var now = Date.now();
+          var norm = items.map(function(x, i){
+            var r = Object.assign({}, x);
+            delete r.id; // new id
+            r.userId = user.uid;
+            if(!r.date && r.month) r.date = r.month + "-01";
+            if(!r.mode) r.mode = "payment";
+            if(typeof r.isPaid !== "boolean") r.isPaid = false;
+            if(typeof r.isRecurring !== "boolean") r.isRecurring = false;
+            if(!r.category) r.category = "Diğer";
+            if(!r.title) r.title = "Aktarılan Kayıt";
+            r._importedAt = now;
+            return r;
+          });
+
+          var chunks = [];
+          for(var i=0;i<norm.length;i+=350) chunks.push(norm.slice(i,i+350));
+
+          (function writeChunk(idx){
+            if(idx>=chunks.length){ toast("İçe aktarma tamamlandı."); renderPage(); return; }
+            var batch = db.batch();
+            chunks[idx].forEach(function(r){
+              var ref = db.collection("payments").doc();
+              batch.set(ref, r);
+            });
+            batch.commit().then(function(){
+              toast("İçe aktarılan: "+Math.min((idx+1)*350, norm.length)+"/"+norm.length);
+              writeChunk(idx+1);
+            }).catch(function(e){
+              console.error(e);
+              toast("İçe aktarma hatası: " + (e.message||e));
+            });
+          })(0);
+
+        }catch(e){
+          toast("İçe aktarma hatası: " + (e.message||e));
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --- Privacy Policy Modal ---
+    function openPolicyModal(){
+      var bg = $("policyBg");
+      var body = $("policyBody");
+      var txt =
+        "Gizlilik Politikası\\n\\n"+
+        "Bu uygulama, yalnızca sizin oluşturduğunuz gelir/gider kayıtlarını saklar.\\n"+
+        "Kayıtlarınız Firebase/Firestore üzerinde, sadece hesabınız ile ilişkilendirilmiş şekilde tutulur.\\n\\n"+
+        "Aydınlatma Metni\\n\\n"+
+        "• Veri sorumlusu: Uygulama sahibi\\n"+
+        "• İşlenen veriler: Başlık, kategori, tutar, tarih, not ve ödeme durumu\\n"+
+        "• Amaç: Ödeme takibi ve raporlama\\n"+
+        "• Saklama: Hesabınız silinene kadar veya siz silene kadar\\n\\n"+
+        "Not: Bu metin taslaktır. İstersen kurumsal/kişisel ihtiyaçlarına göre düzenleriz.";
+      body.innerHTML = '<pre style="white-space:pre-wrap; margin:0; font-family:ui-sans-serif, system-ui; color:var(--txt);">'+escapeHtml(txt)+'</pre>';
+      bg.classList.add("show");
+      $("policyClose").onclick = closePolicyModal;
+      $("policyOk").onclick = closePolicyModal;
+    }
+    function closePolicyModal(){ $("policyBg").classList.remove("show"); }
+function toast(msg){
       var t = $("toast");
       t.textContent = msg;
       t.classList.add("show");
@@ -1225,46 +1403,34 @@
       var total = cats.reduce(function(s,x){ return s + x.amount; }, 0);
 
       if(!total){
-        return '<div class="card spending" style="grid-column: span 8;"><h2>Nereye ne harcadım?</h2><div class="hint">Bu ay gider yok.</div></div>';
+        return '<div class="card spending" style="grid-column: span 12;"><h2>Nereye ne harcadım?</h2><div class="hint">Bu ay gider yok.</div></div>';
       }
 
-      var top = cats.slice(0,6);
-      var rest = cats.slice(6);
-      var restSum = rest.reduce(function(s,x){ return s + x.amount; }, 0);
-
-      var viz = top.slice();
-      if(restSum > 0) viz.push({ category:"Diğer", amount: restSum });
-
-      var parts = viz.map(function(x){ return { value: x.amount/total, color: colorForCategory(x.category) }; });
-      var svg = makeDonutSVG(parts);
-
-      var legend = viz.map(function(x){
-        var pct = Math.round((x.amount/total)*100);
-        return '<div class="legItem"><div class="legLeft"><span class="dot" style="background:'+colorForCategory(x.category)+'"></span><div class="legName">'+escapeHtml(x.category)+'</div></div><div class="legVal">'+pct+'% • '+fmt.format(x.amount)+'</div></div>';
-      }).join("");
-
-      var max = viz[0].amount || 1;
-      var bars = viz.map(function(x){
-        var w = Math.max(6, Math.round((x.amount/max)*100));
-        return '<div><div class="hint" style="display:flex;justify-content:space-between;gap:10px;"><span><span class="dot" style="background:'+colorForCategory(x.category)+'"></span>'+escapeHtml(x.category)+'</span><span>'+fmt.format(x.amount)+'</span></div><div class="bar"><div style="width:'+w+'%;background:'+colorForCategory(x.category)+'"></div></div></div>';
+      var top = cats.slice(0,8);
+      var bars = top.map(function(x){
+        var pct = Math.max(1, Math.round((x.amount/total)*100));
+        var color = colorForCategory(x.category);
+        return ''+
+          '<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0;">'+
+            '<div style="display:flex; align-items:center; gap:10px; min-width:0;">'+
+              '<span class="dot" style="background:'+color+'"></span>'+
+              '<div style="min-width:0;">'+
+                '<div style="font-weight:800; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+escapeHtml(x.category)+'</div>'+
+                '<div class="hint" style="margin-top:2px;">'+pct+'% • '+fmt.format(x.amount)+'</div>'+
+              '</div>'+
+            '</div>'+
+            '<div style="flex:1; max-width:44%; height:10px; border-radius:999px; background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.06); overflow:hidden;">'+
+              '<div style="height:100%; width:'+pct+'%; background:'+color+'; opacity:.95;"></div>'+
+            '</div>'+
+          '</div>';
       }).join("");
 
       return ''+
-        '<div class="card" style="grid-column: span 8;">'+
+        '<div class="card spending" style="grid-column: span 12;">'+
           '<h2>Nereye ne harcadım?</h2>'+
-          '<div class="chartRow">'+
-            '<div class="donutWrap">'+
-              '<div class="donut">'+
-                svg+
-                '<div class="donutCenter"><div class="big">'+fmt.format(total)+'</div><div class="small">Toplam gider</div></div>'+
-              '</div>'+
-              '<div class="legend">'+legend+'</div>'+
-            '</div>'+
-            '<div style="flex:1;min-width:260px;">'+
-              '<div class="hint">Kategori dağılımı (gider)</div>'+
-              '<div class="barList">'+bars+'</div>'+
-            '</div>'+
-          '</div>'+
+          '<div class="hint" style="margin-top:6px;">Toplam gider: <b>'+fmt.format(total)+'</b></div>'+
+          '<div class="hr"></div>'+
+          bars+
         '</div>';
     }
 
@@ -1360,13 +1526,39 @@
 
       document.getElementById("itemTitle").textContent = "Kayıt Detayı";
       document.getElementById("itemBody").innerHTML =
-        '<div class="hint">Tarih</div><div style="font-weight:750">'+escapeHtml(String(row.date||"").slice(0,10) || "—")+'</div>'+
-        '<div class="hr"></div>'+
-        '<div class="hint">Başlık</div><div style="font-weight:750">'+escapeHtml(row.title||"—")+'</div>'+
-        '<div class="hint" style="margin-top:8px;">Kategori</div><div style="font-weight:750">'+dot+'<span>'+escapeHtml(row.category||"Diğer")+'</span></div>'+
-        '<div class="hint" style="margin-top:8px;">Tutar</div><div style="font-weight:850; font-size:18px; color:'+(dir==="income"?'var(--good)':'var(--bad)')+'">'+fmt.format(Number(row.amount||0))+'</div>'+
-        '<div class="hr"></div>'+
-        '<div style="display:flex; gap:8px; flex-wrap:wrap;">'+dirTag+paidTag+recTag+'</div>';
+        '<div style="display:flex; flex-direction:column; gap:12px;">'+
+          '<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">'+
+            '<div style="min-width:0;">'+
+              '<div style="font-size:14px; font-weight:850; letter-spacing:.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+escapeHtml(row.title||"—")+'</div>'+
+              '<div class="hint" style="margin-top:4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">'+
+                '<span class="chip">'+escapeHtml(row.date||"")+'</span>'+
+                '<span class="chip">'+dot+'<span>'+escapeHtml(row.category||"Diğer")+'</span></span>'+
+                recTag+
+                dirTag+
+              '</div>'+
+            '</div>'+
+            '<div style="text-align:right; white-space:nowrap;">'+
+              '<div style="font-size:18px; font-weight:900; color:'+(dir==="income" ? "var(--good)" : "var(--bad)")+';">'+fmt.format(Number(row.amount||0))+'</div>'+
+              '<div style="margin-top:6px;">'+(isPaid(row)?'<span class="miniPill paid">'+(dir==="income"?'Alındı':'Ödendi')+'</span>':'<span class="miniPill unpaid">'+(dir==="income"?'Bekliyor':'Ödenmedi')+'</span>')+'</div>'+
+            '</div>'+
+          '</div>'+
+
+          '<div class="hr"></div>'+
+
+          '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">'+
+            '<div class="heroMini">'+
+              '<div class="lbl">Açıklama</div>'+
+              '<div class="hint" style="margin-top:6px; white-space:pre-wrap;">'+escapeHtml(row.note||"—")+'</div>'+
+            '</div>'+
+            '<div class="heroMini">'+
+              '<div class="lbl">Detay</div>'+
+              '<div class="hint" style="margin-top:6px;">'+
+                '<div><b>Mod:</b> '+escapeHtml(row.mode||"payment")+'</div>'+
+                '<div><b>Durum:</b> '+(isPaid(row)?'Tamamlandı':'Bekliyor')+'</div>'+
+              '</div>'+
+            '</div>'+
+          '</div>'+
+        '</div>';
 
       var btn = document.getElementById("itemTogglePaid");
       btn.textContent = isPaid(row) ? "Geri Al" : (dir==="income" ? "Alındı" : "Ödendi");
@@ -1679,8 +1871,9 @@
       if(currentPage === "expense"){
         var rowsE = filteredRowsForMonth("expense");
         content.innerHTML =
-          '<div class="card">'+
-            '<h2>Gider • '+selectedMonth+'</h2>'+
+          '<div class="card secCard expSec">'+
+            '<div class="secHead expHead">GİDER</div>'+ 
+            '<h2 style="margin-top:8px;">'+selectedMonth+'</h2>'+
             '<div class="hint">İlk bakış: Başlık • Kategori • Tutar (tıkla → detay)</div>'+
             renderCompactList(rowsE)+
           '</div>';
@@ -1691,8 +1884,9 @@
       if(currentPage === "income"){
         var rowsI = filteredRowsForMonth("income");
         content.innerHTML =
-          '<div class="card">'+
-            '<h2>Gelir • '+selectedMonth+'</h2>'+
+          '<div class="card secCard incSec">'+
+            '<div class="secHead incHead">GELİR</div>'+ 
+            '<h2 style="margin-top:8px;">'+selectedMonth+'</h2>'+
             '<div class="hint">İlk bakış: Başlık • Kategori • Tutar (tıkla → detay)</div>'+
             renderCompactList(rowsI)+
           '</div>';
@@ -1715,14 +1909,59 @@
         content.innerHTML =
           '<div class="card">'+
             '<h2>Ayarlar</h2>'+
+
+            '<div class="hr"></div>'+
+
+            '<div class="hint" style="font-weight:850; margin-bottom:8px;">Tema</div>'+
+            '<div style="display:flex; gap:10px; flex-wrap:wrap;">'+
+              '<button class="btn" id="themeDark">Koyu</button>'+
+              '<button class="btn" id="themeLight">Açık</button>'+
+            '</div>'+
+
+            '<div class="hr"></div>'+
+
+            '<div class="hint" style="font-weight:850; margin-bottom:8px;">Veri Aktarımı</div>'+
+            '<div class="hint">Verilerini yedekleyebilir veya başka cihaza taşıyabilirsin.</div>'+
+            '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">'+
+              '<button class="btn" id="btnExport">Dışa Aktar (JSON)</button>'+
+              '<button class="btn" id="btnImport">İçe Aktar (JSON)</button>'+
+              '<input type="file" id="importFile" accept="application/json" style="display:none" />'+
+            '</div>'+
+
+            '<div class="hr"></div>'+
+
+            '<div class="hint" style="font-weight:850; margin-bottom:8px;">Gizlilik</div>'+
+            '<div class="hint">Gizlilik Politikası ve Aydınlatma Metni</div>'+
+            '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">'+
+              '<button class="btn" id="btnPolicy">Metni Görüntüle</button>'+
+            '</div>'+
+
+            '<div class="hr"></div>'+
+
+            '<div class="hint"><b>Uygulama Sürümü:</b> <span id="verText"></span></div>'+
+            '<div class="hint"><b>Build:</b> <span id="buildText"></span></div>'+
+
+            '<div class="hr"></div>'+
+
+            '<div class="hint" style="font-weight:850; margin-bottom:8px;">Teknik</div>'+
             '<div class="hint"><b>Koleksiyon:</b> payments</div>'+
             '<div class="hint"><b>Kullanıcı alanı:</b> userId</div>'+
             '<div class="hint"><b>Gelir:</b> type=incoming • <b>Gider:</b> type!=incoming</div>'+
-            '<div class="hr"></div>'+
-            '<div class="hint">Firestore Rules (öneri):</div>'+
-            '<pre>rules_version = \'2\';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /payments/{docId} {\n      allow read: if request.auth != null\n        && resource.data.userId == request.auth.uid;\n\n      allow create: if request.auth != null\n        && request.resource.data.userId == request.auth.uid;\n\n      allow update, delete: if request.auth != null\n        && resource.data.userId == request.auth.uid;\n    }\n  }\n}</pre>'+
-            '<div class="hint">Bu sürüm index istememek için <b>orderBy</b> kullanmadan userId ile çekip tarayıcıda filtreler/sıralar.</div>'+
           '</div>';
+
+        // Bind settings actions
+        $("verText").textContent = APP_VERSION;
+        $("buildText").textContent = BUILD_DATE;
+
+        $("themeDark").onclick = function(){ setTheme("dark"); };
+        $("themeLight").onclick = function(){ setTheme("light"); };
+
+        $("btnExport").onclick = exportData;
+        $("btnImport").onclick = function(){ $("importFile").click(); };
+        $("importFile").onchange = function(e){ if(e.target.files && e.target.files[0]) importData(e.target.files[0]); };
+
+        $("btnPolicy").onclick = function(){ openPolicyModal(); };
+
         return;
       }
       }catch(e){ console.error(e); toast('Ekran hatası: ' + (e.message||e)); }
