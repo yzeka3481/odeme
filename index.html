@@ -372,7 +372,7 @@
   <div id="addBg" class="modalBg">
     <div class="modal">
       <div class="modalTop">
-        <strong>Yeni Kayıt</strong>
+        <strong id="addTitle">Yeni Kayıt</strong>
         <button id="addClose" class="btn small">✕</button>
       </div>
       <div class="modalBody">
@@ -411,6 +411,12 @@
             <input id="mRecMonths" type="number" min="1" step="1" placeholder="Kaç ay sürecek? (örn: 4)"/>
             <div class="hint" style="display:flex; align-items:center;">Girdiğin ay dahil sayılır</div>
           </div>
+          <div class="hr" style="margin:10px 0;"></div>
+          <label id="seriesRow" style="display:none;align-items:center;gap:10px;cursor:pointer;">
+            <input id="mSeriesUpdate" type="checkbox"/>
+            <span style="font-weight:650;">Bu seri şablonunu da güncelle (gelecek aylar için)</span>
+          </label>
+
         </div>
 
         <div class="hint">Şema uyumu: <b>userId, type(incoming/payment), isPaid, isRecurring, recurrenceId</b></div>
@@ -444,7 +450,7 @@
   <script>
   (function(){
     var firebaseConfig = {
-     apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
+    apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
           authDomain: "gezi-5b54b.firebaseapp.com",
           projectId: "gezi-5b54b",
           storageBucket: "gezi-5b54b.firebasestorage.app",
@@ -452,7 +458,6 @@
           appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
           measurementId: "G-KB8SKRCQ9X"
         };
-
 
     function $(id){ return document.getElementById(id); }
     var fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
@@ -514,6 +519,94 @@
     var unsub = null;
     var allRows = [];
     var user = null;
+    var editingId = null; // doc id
+    var editingRow = null;
+
+    function openAddModalForCreate(){
+      editingId = null;
+      editingRow = null;
+      $("addTitle").textContent = "Yeni Kayıt";
+      $("mSeriesUpdate").checked = false;
+      $("seriesRow").style.display = "none";
+    }
+
+    function openAddModalForEdit(row){
+      editingId = row.id;
+      editingRow = row;
+      $("addTitle").textContent = "Kayıt Düzenle";
+      $("mDir").value = (normalizeDir(row) === "income") ? "income" : "expense";
+      $("mPaid").value = String(!!row.isPaid);
+      $("mAmount").value = Number(row.amount || 0) || "";
+      $("mDate").value = String(row.date || selectedMonth + "-01").slice(0,10);
+
+      // category
+      fillCategorySelect();
+      var cat = (row.category || "Diğer").trim() || "Diğer";
+      if(PRESET_CATS.includes(cat)){
+        $("mCategorySel").value = cat;
+        $("mCategoryOther").style.display = (cat === "Diğer") ? "" : "none";
+        $("mCategoryOther").value = "";
+      }else{
+        $("mCategorySel").value = "Diğer";
+        $("mCategoryOther").style.display = "";
+        $("mCategoryOther").value = cat;
+      }
+
+      $("mTitle").value = row.title || "";
+
+      // recurring
+      var rec = !!row.isRecurring;
+      $("mRecurring").checked = rec;
+      $("recBox").style.display = rec ? "grid" : "none";
+      $("mRecMonths").value = (row.recurrenceTotalMonths ? Number(row.recurrenceTotalMonths) : "");
+
+      // allow updating template (future months) if recurring
+      if(rec && row.recurrenceId){
+        $("seriesRow").style.display = "flex";
+        $("mSeriesUpdate").checked = false;
+      }else{
+        $("seriesRow").style.display = "none";
+        $("mSeriesUpdate").checked = false;
+      }
+    }
+
+    // Delegated actions (works in overflow tables + mobile Safari)
+    document.addEventListener("click", function(e){
+      var btn = e.target && e.target.closest ? e.target.closest("button[data-act]") : null;
+      if(!btn) return;
+      var act = btn.getAttribute("data-act");
+      var id  = btn.getAttribute("data-id");
+      if(!act || !id) return;
+
+      if(!user){
+        toast("Önce giriş yap.");
+        return;
+      }
+
+      var row = allRows.find(function(r){ return r.id === id; });
+      if(!row) return;
+
+      var ref = db.collection("payments").doc(id);
+
+      if(act === "toggle"){
+        ref.update({ isPaid: !isPaid(row), updatedAt: serverTs() })
+          .then(function(){ toast("Güncellendi."); })
+          .catch(function(err){ console.error(err); toast("İşlem hatası: " + (err.code || err.message)); });
+      }
+
+      if(act === "del"){
+        if(!confirm("Silinsin mi?")) return;
+        ref.delete()
+          .then(function(){ toast("Silindi."); })
+          .catch(function(err){ console.error(err); toast("İşlem hatası: " + (err.code || err.message)); });
+      }
+
+      if(act === "edit"){
+        openAddModalForEdit(row);
+        openAddModalForCreate();
+      addBg.classList.add("show");
+      }
+    });
 
     var app=null, auth=null, db=null;
     try{
@@ -599,8 +692,10 @@
       $("mRecMonths").value="";
       addBg.classList.add("show");
     });
-    $("addClose").addEventListener("click", function(){ addBg.classList.remove("show"); });
-    $("addCancel").addEventListener("click", function(){ addBg.classList.remove("show"); });
+    $("addClose").addEventListener("click", function(){ addBg.classList.remove("show");
+      editingId=null; editingRow=null; });
+    $("addCancel").addEventListener("click", function(){ addBg.classList.remove("show");
+      editingId=null; editingRow=null; });
     addBg.addEventListener("click", function(e){ if(e.target === addBg) addBg.classList.remove("show"); });
 
     function categoryValueFromForm(){
@@ -615,6 +710,64 @@
 
     $("addSave").addEventListener("click", function(){
       if(!user) return;
+
+      // EDIT MODE: update existing doc
+      if(editingId){
+        var dirE = $("mDir").value;
+        var paidE = $("mPaid").value === "true";
+        var amountE = Number($("mAmount").value);
+        var dateE = $("mDate").value;
+        var categoryE = categoryValueFromForm();
+        var titleE = $("mTitle").value.trim();
+        var recurringE = $("mRecurring").checked;
+        var recMonthsE = Number($("mRecMonths").value);
+
+        if(!amountE || amountE<=0) return toast("Tutar gir.");
+        if(!dateE) return toast("Tarih seç.");
+        if(recurringE && (!recMonthsE || recMonthsE < 1)) return toast("Tekrarlayan için ay sayısı gir.");
+
+        var payloadE = {
+          amount: amountE,
+          category: categoryE,
+          date: dateE,
+          isPaid: paidE,
+          title: titleE || "",
+          type: (dirE === "income") ? "incoming" : "payment",
+          isRecurring: recurringE,
+          recurrenceTotalMonths: recurringE ? recMonthsE : null,
+          updatedAt: serverTs()
+        };
+
+        var refE = db.collection("payments").doc(editingId);
+
+        refE.set(payloadE, { merge:true })
+          .then(function(){
+            // Optionally update template (future months) if recurring
+            if(($("mSeriesUpdate").checked) && editingRow && editingRow.recurrenceId){
+              var tid = "T_" + String(editingRow.recurrenceId);
+              return db.collection("payments").doc(tid).set({
+                amount: amountE,
+                category: categoryE,
+                title: titleE || "",
+                type: (dirE === "income") ? "incoming" : "payment",
+                recurrenceTotalMonths: recMonthsE,
+                updatedAt: serverTs()
+              }, { merge:true }).catch(function(err){ console.error(err); });
+            }
+          })
+          .then(function(){
+            addBg.classList.remove("show");
+            editingId=null; editingRow=null;
+            toast("Güncellendi.");
+          })
+          .catch(function(err){
+            console.error(err);
+            toast("Güncelleme hatası: " + (err.code || err.message));
+          });
+
+        return;
+      }
+
       var dir = $("mDir").value;
       var paid = $("mPaid").value === "true";
       var amount = Number($("mAmount").value);
@@ -878,7 +1031,8 @@
             '<td>'+s+'</td>'+
             '<td>'+rec+'</td>'+
             '<td class="right nowrap">'+
-              '<button class="btn small" data-act="toggle" data-id="'+escapeHtml(r.id)+'">'+(isPaid(r)?"Geri Al":"Ödendi")+'</button> '+
+              '<button class="btn small" data-act="edit" data-id="'+escapeHtml(r.id)+'">Düzenle</button> '+
+              '<button class="btn small" data-act="toggle" data-id="'+escapeHtml(r.id)+'">'+(isPaid(r)?"Geri Al":"Alındı/Ödendi")+'</button> '+
               '<button class="btn small danger" data-act="del" data-id="'+escapeHtml(r.id)+'">Sil</button>'+
             '</td>'+
           '</tr>';
@@ -888,32 +1042,9 @@
     }
 
     function bindTableActions(){
-      document.querySelectorAll("button[data-act]").forEach(function(btn){
-        btn.addEventListener("click", function(){
-          if(!user) return;
-          var act = btn.getAttribute("data-act");
-          var id  = btn.getAttribute("data-id");
-
-          var row = allRows.find(function(r){ return r.id === id; });
-          if(!row) return;
-
-          var ref = db.collection("payments").doc(id);
-
-          if(act === "toggle"){
-            ref.update({ isPaid: !isPaid(row), updatedAt: serverTs() })
-              .then(function(){ toast("Güncellendi."); })
-              .catch(function(e){ console.error(e); toast("İşlem hatası: "+(e.code||e.message)); });
-          }
-
-          if(act === "del"){
-            if(!confirm("Silinsin mi?")) return;
-            ref.delete()
-              .then(function(){ toast("Silindi."); })
-              .catch(function(e){ console.error(e); toast("İşlem hatası: "+(e.code||e.message)); });
-          }
-        });
-      });
+      // no-op (we use delegated click handler below)
     }
+
 
     function openDayDetail(dateStr){
       var dayRows = filteredRowsForMonth(null).filter(function(r){ return String(r.date||"").slice(0,10) === dateStr; });
