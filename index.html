@@ -565,7 +565,7 @@
   <script>
   (function(){
     var firebaseConfig = {
-     apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
+      apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
           authDomain: "gezi-5b54b.firebaseapp.com",
           projectId: "gezi-5b54b",
           storageBucket: "gezi-5b54b.firebasestorage.app",
@@ -830,7 +830,13 @@
     }
     function serverTs(){ return firebase.firestore.FieldValue.serverTimestamp(); }
 
-    $("addSave").addEventListener("click", function(){
+    $("document.getElementById("mRecurring").addEventListener("change", function(){
+      var on = document.getElementById("mRecurring").checked;
+      document.getElementById("recBox").style.display = on ? "" : "none";
+      document.getElementById("mRecMonths").disabled = !on;
+    });
+
+    addSave").addEventListener("click", function(){
       if(!user) return;
       var editingId = window.__editingId || null;
 
@@ -858,6 +864,9 @@
           type: (dirE === "income") ? "incoming" : "payment",
           isRecurring: recurringE,
           recurrenceTotalMonths: recurringE ? recMonthsE : null,
+          // IMPORTANT: allow turning recurring off (merge needs explicit nulls)
+          recurrenceId: recurringE ? (editingRow && editingRow.recurrenceId ? editingRow.recurrenceId : null) : null,
+          recurrenceStart: recurringE ? (editingRow && editingRow.recurrenceStart ? editingRow.recurrenceStart : monthKey(dateE)) : null,
           updatedAt: serverTs()
         };
 
@@ -865,17 +874,26 @@
 
         refE.set(payloadE, { merge:true })
           .then(function(){
-            // Optionally update template (future months) if recurring
+            // Optionally update series template (future months)
             if(($("mSeriesUpdate").checked) && editingRow && editingRow.recurrenceId){
               var tid = "T_" + String(editingRow.recurrenceId);
-              return db.collection("payments").doc(tid).set({
+              var tpl = {
                 amount: amountE,
                 category: categoryE,
                 title: titleE || "",
                 type: (dirE === "income") ? "incoming" : "payment",
-                recurrenceTotalMonths: recMonthsE,
                 updatedAt: serverTs()
-              }, { merge:true }).catch(function(err){ console.error(err); });
+              };
+              if(recurringE){
+                tpl.isRecurring = true;
+                tpl.recurrenceTotalMonths = recMonthsE;
+              }else{
+                // stop future generation
+                tpl.isRecurring = false;
+                tpl.recurrenceTotalMonths = 0;
+              }
+              return db.collection("payments").doc(tid).set(tpl, { merge:true })
+                .catch(function(err){ console.error(err); });
             }
           })
           .then(function(){
@@ -1253,35 +1271,52 @@
 
     function openEditForRow(row){
       if(!row) return;
+
+      // set globals for edit mode
+      editingId = row.id;
+      editingRow = row;
+      window.__editingId = row.id;
+
+      $("addTitle").textContent = "Kayıt Düzenle";
+
       // Populate add modal with row values
-      document.getElementById("mDir").value = normalizeDir(row);
-      document.getElementById("mPaid").value = String(!!row.isPaid);
-      document.getElementById("mAmount").value = Number(row.amount||0);
-      document.getElementById("mDate").value = String(row.date||"").slice(0,10) || (selectedMonth+"-01");
+      $("mDir").value = normalizeDir(row);
+      $("mPaid").value = String(!!row.isPaid);
+      $("mAmount").value = Number(row.amount||0);
+      $("mDate").value = String(row.date||"").slice(0,10) || (selectedMonth+"-01");
 
       fillCategorySelect();
       var cat = (row.category || "Diğer").trim() || "Diğer";
       if(PRESET_CATS.includes(cat)){
-        document.getElementById("mCategorySel").value = cat;
-        document.getElementById("mCategoryOther").style.display = (cat==="Diğer") ? "" : "none";
-        document.getElementById("mCategoryOther").value = "";
+        $("mCategorySel").value = cat;
+        $("mCategoryOther").style.display = (cat==="Diğer") ? "" : "none";
+        $("mCategoryOther").value = "";
       }else{
-        document.getElementById("mCategorySel").value = "Diğer";
-        document.getElementById("mCategoryOther").style.display = "";
-        document.getElementById("mCategoryOther").value = cat;
+        $("mCategorySel").value = "Diğer";
+        $("mCategoryOther").style.display = "";
+        $("mCategoryOther").value = cat;
       }
 
-      document.getElementById("mTitle").value = row.title || "";
+      $("mTitle").value = row.title || "";
 
-      // Edit mode: recurring fields locked to avoid creating duplicates
-      document.getElementById("mRecurring").checked = !!row.isRecurring;
-      document.getElementById("mRecurring").disabled = true;
-      document.getElementById("recBox").style.display = "none";
-      document.getElementById("mRecMonths").value = row.recurrenceTotalMonths ? Number(row.recurrenceTotalMonths) : "";
-      document.getElementById("mRecMonths").disabled = true;
+      // Recurring edit: allow turning off AND changing months
+      $("mRecurring").checked = !!row.isRecurring;
+      $("mRecurring").disabled = false;
 
-      window.__editingId = row.id;
-      document.getElementById("addBg").classList.add("show");
+      $("recBox").style.display = $("mRecurring").checked ? "" : "none";
+      $("mRecMonths").value = row.recurrenceTotalMonths ? Number(row.recurrenceTotalMonths) : "";
+      $("mRecMonths").disabled = !$("mRecurring").checked;
+
+      // Series update row visible if there is a series/template id
+      if(row.recurrenceId){
+        $("seriesRow").style.display = "flex";
+        $("mSeriesUpdate").checked = true; // default
+      }else{
+        $("seriesRow").style.display = "none";
+        $("mSeriesUpdate").checked = false;
+      }
+
+      $("addBg").classList.add("show");
       toast("Düzenleme modunda: Kaydet ile güncelle.");
     }
 
@@ -1507,9 +1542,9 @@
             renderSpendingChart(rowsMonth)+
             '<div class="card" style="grid-column: span 4;">'+
               '<h2>Kısa</h2>'+
-              '<div class="hint">• Takvim: Güne Tıkla → Detay</div>'+
-              '<div class="hint">• Tekrarlayanlar: Ay Değişince Otomatik Gelir</div>'+
-              '<div class="hint">• Kategori renkleri: Listede ve Grafikte Aynı</div>'+
+              '<div class="hint">• Takvim: güne tıkla → detay</div>'+
+              '<div class="hint">• Tekrarlayanlar: ay değişince otomatik gelir</div>'+
+              '<div class="hint">• Kategori renkleri: listede ve grafikte aynı</div>'+
             '</div>'
 '</div>';
 
