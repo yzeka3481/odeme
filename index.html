@@ -393,6 +393,18 @@
       .card.spending, .card.quick, .card.recent{ grid-column: span 6 !important; }
     }
 
+
+    /* --- Dashboard mobile: force clean vertical stacking to avoid overlap --- */
+    @media (max-width: 680px){
+      .dashGrid{ grid-template-columns: 1fr !important; }
+      .dashGrid > .card{ grid-column: 1 / -1 !important; }
+      .kpiCard .value{ font-size: 18px !important; }
+      .kpiCard h2{ font-size: 13px; }
+      .donutWrap{ width:100%; }
+      .chartRow{ flex-direction:column; align-items:stretch; }
+      .legend{ width:100%; min-width:0; }
+    }
+
 </style>
 </head>
 <body>
@@ -553,7 +565,7 @@
   <script>
   (function(){
     var firebaseConfig = {
-      apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
+     apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
           authDomain: "gezi-5b54b.firebaseapp.com",
           projectId: "gezi-5b54b",
           storageBucket: "gezi-5b54b.firebasestorage.app",
@@ -561,6 +573,7 @@
           appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
           measurementId: "G-KB8SKRCQ9X"
         };
+
 
     function $(id){ return document.getElementById(id); }
     var fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
@@ -1478,7 +1491,7 @@
 
       if(currentPage === "dashboard"){
         content.innerHTML =
-          '<div class="grid">'+
+          '<div class="grid dashGrid">'+
             '<div class="card kpiCard kpi-exp" style="grid-column: span 4;">'+
               '<h2><span class="ttl"><span class="kico">💸</span><span>Gider</span></span><span class="tag bad">Bu ay</span></h2>'+
               '<div class="kpi"><div class="value bad">'+fmt.format(k.exp)+'</div><div class="sub"><span class="chip">✅ '+k.expPaid+'</span><span class="chip bad">⏳ '+k.expUn+'</span></div></div>'+
@@ -1497,13 +1510,8 @@
               '<div class="hint">• Takvim: güne tıkla → detay</div>'+
               '<div class="hint">• Tekrarlayanlar: ay değişince otomatik gelir</div>'+
               '<div class="hint">• Kategori renkleri: listede ve grafikte aynı</div>'+
-            '</div>'+
-            '<div class="card" style="grid-column: span 12;">'+
-              '<h2>Son İşlemler</h2>'+
-              '<div class="hint">'+selectedMonth+' içinde '+rowsMonth.length+' kayıt</div>'+
-              '<div style="overflow:auto; margin-top:10px;">'+renderTable(rowsMonth.slice(0,10))+'</div>'+
-            '</div>'+
-          '</div>';
+            '</div>'
+'</div>';
 
         bindTableActions();
         return;
