@@ -517,7 +517,7 @@
 
       const q = query(
         collection(db, "payments"),
-        where("uid", "==", user.uid),
+        where("userId", "==", user.uid),
         where("month", "==", selectedMonth),
         orderBy("date", "desc")
       );
