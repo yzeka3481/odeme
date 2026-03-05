@@ -405,6 +405,19 @@
       .legend{ width:100%; min-width:0; }
     }
 
+
+    .versionTag{
+      margin-left:auto;
+      font-size:11px;
+      opacity:.65;
+      background: rgba(14,22,42,.7);
+      border:1px solid rgba(255,255,255,.08);
+      padding:3px 8px;
+      border-radius:10px;
+      white-space:nowrap;
+      align-self:flex-start;
+    }
+
 </style>
 </head>
 <body>
@@ -415,6 +428,7 @@
           <h1>Ödeme Takip</h1>
           <small id="subline">Dashboard</small>
         </div>
+        <div class="versionTag" id="appVer"></div>
         <button id="btnPrev" class="btn small">◀</button>
         <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
         <button id="btnNext" class="btn small">▶</button>
@@ -563,6 +577,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
+
   (function(){
     var firebaseConfig = {
       apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
@@ -574,8 +589,9 @@
           measurementId: "G-KB8SKRCQ9X"
         };
 
-
     function $(id){ return document.getElementById(id); }
+    var __verEl = document.getElementById("appVer");
+    if(__verEl){ __verEl.textContent = APP_VERSION + " • " + BUILD_DATE; }
     var fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
 
     var CATEGORY_COLORS = {
@@ -720,7 +736,7 @@
       if(act === "edit"){
         openAddModalForEdit(row);
         openAddModalForCreate();
-      window.__editingId = null;
+      window.__editingId = null; window.__editingRow = null;
       document.getElementById("mRecurring").disabled = false;
       document.getElementById("mRecMonths").disabled = false;
       addBg.classList.add("show");
@@ -795,7 +811,13 @@
     $("mCategorySel").addEventListener("change", function(){
       $("mCategoryOther").style.display = ($("mCategorySel").value === "Diğer") ? "" : "none";
     });
-    $("mRecurring").addEventListener("change", function(){ $("recBox").style.display = $("mRecurring").checked ? "grid" : "none"; });
+    $("mRecurring").addEventListener("change", function(){
+      var on = $("mRecurring").checked;
+      $("recBox").style.display = on ? "grid" : "none";
+      $("mRecMonths").disabled = !on;
+      var sr = document.getElementById("seriesRow");
+      if(sr){ sr.style.display = on ? "flex" : "none"; }
+    });
 
     $("btnAdd").addEventListener("click", function(){
       if(!user) return toast("Önce giriş yap.");
@@ -815,9 +837,9 @@
       addBg.classList.add("show");
     });
     $("addClose").addEventListener("click", function(){ addBg.classList.remove("show");
-      editingId=null; editingRow=null; });
+      window.__editingId=null; window.__editingRow=null; });
     $("addCancel").addEventListener("click", function(){ addBg.classList.remove("show");
-      editingId=null; editingRow=null; });
+      window.__editingId=null; window.__editingRow=null; });
     addBg.addEventListener("click", function(e){ if(e.target === addBg) addBg.classList.remove("show"); });
 
     function categoryValueFromForm(){
@@ -830,13 +852,7 @@
     }
     function serverTs(){ return firebase.firestore.FieldValue.serverTimestamp(); }
 
-    $("document.getElementById("mRecurring").addEventListener("change", function(){
-      var on = document.getElementById("mRecurring").checked;
-      document.getElementById("recBox").style.display = on ? "" : "none";
-      document.getElementById("mRecMonths").disabled = !on;
-    });
-
-    addSave").addEventListener("click", function(){
+    $("addSave").addEventListener("click", function(){
       if(!user) return;
       var editingId = window.__editingId || null;
 
@@ -853,7 +869,23 @@
 
         if(!amountE || amountE<=0) return toast("Tutar gir.");
         if(!dateE) return toast("Tarih seç.");
+
+        var editingRow = window.__editingRow || allRows.find(function(r){ return r.id === editingId; }) || null;
+        var wasRec = !!(editingRow && editingRow.isRecurring && editingRow.recurrenceId);
+
+        // Safety: do not convert a normal record into recurring in edit (would duplicate due to docId scheme)
+        if(!wasRec && recurringE){
+          toast("Bu kaydı tekrarlayana çevirmek için lütfen yeni kayıt oluştur.");
+          $("mRecurring").checked = false;
+          $("recBox").style.display = "none";
+          $("mRecMonths").disabled = true;
+          return;
+        }
+
         if(recurringE && (!recMonthsE || recMonthsE < 1)) return toast("Tekrarlayan için ay sayısı gir.");
+
+        var rid = wasRec ? String(editingRow.recurrenceId) : null;
+        var start = wasRec ? String(editingRow.recurrenceStart || "").slice(0,7) : null;
 
         var payloadE = {
           amount: amountE,
@@ -863,10 +895,9 @@
           title: titleE || "",
           type: (dirE === "income") ? "incoming" : "payment",
           isRecurring: recurringE,
+          recurrenceId: recurringE ? rid : null,
+          recurrenceStart: recurringE ? start : null,
           recurrenceTotalMonths: recurringE ? recMonthsE : null,
-          // IMPORTANT: allow turning recurring off (merge needs explicit nulls)
-          recurrenceId: recurringE ? (editingRow && editingRow.recurrenceId ? editingRow.recurrenceId : null) : null,
-          recurrenceStart: recurringE ? (editingRow && editingRow.recurrenceStart ? editingRow.recurrenceStart : monthKey(dateE)) : null,
           updatedAt: serverTs()
         };
 
@@ -874,32 +905,40 @@
 
         refE.set(payloadE, { merge:true })
           .then(function(){
-            // Optionally update series template (future months)
-            if(($("mSeriesUpdate").checked) && editingRow && editingRow.recurrenceId){
-              var tid = "T_" + String(editingRow.recurrenceId);
-              var tpl = {
+            // Update series template if this record belongs to a recurring series
+            if(!wasRec) return;
+
+            var tid = "T_" + rid;
+            // If user turned recurring OFF, stop future generation by disabling template
+            if(!recurringE){
+              return db.collection("payments").doc(tid).set({
+                isRecurring: false,
+                recurrenceTotalMonths: null,
+                updatedAt: serverTs()
+              }, { merge:true }).catch(function(err){ console.error(err); });
+            }
+
+            // If still recurring and user wants to update series template, apply changes for future months
+            var su = document.getElementById("mSeriesUpdate");
+            var doSeries = !!(su && su.checked);
+            if(doSeries){
+              return db.collection("payments").doc(tid).set({
+                isRecurring: true,
                 amount: amountE,
                 category: categoryE,
                 title: titleE || "",
                 type: (dirE === "income") ? "incoming" : "payment",
+                recurrenceTotalMonths: recMonthsE,
                 updatedAt: serverTs()
-              };
-              if(recurringE){
-                tpl.isRecurring = true;
-                tpl.recurrenceTotalMonths = recMonthsE;
-              }else{
-                // stop future generation
-                tpl.isRecurring = false;
-                tpl.recurrenceTotalMonths = 0;
-              }
-              return db.collection("payments").doc(tid).set(tpl, { merge:true })
-                .catch(function(err){ console.error(err); });
+              }, { merge:true }).catch(function(err){ console.error(err); });
             }
           })
           .then(function(){
             addBg.classList.remove("show");
-            editingId=null; editingRow=null;
+            window.__editingId = null;
+            window.__editingRow = null;
             toast("Güncellendi.");
+            renderPage();
           })
           .catch(function(err){
             console.error(err);
@@ -1271,52 +1310,46 @@
 
     function openEditForRow(row){
       if(!row) return;
-
-      // set globals for edit mode
-      editingId = row.id;
-      editingRow = row;
-      window.__editingId = row.id;
-
-      $("addTitle").textContent = "Kayıt Düzenle";
-
       // Populate add modal with row values
-      $("mDir").value = normalizeDir(row);
-      $("mPaid").value = String(!!row.isPaid);
-      $("mAmount").value = Number(row.amount||0);
-      $("mDate").value = String(row.date||"").slice(0,10) || (selectedMonth+"-01");
+      document.getElementById("mDir").value = normalizeDir(row);
+      document.getElementById("mPaid").value = String(!!row.isPaid);
+      document.getElementById("mAmount").value = Number(row.amount||0);
+      document.getElementById("mDate").value = String(row.date||"").slice(0,10) || (selectedMonth+"-01");
 
       fillCategorySelect();
       var cat = (row.category || "Diğer").trim() || "Diğer";
       if(PRESET_CATS.includes(cat)){
-        $("mCategorySel").value = cat;
-        $("mCategoryOther").style.display = (cat==="Diğer") ? "" : "none";
-        $("mCategoryOther").value = "";
+        document.getElementById("mCategorySel").value = cat;
+        document.getElementById("mCategoryOther").style.display = (cat==="Diğer") ? "" : "none";
+        document.getElementById("mCategoryOther").value = "";
       }else{
-        $("mCategorySel").value = "Diğer";
-        $("mCategoryOther").style.display = "";
-        $("mCategoryOther").value = cat;
+        document.getElementById("mCategorySel").value = "Diğer";
+        document.getElementById("mCategoryOther").style.display = "";
+        document.getElementById("mCategoryOther").value = cat;
       }
 
-      $("mTitle").value = row.title || "";
+      document.getElementById("mTitle").value = row.title || "";
 
-      // Recurring edit: allow turning off AND changing months
-      $("mRecurring").checked = !!row.isRecurring;
-      $("mRecurring").disabled = false;
+      // Edit mode: allow turning OFF recurring and adjusting months for existing series
+      window.__editingRow = row;
 
-      $("recBox").style.display = $("mRecurring").checked ? "" : "none";
-      $("mRecMonths").value = row.recurrenceTotalMonths ? Number(row.recurrenceTotalMonths) : "";
-      $("mRecMonths").disabled = !$("mRecurring").checked;
+      var isRec = !!row.isRecurring;
+      document.getElementById("mRecurring").checked = isRec;
+      // Prevent turning a normal record into recurring (would create duplicates due to docId scheme)
+      document.getElementById("mRecurring").disabled = !isRec ? true : false;
 
-      // Series update row visible if there is a series/template id
-      if(row.recurrenceId){
-        $("seriesRow").style.display = "flex";
-        $("mSeriesUpdate").checked = true; // default
-      }else{
-        $("seriesRow").style.display = "none";
-        $("mSeriesUpdate").checked = false;
-      }
+      document.getElementById("mRecMonths").value = (row.recurrenceTotalMonths ? Number(row.recurrenceTotalMonths) : "");
+      document.getElementById("recBox").style.display = isRec ? "grid" : "none";
+      document.getElementById("mRecMonths").disabled = !isRec;
 
-      $("addBg").classList.add("show");
+      // show series update option for recurring
+      var sr = document.getElementById("seriesRow");
+      var su = document.getElementById("mSeriesUpdate");
+      if(sr){ sr.style.display = isRec ? "flex" : "none"; }
+      if(su){ su.checked = isRec ? true : false; su.disabled = !isRec; }
+
+      window.__editingId = row.id;
+      document.getElementById("addBg").classList.add("show");
       toast("Düzenleme modunda: Kaydet ile güncelle.");
     }
 
@@ -1642,6 +1675,7 @@
     fillCategorySelect();
     renderPage();
   })();
-  </script>
+  
+</script>
 </body>
 </html>
