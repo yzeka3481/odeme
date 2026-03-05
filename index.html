@@ -1,1833 +1,949 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8" />
-    <title>Ödeme Takip Uygulaması</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ödeme Takip — UI Demo</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --card:#0f1730;
+      --text:#e8f0ff; --muted:#8ea3c7; --line:#1e2a46;
+      --good:#2dd4bf; --bad:#fb7185; --warn:#fbbf24; --brand:#4f7cff;
+      --shadow: 0 18px 45px rgba(0,0,0,.32);
+      --r:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1100px 600px at 20% -10%, rgba(79,124,255,.25), transparent 55%),
+                  radial-gradient(900px 500px at 90% 0%, rgba(45,212,191,.16), transparent 55%),
+                  linear-gradient(180deg,#071022,#0b1220 40%, #081025);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:16px;
+    }
+    .phone{
+      width:min(430px, 100%);
+      border:1px solid rgba(255,255,255,.06);
+      background: rgba(12,18,35,.65);
+      backdrop-filter: blur(10px);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
 
-    <style>
-      input[type="month"],
-      input[type="date"] {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 100%;
-      }
+    /* Top bar */
+    .topbar{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(17,26,46,.8), rgba(17,26,46,.35));
+    }
+    .toprow{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .title{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .title h1{ margin:0; font-size:14px; letter-spacing:.2px; }
+    .title small{ color:var(--muted); font-size:12px; }
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(15,23,48,.9);
+      color:var(--text);
+      border-radius: 14px;
+      padding:10px 12px;
+      font-weight:700;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:hover{ filter:brightness(1.08); }
+    .btn.primary{ background: rgba(79,124,255,.95); border-color: rgba(79,124,255,.55); }
+    .btn.ghost{ background: transparent; }
+    .btn.small{ padding:8px 10px; border-radius: 12px; font-size:12px; font-weight:700; }
+    .chip{
+      border:1px solid var(--line);
+      background: rgba(14,22,42,.9);
+      padding:8px 10px;
+      border-radius: 999px;
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      color: #cfe0ff;
+      font-weight:700;
+      font-size:12px;
+    }
+    .monthbar{
+      margin-top:10px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .monthbar .controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
-      /* iOS klavye zoom/pan azaltma */
-      input,
-      select,
-      textarea {
-        font-size: 16px !important;
-      }
-    </style>
+    /* Toggle segmented */
+    .seg{
+      display:flex; gap:0; border:1px solid var(--line);
+      border-radius: 14px; overflow:hidden;
+      background: rgba(14,22,42,.7);
+    }
+    .seg button{
+      border:0; background:transparent; color:var(--muted);
+      padding:9px 12px; cursor:pointer; font-weight:800; font-size:12px;
+    }
+    .seg button.active{
+      background: rgba(79,124,255,.22);
+      color: var(--text);
+    }
+
+    /* Content */
+    .content{
+      padding:12px 12px 86px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      overflow:auto;
+    }
+    .cards{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .card{
+      background: rgba(17,26,46,.62);
+      border:1px solid var(--line);
+      border-radius: var(--r);
+      padding:12px;
+    }
+    .kpi{
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .kpi .label{ color:var(--muted); font-size:12px; }
+    .kpi .value{ font-size:18px; font-weight:900; letter-spacing:.2px; }
+    .value.bad{ color:var(--bad); }
+    .value.good{ color:var(--good); }
+
+    .toolbar{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .toolbar .left{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .toolbar input, .toolbar select{
+      border:1px solid var(--line);
+      background: rgba(14,22,42,.9);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      outline:none;
+      font-weight:650;
+      width: 100%;
+    }
+    .toolbar .search{ min-width: 190px; }
+    .toolbar select{ padding-right: 30px; }
+
+    /* List */
+    .list{
+      background: rgba(17,26,46,.4);
+      border:1px solid var(--line);
+      border-radius: var(--r);
+      overflow:hidden;
+    }
+    .rowItem{
+      display:grid;
+      grid-template-columns: 82px 1fr auto;
+      gap:10px;
+      padding:12px;
+      border-top:1px solid rgba(255,255,255,.06);
+      align-items:center;
+    }
+    .rowItem:first-child{ border-top:0; }
+    .date{
+      font-size:12px; color:#cfe0ff; font-weight:850;
+    }
+    .meta{
+      display:flex; flex-direction:column; gap:4px;
+      min-width:0;
+    }
+    .meta .desc{
+      font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .meta .sub{
+      color:var(--muted); font-size:12px; display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .tag{
+      font-size:12px; font-weight:800;
+      padding:4px 8px; border-radius: 999px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(14,22,42,.9);
+      color:#cfe0ff;
+    }
+    .tag.bad{ border-color: rgba(251,113,133,.35); background: rgba(42,16,24,.85); color:#ffb3c2; }
+    .tag.good{ border-color: rgba(45,212,191,.35); background: rgba(13,42,34,.85); color:#8ff6e4; }
+    .tag.rec{ border-color: rgba(79,124,255,.35); background: rgba(27,35,56,.85); color:#c5d3ff; }
+    .amt{
+      text-align:right;
+      font-weight:950;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+
+    /* Calendar */
+    .calendar{
+      background: rgba(17,26,46,.4);
+      border:1px solid var(--line);
+      border-radius: var(--r);
+      overflow:hidden;
+    }
+    .calHead{
+      padding:10px 12px;
+      display:flex; justify-content:space-between; align-items:center;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      color:#cfe0ff;
+      font-weight:900;
+      font-size:12px;
+    }
+    .calGrid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:0;
+    }
+    .dow{
+      padding:9px 6px;
+      text-align:center;
+      font-size:11px;
+      color:var(--muted);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background: rgba(14,22,42,.6);
+      font-weight:900;
+    }
+    .day{
+      min-height:64px;
+      padding:8px 6px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      border-right:1px solid rgba(255,255,255,.06);
+      cursor:pointer;
+      background: rgba(17,26,46,.22);
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .day:nth-child(7n){ border-right:0; }
+    .day .n{
+      font-weight:950; font-size:12px; color:#cfe0ff;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .mini{
+      display:flex; flex-direction:column; gap:4px;
+      font-size:11px; color:var(--muted);
+    }
+    .mini .g{ color: rgba(45,212,191,.95); font-weight:900; }
+    .mini .c{ color: rgba(251,113,133,.95); font-weight:900; }
+    .day.muted{ opacity:.35; }
+    .day.today{ outline:2px solid rgba(79,124,255,.5); outline-offset:-2px; background: rgba(79,124,255,.08); }
+
+    /* Bottom sheet */
+    .sheetBg{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none; align-items:flex-end; justify-content:center;
+      padding:14px;
+    }
+    .sheetBg.show{ display:flex; }
+    .sheet{
+      width:min(430px, 100%);
+      background: rgba(15,23,48,.98);
+      border:1px solid var(--line);
+      border-radius: 20px 20px 20px 20px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      max-height: 72vh;
+      display:flex; flex-direction:column;
+    }
+    .sheetTop{
+      padding:10px 12px;
+      display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .sheetTop strong{ font-size:13px; }
+    .sheetBody{ padding:10px 12px; overflow:auto; display:flex; flex-direction:column; gap:10px; }
+    .sheetItem{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(14,22,42,.75);
+      border-radius: 14px;
+      padding:10px;
+      display:flex; justify-content:space-between; gap:10px; align-items:center;
+    }
+    .sheetItem .left{ min-width:0; }
+    .sheetItem .left .t{ font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sheetItem .left .s{ font-size:12px; color:var(--muted); margin-top:3px; }
+    .sheetItem .right{ font-weight:950; white-space:nowrap; }
+
+    /* Add modal */
+    .modalBg{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center;
+      padding:14px;
+    }
+    .modalBg.show{ display:flex; }
+    .modal{
+      width:min(430px, 100%);
+      background: rgba(15,23,48,.98);
+      border:1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalTop{
+      padding:10px 12px;
+      display:flex; justify-content:space-between; align-items:center;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .modalTop strong{ font-size:13px; }
+    .modalBody{ padding:12px; display:flex; flex-direction:column; gap:10px; }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .modal input, .modal select{
+      border:1px solid var(--line);
+      background: rgba(14,22,42,.9);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      outline:none;
+      font-weight:650;
+      width:100%;
+    }
+    .modal .actions{ display:flex; gap:10px; padding:12px; border-top:1px solid rgba(255,255,255,.06); }
+    .hint{ font-size:12px; color:var(--muted); }
+
+    /* Bottom tab bar */
+    .tabbar{
+      position:sticky;
+      bottom:0;
+      background: linear-gradient(180deg, rgba(11,18,32,.0), rgba(11,18,32,.75) 15%, rgba(11,18,32,.96));
+      border-top:1px solid var(--line);
+      padding:10px 10px 12px;
+      display:flex; gap:10px;
+    }
+    .tab{
+      flex:1;
+      border:1px solid rgba(255,255,255,.06);
+      background: rgba(14,22,42,.7);
+      border-radius: 16px;
+      padding:10px 10px;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      color:var(--muted);
+      font-weight:900;
+      font-size:11px;
+      user-select:none;
+    }
+    .tab.active{
+      color: var(--text);
+      border-color: rgba(79,124,255,.35);
+      background: rgba(79,124,255,.14);
+    }
+    .ico{ font-size:16px; line-height:1; }
+
+    /* Helpers */
+    .hide{ display:none !important; }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-
-    <!-- AUTH BÖLÜMÜ -->
-    <div id="auth-section" class="min-h-screen flex items-center justify-center px-4">
-        <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-5 space-y-4">
-            <div class="text-center space-y-1">
-                <h1 class="text-lg font-semibold text-slate-50">Ödeme Takip Uygulaması</h1>
-                <p class="text-xs text-slate-400">
-                    Lütfen giriş yap veya yeni hesap oluştur.
-                </p>
-            </div>
-
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs text-slate-300 mb-1">E-posta</label>
-                    <input
-                        type="email"
-                        id="auth-email"
-                        placeholder="ornek@mail.com"
-                        class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm placeholder:text-slate-500"
-                    />
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-300 mb-1">Şifre</label>
-                    <input
-                        type="password"
-                        id="auth-password"
-                        placeholder="En az 6 karakter"
-                        class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm placeholder:text-slate-500"
-                    />
-                </div>
-                <p id="auth-error" class="text-xs text-red-400 min-h-[1rem]"></p>
-                <div class="flex flex-col gap-2">
-                    <button
-                        id="btn-login"
-                        class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 py-2 rounded-lg"
-                        type="button"
-                    >
-                        Giriş Yap
-                    </button>
-                    <button
-                        id="btn-register"
-                        class="w-full border border-slate-600 text-slate-100 text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-800"
-                        type="button"
-                    >
-                        Yeni Hesap Oluştur
-                    </button>
-                </div>
-            </div>
-            <p class="text-[11px] text-slate-500 text-center">
-                Aynı e-posta / şifreyle giriş yaptığın her cihazda verilerin senkron olur.
-            </p>
+<body>
+  <div class="phone">
+    <div class="topbar">
+      <div class="toprow">
+        <div class="title">
+          <h1>Ödeme Takip</h1>
+          <small id="subtitle">Gider • Liste</small>
         </div>
+        <button id="btnAdd" class="btn primary small">＋ Ekle</button>
+      </div>
+
+      <div class="monthbar">
+        <div class="controls">
+          <button id="btnPrev" class="btn small">◀</button>
+          <span class="chip"><span>📅</span><span id="monthLabel">—</span></span>
+          <button id="btnNext" class="btn small">▶</button>
+        </div>
+
+        <div class="controls">
+          <div class="seg" role="tablist" aria-label="Görünüm">
+            <button id="btnListView" class="active" type="button">Liste</button>
+            <button id="btnCalView" type="button">Takvim</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- ANA UYGULAMA BÖLÜMÜ -->
-    <div id="app-section" class="hidden max-w-5xl mx-auto px-3 md:px-4 py-4 md:py-6">
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2">
-            <div>
-                <h1 class="text-xl md:text-3xl font-bold text-slate-50">
-                    Ödeme Takip Uygulaması
-                </h1>
-                <p class="text-xs text-slate-400 mt-1">
-                    Giriş yapıldı: <span id="user-email-label" class="font-semibold text-slate-200"></span>
-                </p>
-            </div>
-            <button
-                id="btn-logout"
-                class="self-start md:self-auto border border-slate-600 text-slate-100 text-xs md:text-sm px-3 py-1.5 rounded-lg hover:bg-slate-800"
-                type="button"
-            >
-                Çıkış Yap
-            </button>
+    <div class="content">
+      <div class="cards">
+        <div class="card kpi">
+          <div class="label">Bu Ay Gider</div>
+          <div class="value bad" id="kpiExpense">₺0</div>
+          <div class="hint" id="kpiExpenseHint">Ödenen/Ödenmeyen</div>
         </div>
-
-        <!-- Özet Kartları -->
-        <div class="space-y-3 md:space-y-4 mb-3 md:mb-4">
-            <!-- Toplam Borç / Alacak / Fark - Yanyana -->
-            <div class="grid grid-cols-3 gap-2 md:gap-4">
-                <div class="bg-gradient-to-r from-rose-950 to-red-900 border border-red-500/40 rounded-xl shadow p-2 md:p-3">
-                    <div class="text-[10px] md:text-sm text-rose-100/80 text-center">Toplam Borç (Çıkış)</div>
-                    <div id="total-outgoing" class="text-xs md:text-2xl font-semibold text-rose-50 mt-1 text-center">
-                        0 ₺
-                    </div>
-                </div>
-
-                <div class="bg-gradient-to-r from-emerald-950 to-teal-900 border border-emerald-500/40 rounded-xl shadow p-2 md:p-3">
-                    <div class="text-[10px] md:text-sm text-emerald-100/80 text-center">Toplam Alacak (Giriş)</div>
-                    <div id="total-incoming" class="text-xs md:text-2xl font-semibold text-emerald-50 mt-1 text-center">
-                        0 ₺
-                    </div>
-                </div>
-
-                <!-- Borç / Alacak Farkı -->
-                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-2 md:p-3">
-                    <div id="total-unpaid-label" class="text-[10px] md:text-sm text-slate-400 text-center">
-                        Borç / Alacak Farkı
-                    </div>
-                    <div id="total-unpaid" class="text-xs md:text-xl font-semibold mt-1 text-slate-100 text-center">
-                        0 ₺
-                    </div>
-                </div>
-            </div>
-
-            <!-- ÖDEME DURUMU (YENİ TASARIM) -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl shadow p-3 md:p-4">
-                               <!-- İki kolonlu net görünüm: Borç ve Alacak -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                    <!-- BORÇ BLOĞU -->
-                    <div class="rounded-xl bg-slate-950/80 border border-red-500/30 p-3 space-y-2">
-                        <div class="flex items-center justify-between text-[11px] md:text-xs">
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-red-400"></span>
-                                <span class="font-semibold text-rose-100">Borç (Çıkış)</span>
-                            </div>
-                            <span id="debt-summary" class="text-rose-200 font-medium">
-                                <!-- JS: Toplam: xx ₺ -->
-                            </span>
-                        </div>
-
-                        <!-- Bar -->
-                        <div class="flex w-full h-3.5 rounded-full bg-slate-800 overflow-hidden">
-                            <div
-                                id="bar-paid-outgoing"
-                                class="h-full bg-emerald-500 transition-all duration-300 ease-out"
-                                style="width: 0%"
-                            ></div>
-                            <div
-                                id="bar-unpaid-outgoing"
-                                class="h-full bg-red-500/80 transition-all duration-300 ease-out"
-                                style="width: 0%"
-                            ></div>
-                        </div>
-
-                        <!-- Etiketler -->
-                        <div class="flex justify-between mt-1 text-[10px] md:text-[11px] text-slate-200">
-                            <span id="label-paid-outgoing" class="flex-1 text-left">
-                                Ödediğim: 0 ₺
-                            </span>
-                            <span id="label-unpaid-outgoing" class="flex-1 text-right">
-                                Ödeyeceğim: 0 ₺
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- ALACAK BLOĞU -->
-                    <div class="rounded-xl bg-slate-950/80 border border-emerald-500/30 p-3 space-y-2">
-                        <div class="flex items-center justify-between text-[11px] md:text-xs">
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                                <span class="font-semibold text-emerald-100">Alacak (Giriş)</span>
-                            </div>
-                            <span id="credit-summary" class="text-emerald-200 font-medium">
-                                <!-- JS: Toplam: xx ₺ -->
-                            </span>
-                        </div>
-
-                        <!-- Bar -->
-                        <div class="flex w-full h-3.5 rounded-full bg-slate-800 overflow-hidden">
-                            <div
-                                id="bar-paid-incoming"
-                                class="h-full bg-sky-400 transition-all duration-300 ease-out"
-                                style="width: 0%"
-                            ></div>
-                            <div
-                                id="bar-unpaid-incoming"
-                                class="h-full bg-emerald-500/80 transition-all duration-300 ease-out"
-                                style="width: 0%"
-                            ></div>
-                        </div>
-
-                        <!-- Etiketler -->
-                        <div class="flex justify-between mt-1 text-[10px] md:text-[11px] text-slate-200">
-                            <span id="label-paid-incoming" class="flex-1 text-left">
-                                Aldığım: 0 ₺
-                            </span>
-                            <span id="label-unpaid-incoming" class="flex-1 text-right">
-                                Alacağım: 0 ₺
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="card kpi">
+          <div class="label">Bu Ay Gelir</div>
+          <div class="value good" id="kpiIncome">₺0</div>
+          <div class="hint" id="kpiIncomeHint">Toplam gelir</div>
         </div>
+      </div>
 
-        <!-- SEKME BUTONLARI -->
-        <div class="flex gap-2 mb-3">
-            <button
-                id="tab-payments"
-                type="button"
-                class="px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-slate-600 bg-slate-800 text-slate-50"
-            >
-                Ödemeler
-            </button>
-            <button
-                id="tab-scheduled"
-                type="button"
-                class="px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-slate-700 text-slate-400 hover:bg-slate-900"
-            >
-                Planlanan Ödemeler
-            </button>
+      <div class="card">
+        <div class="toolbar">
+          <div class="left">
+            <select id="statusFilter" style="min-width:160px;">
+              <option value="all">Durum: Hepsi</option>
+              <option value="unpaid">Durum: Alınmadı/Ödenmedi</option>
+              <option value="paid">Durum: Alındı/Ödendi</option>
+            </select>
+            <input id="search" class="search" placeholder="Ara (açıklama / kişi / kategori)" />
+          </div>
+          <button id="btnDemo" class="btn small">Demo veri ekle</button>
         </div>
+        <div class="hint" id="infoLine" style="margin-top:10px;"></div>
+      </div>
 
-        <!-- ÖDEMELER BÖLÜMÜ -->
-        <div id="payments-section" class="bg-slate-900 border border-slate-800 rounded-xl shadow overflow-hidden">
-            <!-- Başlık + Yeni Ödeme -->
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 px-3 md:px-4 py-3 border-b border-slate-800">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-base md:text-lg font-semibold text-slate-50">Ödeme Listesi</h2>
-                    <span id="count-info" class="text-[11px] md:text-xs text-slate-400"></span>
-                </div>
-                <button
-                    id="btn-open-modal"
-                    class="self-start md:self-auto inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-medium px-3 py-2 rounded-lg"
-                    type="button"
-                >
-                    Yeni Ödeme
-                </button>
-            </div>
+      <!-- LIST -->
+      <div id="listWrap" class="list"></div>
 
-            <!-- Filtreler -->
-            <div class="px-3 md:px-4 py-3 border-b border-slate-800 bg-slate-950/60">
-                <div class="grid grid-cols-2 gap-2 md:gap-3 items-end">
-                    <div class="flex flex-col">
-                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Dönem</label>
-                        <input
-                            type="month"
-                            id="month-filter"
-                            class="w-full min-w-0 h-9 md:h-9 border border-slate-700 bg-slate-900 text-slate-100 rounded-lg px-2 text-xs md:text-sm"
-                        />
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Durum</label>
-                        <select
-                            id="status-filter"
-                            class="w-full min-w-0 h-9 md:h-9 border border-slate-700 bg-slate-900 text-slate-100 rounded-lg px-2 text-xs md:text-sm"
-                        >
-                            <option value="all">Tümü</option>
-                            <option value="unpaid">Sadece ödenmemiş</option>
-                            <option value="paid">Sadece ödenmiş</option>
-                        </select>
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Tür</label>
-                        <select
-                            id="type-filter"
-                            class="w-full min-w-0 h-9 md:h-9 border border-slate-700 bg-slate-900 text-slate-100 rounded-lg px-2 text-xs md:text-sm"
-                        >
-                            <option value="all">Hepsi</option>
-                            <option value="outgoing">Sadece borç (çıkış)</option>
-                            <option value="incoming">Sadece alacak (giriş)</option>
-                        </select>
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label class="block text-[11px] md:text-xs text-slate-400 mb-1">Ara (başlık/kategori)</label>
-                        <input
-                            type="text"
-                            id="search-filter"
-                            placeholder="kira, elektrik, okul..."
-                            class="w-full min-w-0 h-9 md:h-9 border border-slate-700 bg-slate-900 text-slate-100 rounded-lg px-2 text-xs md:text-sm placeholder:text-slate-500"
-                        />
-                    </div>
-
-                    <div class="col-span-2 flex justify-between gap-2">
-                        <button
-                            id="next-month"
-                            class="w-1/2 md:w-auto border border-sky-500/40 text-sky-300 text-[11px] md:text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-sky-500/10"
-                            type="button"
-                        >
-                            Yeni Aya Geç
-                        </button>
-
-                        <button
-                            id="clear-all"
-                            class="w-1/2 md:w-auto border border-red-500/40 text-red-300 text-[11px] md:text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-red-500/10"
-                            type="button"
-                        >
-                            Tüm Kayıtları Sil
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tablo -->
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-xs md:text-sm">
-                    <thead class="bg-slate-900/80">
-                        <tr>
-                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Tarih</th>
-                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Başlık</th>
-                            <th class="px-3 py-2 text-left text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Kategori</th>
-                            <th class="px-3 py-2 text-right text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Tutar</th>
-                            <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Durum</th>
-                            <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">Tür</th>
-                            <th class="px-3 py-2 text-center text-[11px] md:text-xs font-semibold text-slate-400 border-b border-slate-800">İşlem</th>
-                        </tr>
-                    </thead>
-                    <tbody id="payments-body" class="divide-y divide-slate-800"></tbody>
-                </table>
-            </div>
-            <div id="empty-state" class="px-3 md:px-4 py-4 text-xs md:text-sm text-slate-400 hidden">
-                Kayıt bulunamadı. Sağ üstten “Yeni Ödeme” butonuna basarak ekleyebilirsin.
-            </div>
+      <!-- CALENDAR -->
+      <div id="calWrap" class="calendar hide">
+        <div class="calHead">
+          <span>Takvim</span>
+          <span class="hint">Gün’e tıkla → detay</span>
         </div>
-
-        <!-- PLANLANAN ÖDEMELER BÖLÜMÜ -->
-        <div id="scheduled-section" class="hidden bg-slate-900 border border-slate-800 rounded-xl shadow overflow-hidden">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 px-3 md:px-4 py-3 border-b border-slate-800">
-                <div>
-                    <h2 class="text-base md:text-lg font-semibold text-slate-50">Planlanan Ödemeler</h2>
-                    <p class="text-[11px] md:text-xs text-slate-400">
-                        Tarihli işleri takvim üzerinden planla. Tarihi gelince otomatik Ödeme Listesi’ne düşer.
-                    </p>
-                </div>
-                <button
-                    id="btn-open-scheduled"
-                    class="self-start md:self-auto inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-medium px-3 py-2 rounded-lg"
-                    type="button"
-                >
-                    Yeni Planlı Ödeme
-                </button>
-            </div>
-
-            <!-- Takvim -->
-            <div class="px-3 md:px-4 py-3 border-b border-slate-800 bg-slate-950/60">
-                <div class="flex items-center justify-between mb-2">
-                    <button
-                        id="cal-prev"
-                        type="button"
-                        class="px-2 py-1 rounded-lg border border-slate-700 text-slate-300 text-xs hover:bg-slate-800"
-                    >
-                        ‹ Önceki
-                    </button>
-                    <div class="text-xs md:text-sm font-semibold text-slate-100" id="cal-label"></div>
-                    <button
-                        id="cal-next"
-                        type="button"
-                        class="px-2 py-1 rounded-lg border border-slate-700 text-slate-300 text-xs hover:bg-slate-800"
-                    >
-                        Sonraki ›
-                    </button>
-                </div>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-[10px] md:text-xs text-slate-300"></div>
-            </div>
-
-            <!-- Planlı Liste -->
-            <div class="px-3 md:px-4 py-3">
-                <h3 class="text-[11px] md:text-xs font-semibold text-slate-300 mb-2">
-                    Bu aya ait planlanan ödemeler
-                </h3>
-                <div id="scheduled-list" class="space-y-1.5 max-h-56 overflow-y-auto text-[11px] md:text-xs"></div>
-            </div>
-        </div>
+        <div class="calGrid" id="calGrid"></div>
+      </div>
     </div>
 
-    <!-- ÖDEME / PLANLI ÖDEME MODALI (ORTAK) -->
-    <div
-        id="payment-modal"
-        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70"
-    >
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-xl w-full max-w-lg mx-3">
-            <div class="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-                <h2 id="modal-title" class="text-base md:text-lg font-semibold text-slate-50">
-                    Yeni Ödeme Ekle
-                </h2>
-                <button
-                    id="modal-close"
-                    type="button"
-                    class="text-slate-400 hover:text-slate-200 text-xl leading-none"
-                >
-                    &times;
-                </button>
-            </div>
-            <div class="p-4">
-                <form id="payment-form" class="space-y-3">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Tarih</label>
-                            <input
-                                type="date"
-                                id="date"
-                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Tutar (₺)</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                id="amount"
-                                inputmode="decimal"
-                                pattern="[0-9]*"
-                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Başlık</label>
-                            <input
-                                type="text"
-                                id="title"
-                                placeholder="Kira, fatura, taksit..."
-                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm placeholder:text-slate-500"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Kategori (opsiyonel)</label>
-                            <input
-                                type="text"
-                                id="category"
-                                placeholder="Ev, okul, kredi kartı..."
-                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm placeholder:text-slate-500"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Hızlı Kartlar -->
-                    <div class="space-y-1">
-                        <label class="block text-xs md:text-sm text-slate-300">
-                            Hızlı kart seç (isteğe bağlı)
-                        </label>
-                        <div class="flex flex-wrap gap-2">
-                            <button
-                                type="button"
-                                class="quick-bank px-3 py-1.5 rounded-full text-[11px] md:text-xs border border-slate-600 text-slate-100 hover:bg-slate-800"
-                                data-title="Halkbank Kredi Kartı"
-                                data-category="Kredi Kartı"
-                            >
-                                Halkbank
-                            </button>
-                            <button
-                                type="button"
-                                class="quick-bank px-3 py-1.5 rounded-full text-[11px] md:text-xs border border-slate-600 text-slate-100 hover:bg-slate-800"
-                                data-title="İş Bankası Kredi Kartı"
-                                data-category="Kredi Kartı"
-                            >
-                                İş Bankası
-                            </button>
-                            <button
-                                type="button"
-                                class="quick-bank px-3 py-1.5 rounded-full text-[11px] md:text-xs border border-slate-600 text-slate-100 hover:bg-slate-800"
-                                data-title="Ziraat Bankası Kredi Kartı"
-                                data-category="Kredi Kartı"
-                            >
-                                Ziraat
-                            </button>
-                        </div>
-                        <p class="text-[11px] md:text-xs text-slate-500">
-                            Banka adına tıkladığında başlık, kategori ve tür dolar. Tarih ve tutarı girmek yeterli.
-                        </p>
-                    </div>
-
-                    <!-- Sesli / Metin Komut -->
-                    <div class="space-y-1">
-                        <label class="block text-xs md:text-sm text-slate-300">
-                            Sesli / Metin Komutu
-                        </label>
-                        <div class="flex gap-2">
-                            <input
-                                type="text"
-                                id="voice-command"
-                                placeholder="Örn: Halkbankası 20 bin lira borç 16 Aralık"
-                                class="flex-1 border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-slate-500"
-                            />
-                            <button
-                                type="button"
-                                id="btn-parse-command"
-                                class="text-[11px] md:text-xs px-3 py-2 rounded-lg border border-slate-600 text-slate-100 hover:bg-slate-800"
-                            >
-                                Dağıt
-                            </button>
-                        </div>
-                        <p class="text-[11px] md:text-xs text-slate-500">
-                            Klavye mikrofonuyla komut yazdırıp “Dağıt” butonuna basabilirsin.
-                        </p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-                        <div>
-                            <label class="block text-xs md:text-sm text-slate-300 mb-1">Tür</label>
-                            <select
-                                id="type"
-                                class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-sm"
-                            >
-                                <option value="outgoing">Borç / Ödeme (Çıkış)</option>
-                                <option value="incoming">Alacak / Tahsilat (Giriş)</option>
-                            </select>
-                        </div>
-                        <div class="flex flex-col gap-1">
-                            <label class="inline-flex items-center gap-2 text-xs md:text-sm text-slate-200">
-                                <input type="checkbox" id="isPaid" class="w-4 h-4" />
-                                <span>Ödendi olarak işaretle</span>
-                            </label>
-                            <label class="inline-flex items-center gap-2 text-xs md:text-sm text-slate-200">
-                                <input type="checkbox" id="isRecurring" class="w-4 h-4" />
-                                <span>Her ay tekrarlayan ödeme</span>
-                            </label>
-                            <div id="recurringMonthsWrap" class="mt-2 hidden">
-                                <label class="block text-xs md:text-sm text-slate-300 mb-1">Kaç ay tekrarlansın? (Girilen ay dahil)</label>
-                                <input id="recurringMonths" type="number" min="1" max="60" placeholder="Örn: 4" class="w-full border border-slate-700 bg-slate-950 text-slate-100 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-slate-500" />
-                                <p class="text-[11px] md:text-xs text-slate-500 mt-1">Boş bırakırsan sınırsız devam eder.</p>
-                            </div>
-                        </div>
-                        <div class="flex justify-end gap-2">
-                            <button
-                                type="button"
-                                id="btn-cancel"
-                                class="border border-slate-600 text-slate-200 text-xs md:text-sm px-3 py-2 rounded-lg hover:bg-slate-800"
-                            >
-                                İptal
-                            </button>
-                            <button
-                                id="submit-btn"
-                                type="submit"
-                                class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-medium px-4 py-2 rounded-lg"
-                            >
-                                Kaydet
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <div class="tabbar">
+      <div class="tab active" data-tab="expense"><div class="ico">💸</div>Gider</div>
+      <div class="tab" data-tab="income"><div class="ico">💰</div>Gelir</div>
+      <div class="tab" data-tab="calendar"><div class="ico">📆</div>Takvim</div>
+      <div class="tab" data-tab="settings"><div class="ico">⚙️</div>Ayarlar</div>
     </div>
+  </div>
 
-    <!-- Firebase Compat SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- Day Sheet -->
+  <div id="sheetBg" class="sheetBg" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="sheetTop">
+        <strong id="sheetTitle">Gün Detayı</strong>
+        <button id="sheetClose" class="btn small ghost">✕</button>
+      </div>
+      <div id="sheetBody" class="sheetBody"></div>
+    </div>
+  </div>
 
-    <script>
-        const firebaseConfig = {
-          apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
-          authDomain: "gezi-5b54b.firebaseapp.com",
-          projectId: "gezi-5b54b",
-          storageBucket: "gezi-5b54b.firebasestorage.app",
-          messagingSenderId: "926426747002",
-          appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
-          measurementId: "G-KB8SKRCQ9X"
-        };
+  <!-- Add Modal -->
+  <div id="modalBg" class="modalBg" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modalTop">
+        <strong id="modalTitle">Yeni Kayıt</strong>
+        <button id="modalClose" class="btn small ghost">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="grid2">
+          <select id="mType">
+            <option value="expense">Gider</option>
+            <option value="income">Gelir</option>
+          </select>
+          <select id="mStatus">
+            <option value="unpaid">Alınmadı/Ödenmedi</option>
+            <option value="paid">Alındı/Ödendi</option>
+          </select>
+        </div>
+        <div class="grid2">
+          <input id="mAmount" type="number" step="0.01" placeholder="Tutar (₺)" />
+          <input id="mDate" type="date" />
+        </div>
+        <div class="grid2">
+          <input id="mPerson" placeholder="Kişi (opsiyon)" />
+          <input id="mCategory" placeholder="Kategori (örn: Kira, Maaş)" />
+        </div>
+        <input id="mDesc" placeholder="Açıklama (örn: Macbook taksiti)" />
+        <label class="hint" style="display:flex; gap:10px; align-items:center;">
+          <input id="mRecurring" type="checkbox" />
+          Tekrarlayan (Aylık)
+        </label>
+        <div class="grid2">
+          <input id="mRepeatMonths" type="number" min="1" max="60" value="4" placeholder="Kaç ay?" />
+          <input id="mStartMonth" placeholder="Başlangıç ayı (YYYY-MM)" />
+        </div>
+        <div class="hint">Not: Bu demo — “Tekrarlayan” sadece UI mantığıdır. Firebase’e bağlayınca gerçek kayda dönecek.</div>
+      </div>
+      <div class="actions">
+        <button id="modalSave" class="btn primary" style="flex:1;">Kaydet</button>
+        <button id="modalCancel" class="btn" style="flex:1;">Vazgeç</button>
+      </div>
+    </div>
+  </div>
 
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const paymentsCol = db.collection("payments");
+  <script>
+    // ===== Demo State =====
+    const fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
 
-        let payments = [];
-        let editingId = null;
-        let currentUserId = null;
-        let currentUserEmail = null;
-        let unsubscribePayments = null;
+    let tab = "expense";     // expense | income | calendar | settings
+    let view = "list";       // list | calendar
+    let selectedMonth = ymFromDate(new Date());
+    let items = [];          // transactions in-memory
 
-        // ===== Tekrarlayan Ödeme (Aylık) — Çoğalma Fix (Idempotent) =====
-        // Not: Eski kayıtlarda recurrenceId yoksa, title/amount/category/type/day bazlı deterministik üretiriz.
-        function fnv1aHash(str) {
-            let h = 0x811c9dc5;
-            for (let i = 0; i < str.length; i++) {
-                h ^= str.charCodeAt(i);
-                h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
-            }
-            return ("0000000" + h.toString(16)).slice(-8);
-        }
+    // ===== Utils =====
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function ymFromDate(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1); }
+    function nextMonth(ym){
+      const p = ym.split("-"); const y = Number(p[0]); const m = Number(p[1]);
+      const d = new Date(y, m-1, 1); d.setMonth(d.getMonth()+1);
+      return ymFromDate(d);
+    }
+    function prevMonth(ym){
+      const p = ym.split("-"); const y = Number(p[0]); const m = Number(p[1]);
+      const d = new Date(y, m-1, 1); d.setMonth(d.getMonth()-1);
+      return ymFromDate(d);
+    }
+    function todayStr(){
+      const d = new Date();
+      return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+    }
+    function escapeHtml(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+      }[m]));
+    }
+    function monthOf(dateStr){ return (dateStr || "").slice(0,7); }
 
-        function ymOf(dateStr) {
-            return (dateStr || "").slice(0, 7); // YYYY-MM
-        }
+    // ===== DOM =====
+    const $ = (id) => document.getElementById(id);
 
-        function monthDiff(fromYM, toYM) {
-            const [fy, fm] = fromYM.split("-").map(Number);
-            const [ty, tm] = toYM.split("-").map(Number);
-            return (ty - fy) * 12 + (tm - fm);
-        }
+    // Tabs
+    document.querySelectorAll(".tab").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+        el.classList.add("active");
+        tab = el.dataset.tab;
+        if (tab === "calendar") { view = "calendar"; }
+        if (tab === "settings") { view = "list"; }
+        renderAll();
+      });
+    });
 
-        function computeRecurrenceId(p) {
-            // Day'ı sabitle: 15.03.2026 gibi örnekte gün=15. Aylık tekrar aynı gün mantığı.
-            const day = (p.date && p.date.split("-")[2]) ? p.date.split("-")[2] : "01";
-            const key = [
-                (p.title || "").trim().toLowerCase(),
-                String(Number(p.amount || 0)),
-                (p.category || "").trim().toLowerCase(),
-                (p.type || "").trim().toLowerCase(),
-                day,
-                "payment"
-            ].join("|");
-            return (p.recurrenceId || fnv1aHash(key));
-        }
+    // Month nav
+    $("btnPrev").addEventListener("click", ()=>{ selectedMonth = prevMonth(selectedMonth); renderAll(); });
+    $("btnNext").addEventListener("click", ()=>{ selectedMonth = nextMonth(selectedMonth); renderAll(); });
 
-        function dedupeRecurring(list) {
-            // Aynı ay içinde aynı recurrenceId olanları tekilleştir (DB'de çoğalsa da ekranda 1 kez görünsün)
-            const seen = new Set();
-            const out = [];
-            for (const p of list) {
-                if (p.isRecurring) {
-                    const rid = computeRecurrenceId(p);
-                    const k = rid + "|" + ymOf(p.date);
-                    if (seen.has(k)) continue;
-                    seen.add(k);
-                    // Render'da da kullanabilelim diye
-                    p.recurrenceId = rid;
-                    out.push(p);
-                } else {
-                    out.push(p);
-                }
-            }
-            return out;
-        }
+    // View toggle
+    $("btnListView").addEventListener("click", ()=>{
+      view = "list";
+      $("btnListView").classList.add("active");
+      $("btnCalView").classList.remove("active");
+      renderAll();
+    });
+    $("btnCalView").addEventListener("click", ()=>{
+      view = "calendar";
+      $("btnCalView").classList.add("active");
+      $("btnListView").classList.remove("active");
+      renderAll();
+    });
 
+    // Filters
+    $("statusFilter").addEventListener("change", renderAll);
+    $("search").addEventListener("input", renderAll);
 
-        // form modu: "payment" (normal liste) veya "scheduled" (planlı)
-        let currentFormMode = "payment";
+    // Demo button
+    $("btnDemo").addEventListener("click", ()=>{
+      seedDemo();
+      renderAll();
+    });
 
-        // Takvim görünümü (planlı ekran) için yıl/ay
-        let calendarYear;
-        let calendarMonth; // 0-11
+    // Add modal
+    $("btnAdd").addEventListener("click", openAddModal);
+    $("modalClose").addEventListener("click", closeAddModal);
+    $("modalCancel").addEventListener("click", closeAddModal);
+    $("modalSave").addEventListener("click", saveModal);
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const today = new Date();
-            calendarYear = today.getFullYear();
-            calendarMonth = today.getMonth();
+    // Sheet
+    $("sheetClose").addEventListener("click", closeSheet);
+    $("sheetBg").addEventListener("click", (e)=>{ if(e.target === $("sheetBg")) closeSheet(); });
+    $("modalBg").addEventListener("click", (e)=>{ if(e.target === $("modalBg")) closeAddModal(); });
 
-            bindAuthEvents();
-            bindAppEvents();
+    document.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape"){ closeSheet(); closeAddModal(); }
+    });
 
-            auth.onAuthStateChanged(user => {
-                if (user) {
-                    currentUserId = user.uid;
-                    currentUserEmail = user.email || "";
-                    showApp();
-                    subscribePayments();
-                } else {
-                    currentUserId = null;
-                    currentUserEmail = null;
-                    payments = [];
-                    if (unsubscribePayments) unsubscribePayments();
-                    renderAll();
-                    showAuth();
-                }
-            });
+    function openAddModal(){
+      $("modalBg").classList.add("show");
+      $("mType").value = (tab === "income") ? "income" : "expense";
+      $("mStatus").value = "unpaid";
+      $("mAmount").value = "";
+      $("mDate").value = todayStr();
+      $("mPerson").value = "";
+      $("mCategory").value = "";
+      $("mDesc").value = "";
+      $("mRecurring").checked = false;
+      $("mRepeatMonths").value = "4";
+      $("mStartMonth").value = selectedMonth;
+      $("modalTitle").textContent = "Yeni Kayıt";
+    }
+    function closeAddModal(){ $("modalBg").classList.remove("show"); }
+
+    function openSheet(title, list){
+      $("sheetTitle").textContent = title;
+      const body = $("sheetBody");
+      body.innerHTML = "";
+      if(!list.length){
+        body.innerHTML = `<div class="hint">Kayıt yok.</div>`;
+      } else {
+        list.forEach(it=>{
+          const cls = it.type === "income" ? "good" : "bad";
+          const badge = it.source === "recurring" ? `<span class="tag rec">Aylık</span>` : "";
+          body.insertAdjacentHTML("beforeend", `
+            <div class="sheetItem">
+              <div class="left">
+                <div class="t">${escapeHtml(it.desc || "—")}</div>
+                <div class="s">${escapeHtml(it.category || "—")} • ${escapeHtml(it.person || "—")} ${badge}</div>
+              </div>
+              <div class="right" style="color:${it.type==="income" ? "var(--good)" : "var(--bad)"}">${fmt.format(it.amount)}</div>
+            </div>
+          `);
         });
+      }
+      $("sheetBg").classList.add("show");
+    }
+    function closeSheet(){ $("sheetBg").classList.remove("show"); }
 
-        function showAuth() {
-            document.getElementById("auth-section").classList.remove("hidden");
-            document.getElementById("app-section").classList.add("hidden");
-            const errEl = document.getElementById("auth-error");
-            if (errEl) errEl.textContent = "";
+    function saveModal(){
+      const type = $("mType").value; // income|expense
+      const status = $("mStatus").value;
+      const amount = Number($("mAmount").value);
+      const date = $("mDate").value;
+      const person = $("mPerson").value.trim();
+      const category = $("mCategory").value.trim();
+      const desc = $("mDesc").value.trim();
+      const recurring = $("mRecurring").checked;
+      const repeatMonths = Number($("mRepeatMonths").value || 1);
+      const startMonth = ($("mStartMonth").value || selectedMonth).trim();
+
+      if(!amount || amount <= 0){ alert("Tutar gir."); return; }
+      if(!date){ alert("Tarih seç."); return; }
+
+      if(!recurring){
+        items.push(makeItem({ type, status, amount, date, person, category, desc, source:"manual" }));
+      } else {
+        // UI demo: girilen ay dahil X ay boyunca her ay 1 kayıt üret
+        const rid = "rec_" + Math.random().toString(36).slice(2,9);
+        let ym = startMonth;
+        for(let i=0;i<Math.max(1, repeatMonths);i++){
+          const d = ym + "-" + date.slice(8,10); // aynı gün
+          items.push(makeItem({ type, status, amount, date:d, person, category, desc, source:"recurring", recurrenceId: rid }));
+          ym = nextMonth(ym);
+        }
+      }
+
+      closeAddModal();
+      renderAll();
+    }
+
+    function makeItem({type, status, amount, date, person, category, desc, source, recurrenceId}){
+      return {
+        id: "t_" + Math.random().toString(36).slice(2),
+        type, status, amount,
+        date,
+        month: monthOf(date),
+        person, category, desc,
+        source: source || "manual",
+        recurrenceId: recurrenceId || null
+      };
+    }
+
+    // ===== Demo seed =====
+    function seedDemo(){
+      // örnek: Şubat'ta girilmiş 4 ay süren aylık gelir
+      const start = selectedMonth;
+      const rid1 = "rec_demo_income";
+      const rid2 = "rec_demo_expense";
+      items = items.filter(x => !x.id.startsWith("t_demo_"));
+
+      // recurring income: 4 months
+      let ym = start;
+      for(let i=0;i<4;i++){
+        items.push({
+          id:"t_demo_income_"+ym,
+          type:"income", status:"unpaid", amount:5533,
+          date: ym+"-15",
+          month: ym,
+          person:"Hüseyin",
+          category:"Macbook",
+          desc:"Macbook",
+          source:"recurring",
+          recurrenceId: rid1
+        });
+        ym = nextMonth(ym);
+      }
+
+      // recurring expense: 4 months
+      ym = start;
+      for(let i=0;i<4;i++){
+        items.push({
+          id:"t_demo_exp_"+ym,
+          type:"expense", status:"unpaid", amount:4800,
+          date: ym+"-05",
+          month: ym,
+          person:"—",
+          category:"Kira",
+          desc:"Kira",
+          source:"recurring",
+          recurrenceId: rid2
+        });
+        ym = nextMonth(ym);
+      }
+
+      // manual items
+      items.push(makeItem({ type:"expense", status:"paid", amount:320, date: start+"-10", person:"", category:"Market", desc:"Alışveriş", source:"manual" }));
+      items.push(makeItem({ type:"income", status:"paid", amount:1500, date: start+"-12", person:"", category:"Freelance", desc:"Ek iş", source:"manual" }));
+    }
+
+    // ===== Rendering =====
+    function renderAll(){
+      $("monthLabel").textContent = selectedMonth;
+
+      const subtitleTab =
+        tab === "expense" ? "Gider" :
+        tab === "income" ? "Gelir" :
+        tab === "calendar" ? "Takvim" : "Ayarlar";
+
+      const subtitleView = (tab === "calendar") ? "Takvim" : (view === "calendar" ? "Takvim" : "Liste");
+      $("subtitle").textContent = subtitleTab + " • " + subtitleView;
+
+      // Settings placeholder
+      if(tab === "settings"){
+        $("listWrap").classList.remove("hide");
+        $("calWrap").classList.add("hide");
+        $("btnListView").classList.add("active");
+        $("btnCalView").classList.remove("active");
+        view = "list";
+        renderSettings();
+        renderKPIs();
+        return;
+      }
+
+      // tab -> type filter
+      // calendar tab shows both types in calendar view
+      if(tab === "calendar") view = "calendar";
+
+      $("listWrap").classList.toggle("hide", view === "calendar");
+      $("calWrap").classList.toggle("hide", view !== "calendar");
+
+      renderKPIs();
+
+      if(view === "calendar"){
+        renderCalendar();
+      } else {
+        renderList();
+      }
+    }
+
+    function filteredForMonth(){
+      const st = $("statusFilter").value;
+      const q = $("search").value.trim().toLowerCase();
+
+      let base = items.filter(it => it.month === selectedMonth);
+
+      // tab filter
+      if(tab === "expense") base = base.filter(it => it.type === "expense");
+      if(tab === "income") base = base.filter(it => it.type === "income");
+
+      // status
+      if(st !== "all") base = base.filter(it => it.status === st);
+
+      // search
+      if(q){
+        base = base.filter(it => {
+          const blob = (it.desc+" "+it.category+" "+it.person).toLowerCase();
+          return blob.includes(q);
+        });
+      }
+
+      // IMPORTANT: UI-side de-dup for recurring (same recurrenceId+month)
+      const seen = new Set();
+      const out = [];
+      for(const it of base){
+        const key = (it.source === "recurring" && it.recurrenceId) ? (it.recurrenceId+"_"+it.month) : it.id;
+        if(seen.has(key)) continue;
+        seen.add(key);
+        out.push(it);
+      }
+
+      // sort desc by date
+      out.sort((a,b)=> (b.date || "").localeCompare(a.date || ""));
+      return out;
+    }
+
+    function renderKPIs(){
+      const monthItems = items.filter(it => it.month === selectedMonth);
+      const exp = monthItems.filter(it => it.type === "expense").reduce((s,it)=> s+Number(it.amount||0), 0);
+      const inc = monthItems.filter(it => it.type === "income").reduce((s,it)=> s+Number(it.amount||0), 0);
+      $("kpiExpense").textContent = fmt.format(exp);
+      $("kpiIncome").textContent = fmt.format(inc);
+
+      const expPaid = monthItems.filter(it => it.type === "expense" && it.status === "paid").length;
+      const expUn = monthItems.filter(it => it.type === "expense" && it.status !== "paid").length;
+      $("kpiExpenseHint").textContent = `Ödendi ${expPaid} • Ödenmedi ${expUn}`;
+      $("kpiIncomeHint").textContent = `Toplam ${monthItems.filter(it=>it.type==="income").length} kayıt`;
+
+      const shown = filteredForMonth().length;
+      $("infoLine").textContent = `${selectedMonth} içinde ${shown} kayıt görünüyor. (Demo veriler tekilleştirilir)`;
+    }
+
+    function renderList(){
+      const list = filteredForMonth();
+      const wrap = $("listWrap");
+      wrap.innerHTML = "";
+
+      if(!list.length){
+        wrap.innerHTML = `<div class="rowItem"><div class="meta"><div class="desc">Kayıt yok</div><div class="sub">Demo veri ekle butonuyla örnek ekleyebilirsin.</div></div></div>`;
+        return;
+      }
+
+      list.forEach(it=>{
+        const tagType = it.type === "income"
+          ? `<span class="tag good">Gelir</span>`
+          : `<span class="tag bad">Gider</span>`;
+        const tagRec = it.source === "recurring" ? `<span class="tag rec">Aylık</span>` : "";
+        const tagSt = it.status === "paid" ? `<span class="tag good">Alındı/Ödendi</span>` : `<span class="tag">Alınmadı</span>`;
+        const amountColor = it.type === "income" ? "var(--good)" : "var(--bad)";
+
+        wrap.insertAdjacentHTML("beforeend", `
+          <div class="rowItem">
+            <div class="date">${escapeHtml(it.date || "—")}</div>
+            <div class="meta">
+              <div class="desc">${escapeHtml(it.person || "—")} <span class="muted" style="font-weight:900">•</span> ${escapeHtml(it.category || "—")}</div>
+              <div class="sub">
+                ${tagType} ${tagRec} ${tagSt}
+                <span class="muted">•</span>
+                <span>${escapeHtml(it.desc || "")}</span>
+              </div>
+            </div>
+            <div class="amt" style="color:${amountColor}">${fmt.format(it.amount || 0)}</div>
+          </div>
+        `);
+      });
+    }
+
+    function renderCalendar(){
+      // Calendar shows BOTH types (even if tab=expense/income), unless settings
+      const grid = $("calGrid");
+      grid.innerHTML = "";
+
+      // DOW headers
+      const dows = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
+      dows.forEach(d => grid.insertAdjacentHTML("beforeend", `<div class="dow">${d}</div>`));
+
+      const y = Number(selectedMonth.slice(0,4));
+      const m = Number(selectedMonth.slice(5,7));
+      const first = new Date(y, m-1, 1);
+      const last = new Date(y, m, 0);
+      const daysIn = last.getDate();
+
+      // Monday-based index
+      const firstDow = (first.getDay() + 6) % 7; // 0=Mon ... 6=Sun
+      const totalCells = 42; // 6 weeks
+      const startDayNumber = 1 - firstDow;
+
+      const today = new Date();
+      const todayYM = ymFromDate(today);
+      const todayD = today.getDate();
+
+      for(let i=0;i<totalCells;i++){
+        const dayNum = startDayNumber + i;
+        const inMonth = dayNum >= 1 && dayNum <= daysIn;
+
+        // actual date for cell
+        const dateStr = inMonth ? `${selectedMonth}-${pad2(dayNum)}` : "";
+
+        // totals
+        let inc = 0, exp = 0;
+        if(inMonth){
+          const dayItems = items.filter(it => it.date === dateStr);
+          // de-dup recurring per day by (recurrenceId+date)
+          const seen = new Set();
+          dayItems.forEach(it=>{
+            const k = (it.source==="recurring" && it.recurrenceId) ? (it.recurrenceId+"_"+it.date) : it.id;
+            if(seen.has(k)) return;
+            seen.add(k);
+            if(it.type==="income") inc += Number(it.amount||0);
+            else exp += Number(it.amount||0);
+          });
         }
 
-        function showApp() {
-            document.getElementById("auth-section").classList.add("hidden");
-            document.getElementById("app-section").classList.remove("hidden");
-            const emailLabel = document.getElementById("user-email-label");
-            if (emailLabel) emailLabel.textContent = currentUserEmail || "(E-posta yok)";
-        }
-
-        function bindAuthEvents() {
-            const emailInput = document.getElementById("auth-email");
-            const passInput = document.getElementById("auth-password");
-            const errEl = document.getElementById("auth-error");
-
-            document.getElementById("btn-login").addEventListener("click", async () => {
-                const email = emailInput.value.trim();
-                const password = passInput.value.trim();
-                errEl.textContent = "";
-
-                if (!email || !password) {
-                    errEl.textContent = "E-posta ve şifre girmeniz gerekiyor.";
-                    return;
-                }
-                try {
-                    await auth.signInWithEmailAndPassword(email, password);
-                } catch (err) {
-                    console.error("Login hatası:", err);
-                    errEl.textContent = getAuthErrorMessage(err);
-                }
-            });
-
-            document.getElementById("btn-register").addEventListener("click", async () => {
-                const email = emailInput.value.trim();
-                const password = passInput.value.trim();
-                errEl.textContent = "";
-
-                if (!email || !password) {
-                    errEl.textContent = "E-posta ve şifre girmeniz gerekiyor.";
-                    return;
-                }
-                if (password.length < 6) {
-                    errEl.textContent = "Şifre en az 6 karakter olmalı.";
-                    return;
-                }
-                try {
-                    await auth.createUserWithEmailAndPassword(email, password);
-                } catch (err) {
-                    console.error("Register hatası:", err);
-                    errEl.textContent = getAuthErrorMessage(err);
-                }
-            });
-
-            document.getElementById("btn-logout").addEventListener("click", async () => {
-                try {
-                    await auth.signOut();
-                } catch (err) {
-                    console.error("Çıkış hatası:", err);
-                    alert("Çıkış yapılamadı.");
-                }
-            });
-        }
-
-        function getAuthErrorMessage(err) {
-            if (!err || !err.code) return "Bir hata oluştu.";
-            const code = err.code;
-            if (code === "auth/user-not-found") return "Kayıt bulunamadı. Önce hesap oluşturabilirsiniz.";
-            if (code === "auth/wrong-password") return "Şifre hatalı.";
-            if (code === "auth/email-already-in-use") return "Bu e-posta ile zaten bir hesap var.";
-            if (code === "auth/invalid-email") return "Geçersiz e-posta adresi.";
-            if (code === "auth/too-many-requests") return "Çok fazla deneme yapıldı. Lütfen tekrar deneyin.";
-            if (code === "auth/operation-not-allowed") return "E-posta/şifre ile giriş projenizde aktif değil (Firebase Console > Authentication).";
-            return "Hata: " + code;
-        }
-
-        function bindAppEvents() {
-            const form = document.getElementById("payment-form");
-            form.addEventListener("submit", handleSubmit);
-
-            // isRecurring -> ay sayısı alanını göster/gizle
-            const recCb = document.getElementById("isRecurring");
-            const recWrap = document.getElementById("recurringMonthsWrap");
-            if (recCb && recWrap) {
-                const sync = () => recWrap.classList.toggle("hidden", !recCb.checked);
-                recCb.addEventListener("change", sync);
-                sync();
-            }
-
-            document.getElementById("month-filter").addEventListener("change", renderAll);
-            document.getElementById("status-filter").addEventListener("change", renderAll);
-            document.getElementById("type-filter").addEventListener("change", renderAll);
-            document.getElementById("search-filter").addEventListener("input", renderAll);
-
-            document.getElementById("clear-all").addEventListener("click", async () => {
-                const realPayments = payments.filter(p => p.mode !== "scheduled");
-                if (realPayments.length === 0) return;
-                if (!confirm("Tüm gerçek ödemeleri (planlılar hariç) silmek istediğine emin misin?")) return;
-                for (const p of realPayments) {
-                    await paymentsCol.doc(p.id).delete();
-                }
-            });
-
-            document.getElementById("next-month").addEventListener("click", goToNextMonth);
-
-            document.getElementById("btn-open-modal").addEventListener("click", () => {
-                openNewModal("payment");
-            });
-            document.getElementById("btn-open-scheduled").addEventListener("click", () => {
-                openNewModal("scheduled");
-            });
-
-            document.getElementById("modal-close").addEventListener("click", closeModal);
-            document.getElementById("btn-cancel").addEventListener("click", closeModal);
-
-            document.getElementById("payment-modal").addEventListener("click", (e) => {
-                if (e.target.id === "payment-modal") {
-                    closeModal();
-                }
-            });
-
-            const tbody = document.getElementById("payments-body");
-
-            tbody.addEventListener("click", (e) => {
-                const target = e.target;
-
-                if (target.classList.contains("btn-edit")) {
-                    const id = target.dataset.id;
-                    openEditModal(id);
-                } else if (target.classList.contains("btn-delete")) {
-                    const id = target.dataset.id;
-                    deletePayment(id);
-                }
-            });
-
-            tbody.addEventListener("change", (e) => {
-                const target = e.target;
-                if (target.classList.contains("chk-paid")) {
-                    const id = target.dataset.id;
-                    togglePaid(id, target.checked);
-                }
-            });
-
-            document.getElementById("btn-parse-command").addEventListener("click", () => {
-                const cmd = document.getElementById("voice-command").value;
-                if (!cmd.trim()) {
-                    alert("Önce komut metnini gir (veya klavye mikrofonuyla konuş).");
-                    return;
-                }
-                fillFormFromCommand(cmd);
-            });
-
-            document.querySelectorAll(".quick-bank").forEach((btn) => {
-                btn.addEventListener("click", () => {
-                    const titleInput = document.getElementById("title");
-                    const categoryInput = document.getElementById("category");
-                    const typeSelect = document.getElementById("type");
-                    const isRecurring = document.getElementById("isRecurring");
-
-                    const rawTitle = btn.dataset.title || btn.textContent.trim();
-                    const rawCategory = btn.dataset.category || "Kredi Kartı";
-
-                    const title = toTitleCase(rawTitle);
-                    const category = toTitleCase(rawCategory);
-
-                    titleInput.value = title;
-                    categoryInput.value = category;
-
-                    if (typeSelect) typeSelect.value = "outgoing";
-                    if (isRecurring) isRecurring.checked = true;
-                });
-            });
-
-            // Sekmeler
-            document.getElementById("tab-payments").addEventListener("click", () => switchTab("payments"));
-            document.getElementById("tab-scheduled").addEventListener("click", () => switchTab("scheduled"));
-
-            // Takvim navigasyonu
-            document.getElementById("cal-prev").addEventListener("click", () => {
-                calendarMonth--;
-                if (calendarMonth < 0) {
-                    calendarMonth = 11;
-                    calendarYear--;
-                }
-                renderAll();
-            });
-            document.getElementById("cal-next").addEventListener("click", () => {
-                calendarMonth++;
-                if (calendarMonth > 11) {
-                    calendarMonth = 0;
-                    calendarYear++;
-                }
-                renderAll();
-            });
-
-            // Takvim hücre tıklama (planlı ödeme ekleme)
-            document.getElementById("calendar-grid").addEventListener("click", (e) => {
-                const cell = e.target.closest("[data-date]");
-                if (!cell) return;
-                const dateStr = cell.dataset.date;
-                openNewModal("scheduled", dateStr);
-            });
-        }
-
-        function switchTab(tab) {
-            const paySec = document.getElementById("payments-section");
-            const schSec = document.getElementById("scheduled-section");
-            const tabPayments = document.getElementById("tab-payments");
-            const tabScheduled = document.getElementById("tab-scheduled");
-
-            if (tab === "payments") {
-                paySec.classList.remove("hidden");
-                schSec.classList.add("hidden");
-
-                tabPayments.classList.add("bg-slate-800", "text-slate-50", "border-slate-600");
-                tabPayments.classList.remove("text-slate-400");
-
-                tabScheduled.classList.remove("bg-slate-800", "text-slate-50");
-                tabScheduled.classList.add("text-slate-400", "border-slate-700");
-            } else {
-                paySec.classList.add("hidden");
-                schSec.classList.remove("hidden");
-
-                tabScheduled.classList.add("bg-slate-800", "text-slate-50", "border-slate-600");
-                tabScheduled.classList.remove("text-slate-400");
-
-                tabPayments.classList.remove("bg-slate-800", "text-slate-50");
-                tabPayments.classList.add("text-slate-400", "border-slate-700");
-            }
-        }
-
-        function setTodayAsDefaultDate() {
-            const input = document.getElementById("date");
-            const today = new Date();
-            const y = today.getFullYear();
-            const m = String(today.getMonth() + 1).padStart(2, "0");
-            const d = String(today.getDate()).padStart(2, "0");
-            input.value = `${y}-${m}-${d}`;
-        }
-
-        function openNewModal(mode = "payment", presetDate = null) {
-            currentFormMode = mode;
-            editingId = null;
-            resetFormFields();
-
-            const titleEl = document.getElementById("modal-title");
-            const submitBtn = document.getElementById("submit-btn");
-            const isPaidChk = document.getElementById("isPaid");
-
-            if (mode === "payment") {
-                titleEl.textContent = "Yeni Ödeme Ekle";
-                submitBtn.textContent = "Kaydet";
-                submitBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-500");
-                submitBtn.classList.add("bg-indigo-600", "hover:bg-indigo-500");
-                isPaidChk.disabled = false;
-            } else {
-                titleEl.textContent = "Planlı Ödeme Ekle";
-                submitBtn.textContent = "Planı Kaydet";
-                submitBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-500");
-                submitBtn.classList.add("bg-indigo-600", "hover:bg-indigo-500");
-                // Planlı ödemede "ödendi" mantıksız, checkbox’ı disable edelim
-                isPaidChk.checked = false;
-                isPaidChk.disabled = true;
-            }
-
-            if (presetDate) {
-                document.getElementById("date").value = presetDate;
-            } else {
-                setTodayAsDefaultDate();
-            }
-
-            showModal();
-        }
-
-        function openEditModal(id) {
-            const payment = payments.find(p => p.id === id && p.mode !== "scheduled");
-            if (!payment) return;
-
-            currentFormMode = "payment";
-            editingId = id;
-
-            const titleEl = document.getElementById("modal-title");
-            const submitBtn = document.getElementById("submit-btn");
-            const isPaidChk = document.getElementById("isPaid");
-
-            titleEl.textContent = "Ödemeyi Düzenle";
-            submitBtn.textContent = "Güncelle";
-            submitBtn.classList.remove("bg-indigo-600", "hover:bg-indigo-500");
-            submitBtn.classList.add("bg-emerald-600", "hover:bg-emerald-500");
-            isPaidChk.disabled = false;
-
-            document.getElementById("date").value = payment.date;
-            document.getElementById("amount").value = payment.amount;
-            document.getElementById("title").value = payment.title;
-            document.getElementById("category").value = payment.category;
-            document.getElementById("type").value = payment.type;
-            document.getElementById("isPaid").checked = payment.isPaid;
-            document.getElementById("isRecurring").checked = !!payment.isRecurring;
-            const rm = document.getElementById("recurringMonths");
-            if (rm) rm.value = payment.recurrenceTotalMonths ? String(payment.recurrenceTotalMonths) : "";
-            const rw = document.getElementById("recurringMonthsWrap");
-            if (rw) rw.classList.toggle("hidden", !payment.isRecurring);
-
-            showModal();
-        }
-
-        function showModal() {
-            const modal = document.getElementById("payment-modal");
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-        }
-
-        function closeModal() {
-            const modal = document.getElementById("payment-modal");
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-            editingId = null;
-            resetFormFields();
-        }
-
-        function resetFormFields() {
-            const form = document.getElementById("payment-form");
-            form.reset();
-            setTodayAsDefaultDate();
-            document.getElementById("isPaid").checked = false;
-            document.getElementById("isPaid").disabled = false;
-            const rec = document.getElementById("isRecurring");
-            if (rec) rec.checked = false;
-            const rm = document.getElementById("recurringMonths");
-            if (rm) rm.value = "";
-            const rw = document.getElementById("recurringMonthsWrap");
-            if (rw) rw.classList.add("hidden");
-            document.getElementById("type").value = "outgoing";
-            const vc = document.getElementById("voice-command");
-            if (vc) vc.value = "";
-        }
-
-        function toTitleCase(str) {
-            if (!str) return "";
-            return str
-                .toLowerCase()
-                .split(" ")
-                .filter(Boolean)
-                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-                .join(" ");
-        }
-
-        // Sesli / metin komut çözümü
-        function fillFormFromCommand(text) {
-            if (!text) return;
-            const raw = text.trim();
-            let t = raw.toLowerCase();
-
-            let type = "outgoing";
-            if (t.includes("alacak") || t.includes("alacağım") || t.includes("tahsil")) {
-                type = "incoming";
-            } else if (t.includes("borç") || t.includes("borcum") || t.includes("öde")) {
-                type = "outgoing";
-            }
-
-            let amount = null;
-
-            let amountMatchBin = t.match(/(\d+)\s*bin/);
-            if (amountMatchBin) {
-                amount = parseInt(amountMatchBin[1], 10) * 1000;
-            }
-
-            if (!amount) {
-                let liraIndex = t.indexOf("lira");
-                let searchSpan = t;
-                if (liraIndex !== -1) {
-                    const start = Math.max(0, liraIndex - 20);
-                    searchSpan = t.substring(start, liraIndex);
-                }
-
-            let numMatch = searchSpan.match(/(\d[\d.,]*)/);
-                if (numMatch) {
-                    let n = numMatch[1].trim();
-
-                    if (n.includes(".") && !n.includes(",")) {
-                        n = n.replace(/\./g, "");
-                    } else {
-                        n = n.replace(/\./g, "").replace(",", ".");
-                    }
-
-                    const parsed = parseFloat(n);
-                    if (!isNaN(parsed)) {
-                        amount = parsed;
-                    }
-                }
-            }
-
-            const aylar = {
-                "ocak": "01",
-                "şubat": "02",
-                "subat": "02",
-                "mart": "03",
-                "nisan": "04",
-                "mayıs": "05",
-                "mayis": "05",
-                "haziran": "06",
-                "temmuz": "07",
-                "ağustos": "08",
-                "agustos": "08",
-                "eylül": "09",
-                "eylul": "09",
-                "ekim": "10",
-                "kasım": "11",
-                "kasim": "11",
-                "aralık": "12",
-                "aralik": "12"
-            };
-
-            let dateStr = null;
-            const dateMatch = t.match(/(\d{1,2})\s+(ocak|şubat|subat|mart|nisan|mayıs|mayis|haziran|temmuz|ağustos|agustos|eylül|eylul|ekim|kasım|kasim|aralık|aralik)/);
-            if (dateMatch) {
-                const gun = dateMatch[1].padStart(2, "0");
-                const ayKelime = dateMatch[2];
-                const ay = aylar[ayKelime] || "01";
-
-                const today = new Date();
-                const yil = today.getFullYear();
-                dateStr = `${yil}-${ay}-${gun}`;
-            }
-
-            if (!dateStr) {
-                const today = new Date();
-                const y = today.getFullYear();
-                const m = String(today.getMonth() + 1).padStart(2, "0");
-                const d = String(today.getDate()).padStart(2, "0");
-                dateStr = `${y}-${m}-${d}`;
-            }
-
-            let title = raw;
-
-            let cleaned = t
-                .replace(/(\d+)\s*bin/g, "")
-                .replace(/(\d[\d.,]*)/g, "")
-                .replace(/lira/g, "")
-                .replace(/borç|borcu|borcum|alacak|alacağım|tahsil/g, "")
-                .trim();
-
-            if (dateMatch) {
-                cleaned = cleaned.replace(dateMatch[0], "").trim();
-            }
-
-            if (cleaned) {
-                title = cleaned.split(" ").slice(0, 3).join(" ");
-            } else {
-                title = raw.split(" ").slice(0, 3).join(" ");
-            }
-
-            title = toTitleCase(title);
-
-            if (title) document.getElementById("title").value = title;
-            if (amount) document.getElementById("amount").value = amount;
-            if (dateStr) document.getElementById("date").value = dateStr;
-            document.getElementById("type").value = type;
-
-            alert(
-                "Komut çözümlendi:\n" +
-                "- Başlık: " + title + "\n" +
-                "- Tutar: " + (amount || "bulunamadı") + "\n" +
-                "- Tür: " + (type === "outgoing" ? "Borç/Çıkış" : "Alacak/Giriş") + "\n" +
-                "- Tarih: " + dateStr
-            );
-        }
-
-        async function handleSubmit(e) {
-            e.preventDefault();
-
-            if (!currentUserId) {
-                alert("Önce giriş yapmanız gerekiyor.");
-                return;
-            }
-
-            const date = document.getElementById("date").value;
-            const amount = parseFloat(document.getElementById("amount").value || "0");
-            let title = document.getElementById("title").value.trim();
-            let category = document.getElementById("category").value.trim();
-            const type = document.getElementById("type").value;
-            let isPaid = document.getElementById("isPaid").checked;
-            const isRecurring = document.getElementById("isRecurring").checked;
-            const recurringMonthsRaw = (document.getElementById("recurringMonths")?.value || "").trim();
-            const recurringMonths = recurringMonthsRaw ? Math.max(1, Math.min(60, parseInt(recurringMonthsRaw, 10))) : null;
-
-            if (!date || !title || isNaN(amount)) {
-                alert("Lütfen tarih, başlık ve tutar alanlarını doldurun.");
-                return;
-            }
-
-            title = toTitleCase(title);
-            category = toTitleCase(category);
-
-            try {
-                if (currentFormMode === "payment") {
-                    if (editingId) {
-                        await paymentsCol.doc(editingId).update({
-                            date,
-                            amount,
-                            title,
-                            category,
-                            type,
-                            isPaid,
-                            isRecurring,
-                            recurrenceId: isRecurring ? computeRecurrenceId({date, amount, title, category, type}) : null,
-                            recurrenceStart: isRecurring ? ymOf(date) : null,
-                            recurrenceTotalMonths: isRecurring ? recurringMonths : null,
-                            userId: currentUserId,
-                            mode: "payment"
-                        });
-                    } else {
-                        await paymentsCol.add({
-                            date,
-                            amount,
-                            title,
-                            category,
-                            type,
-                            isPaid,
-                            isRecurring,
-                            recurrenceId: isRecurring ? computeRecurrenceId({date, amount, title, category, type}) : null,
-                            recurrenceStart: isRecurring ? ymOf(date) : null,
-                            recurrenceTotalMonths: isRecurring ? recurringMonths : null,
-                            userId: currentUserId,
-                            mode: "payment"
-                        });
-                    }
-                } else {
-                    // Planlı ödeme: her zaman isPaid = false, isRecurring şimdilik kaydedilmiyor
-                    isPaid = false;
-                    await paymentsCol.add({
-                        date,
-                        amount,
-                        title,
-                        category,
-                        type,
-                        isPaid: false,
-                        isRecurring: false,
-                        userId: currentUserId,
-                        mode: "scheduled"
-                    });
-                }
-
-                closeModal();
-            } catch (err) {
-                console.error("Kayıt hatası:", err);
-                alert("Kaydetme sırasında bir hata oluştu. Tarayıcı konsoluna bakabilirsin.");
-            }
-        }
-
-        async function togglePaid(id, checked) {
-            try {
-                await paymentsCol.doc(id).update({ isPaid: checked });
-            } catch (err) {
-                console.error("Durum güncelleme hatası:", err);
-                alert("Durum güncellenemedi.");
-            }
-        }
-
-        async function deletePayment(id) {
-            if (!confirm("Bu kaydı silmek istediğine emin misin?")) return;
-            try {
-                await paymentsCol.doc(id).delete();
-            } catch (err) {
-                console.error("Silme hatası:", err);
-                alert("Silme sırasında bir hata oluştu.");
-            }
-        }
-
-        function subscribePayments() {
-            if (!currentUserId) return;
-            if (unsubscribePayments) unsubscribePayments();
-
-            unsubscribePayments = paymentsCol
-                .where("userId", "==", currentUserId)
-                .onSnapshot(async (snapshot) => {
-                    payments = snapshot.docs.map(docSnap => ({
-                        id: docSnap.id,
-                        ...docSnap.data()
-                    }));
-
-                    try {
-                        await releaseDueScheduled();
-                    } catch (err) {
-                        console.error("Planlıdan listeye aktarma hatası:", err);
-                    }
-
-                    renderAll();
-                }, (err) => {
-                    console.error("Firestore dinleme hatası:", err);
-                });
-        }
-
-        async function releaseDueScheduled() {
-            if (!currentUserId) return;
-
-            const today = new Date();
-            const y = today.getFullYear();
-            const m = String(today.getMonth() + 1).padStart(2, "0");
-            const d = String(today.getDate()).padStart(2, "0");
-            const todayStr = `${y}-${m}-${d}`;
-
-            const due = payments.filter(
-                p => p.mode === "scheduled" && p.date && p.date <= todayStr
-            );
-
-            for (const s of due) {
-                try {
-                    await paymentsCol.add({
-                        date: s.date,
-                        amount: s.amount,
-                        title: s.title,
-                        category: s.category,
-                        type: s.type,
-                        isPaid: false,
-                        isRecurring: false,
-                        userId: currentUserId,
-                        mode: "payment"
-                    });
-                    await paymentsCol.doc(s.id).delete();
-                } catch (err) {
-                    console.error("Planlıdan gerçek listeye kopyalama hatası:", err);
-                }
-            }
-        }
-
-        function formatCurrency(value) {
-            return value.toLocaleString("tr-TR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }) + " ₺";
-        }
-
-        function formatDate(dateStr) {
-            if (!dateStr) return "";
-            const [y, m, d] = dateStr.split("-");
-            return `${d}.${m}.${y}`;
-        }
-
-        function getCurrentPeriod() {
-            const monthFilter = document.getElementById("month-filter").value;
-            if (monthFilter) return monthFilter;
-
-            const today = new Date();
-            const y = today.getFullYear();
-            const m = String(today.getMonth() + 1).padStart(2, "0");
-            return `${y}-${m}`;
-        }
-
-        function getNextPeriod(period) {
-            let [y, m] = period.split("-");
-            let year = parseInt(y, 10);
-            let month = parseInt(m, 10) + 1;
-
-            if (month === 13) {
-                month = 1;
-                year++;
-            }
-            return `${year}-${String(month).padStart(2, "0")}`;
-        }
-
-        async function goToNextMonth() {
-            if (!currentUserId) {
-                alert("Önce giriş yapmanız gerekiyor.");
-                return;
-            }
-
-            const currentPeriod = getCurrentPeriod();   // YYYY-MM
-            const nextPeriod = getNextPeriod(currentPeriod);
-
-            const realPayments = payments.filter(p => p.mode !== "scheduled");
-
-            const unpaidExists = realPayments.some(
-                p => !p.isPaid && p.date && p.date.startsWith(currentPeriod)
-            );
-
-            if (unpaidExists) {
-                const ok = confirm(
-                    "Bu ay için hâlâ ödenmemiş kayıtlar var. Yine de yeni aya geçilsin mi?"
-                );
-                if (!ok) return;
-            }
-
-            // Bu ayın tekrarlayanlarını "tekil recurrenceId" bazında seç (DB'de çoğalmış olsa bile 1 kez ele al)
-            const recurringThisMonth = realPayments.filter(
-                p => p.isRecurring && p.date && p.date.startsWith(currentPeriod)
-            );
-
-            const byRid = new Map();
-            for (const p of recurringThisMonth) {
-                const rid = computeRecurrenceId(p);
-                if (!byRid.has(rid)) {
-                    byRid.set(rid, { ...p, recurrenceId: rid });
-                }
-            }
-
-            for (const [rid, p] of byRid.entries()) {
-                // Süre kontrolü: girilen ay dahil X ay
-                const startYM = p.recurrenceStart || ymOf(p.date) || currentPeriod;
-                const total = (typeof p.recurrenceTotalMonths === "number" && p.recurrenceTotalMonths > 0)
-                    ? p.recurrenceTotalMonths
-                    : null;
-
-                if (total !== null) {
-                    const diff = monthDiff(startYM, nextPeriod); // start=0, sonraki ay=1, ...
-                    if (diff > (total - 1)) {
-                        continue; // süre bitti
-                    }
-                }
-
-                // Eğer nextPeriod içinde zaten aynı recurrenceId'li kayıt varsa (eski çoğalmalar dahil) yeniden üretme
-                const alreadyThere = realPayments.some(x =>
-                    x.isRecurring &&
-                    (x.recurrenceId ? x.recurrenceId === rid : computeRecurrenceId(x) === rid) &&
-                    x.date && x.date.startsWith(nextPeriod)
-                );
-                if (alreadyThere) continue;
-
-                const [ny, nm] = nextPeriod.split("-");
-                const yearNum = parseInt(ny, 10);
-                const monthNum = parseInt(nm, 10);
-
-                const originalDay = parseInt((p.date || "").split("-")[2] || "1", 10);
-                const lastDayOfNext = new Date(yearNum, monthNum, 0).getDate();
-                const safeDay = String(Math.min(originalDay, lastDayOfNext)).padStart(2, "0");
-
-                const newDate = `${nextPeriod}-${safeDay}`;
-
-                // IDempotent doküman id: rid_YYYY-MM (aynı ay için 1 kayıt)
-                const docId = `${rid}_${nextPeriod}`;
-
-                await paymentsCol.doc(docId).set({
-                    date: newDate,
-                    amount: p.amount,
-                    title: p.title,
-                    category: p.category,
-                    type: p.type,
-                    isPaid: false,
-                    isRecurring: true,
-                    recurrenceId: rid,
-                    recurrenceStart: startYM,
-                    recurrenceTotalMonths: total,
-                    userId: currentUserId,
-                    mode: "payment"
-                }, { merge: true });
-            }
-
-            const monthInput = document.getElementById("month-filter");
-            monthInput.value = nextPeriod;
-
-            renderAll();
-        }
-
-        function updateStatusCharts(stats) {
-            const {
-                paidOutgoing,
-                unpaidOutgoing,
-                paidIncoming,
-                unpaidIncoming,
-                totalOutgoing,
-                totalIncoming
-            } = stats;
-
-            const totalDebt = paidOutgoing + unpaidOutgoing;
-            const totalCredit = paidIncoming + unpaidIncoming;
-
-            const totalPaidDebt   = paidOutgoing;
-            const totalReceived   = paidIncoming;
-            const totalUnpaidDebt = unpaidOutgoing;
-            const totalUnreceived = unpaidIncoming;
-
-            const debtSummary = document.getElementById("debt-summary");
-            const labelPaidOut = document.getElementById("label-paid-outgoing");
-            const labelUnpaidOut = document.getElementById("label-unpaid-outgoing");
-            const barPaidOut = document.getElementById("bar-paid-outgoing");
-            const barUnpaidOut = document.getElementById("bar-unpaid-outgoing");
-
-            if (debtSummary) {
-                debtSummary.textContent =
-                    totalDebt > 0 ? "Toplam: " + formatCurrency(totalDebt) : "-";
-            }
-            if (labelPaidOut) {
-                labelPaidOut.textContent = "Ödediğim: " + formatCurrency(totalPaidDebt);
-            }
-            if (labelUnpaidOut) {
-                labelUnpaidOut.textContent = "Ödeyeceğim: " + formatCurrency(totalUnpaidDebt);
-            }
-
-            let paidOutPct = 0;
-            let unpaidOutPct = 0;
-            if (totalDebt > 0) {
-                paidOutPct = (totalPaidDebt / totalDebt) * 100;
-                unpaidOutPct = (totalUnpaidDebt / totalDebt) * 100;
-            }
-            if (barPaidOut) barPaidOut.style.width = paidOutPct + "%";
-            if (barUnpaidOut) barUnpaidOut.style.width = unpaidOutPct + "%";
-
-            const creditSummary = document.getElementById("credit-summary");
-            const labelPaidIn = document.getElementById("label-paid-incoming");
-            const labelUnpaidIn = document.getElementById("label-unpaid-incoming");
-            const barPaidIn = document.getElementById("bar-paid-incoming");
-            const barUnpaidIn = document.getElementById("bar-unpaid-incoming");
-
-            if (creditSummary) {
-                creditSummary.textContent =
-                    totalCredit > 0 ? "Toplam: " + formatCurrency(totalCredit) : "-";
-            }
-            if (labelPaidIn) {
-                labelPaidIn.textContent = "Aldığım: " + formatCurrency(totalReceived);
-            }
-            if (labelUnpaidIn) {
-                labelUnpaidIn.textContent = "Alacağım: " + formatCurrency(totalUnreceived);
-            }
-
-            let paidInPct = 0;
-            let unpaidInPct = 0;
-            if (totalCredit > 0) {
-                paidInPct = (totalReceived / totalCredit) * 100;
-                unpaidInPct = (totalUnreceived / totalCredit) * 100;
-            }
-            if (barPaidIn) barPaidIn.style.width = paidInPct + "%";
-            if (barUnpaidIn) barUnpaidIn.style.width = unpaidInPct + "%";
-
-            const statusTotalText = document.getElementById("status-total-text");
-            const statusTotalBalance = document.getElementById("status-total-balance");
-            const diff = totalOutgoing - totalIncoming;
-
-            if (statusTotalText) {
-                statusTotalText.textContent =
-                    "Ödediğim toplam: " + formatCurrency(totalPaidDebt) +
-                    " · Aldığım toplam: " + formatCurrency(totalReceived);
-            }
-
-            if (statusTotalBalance) {
-                let text = "Genel durum: Dengede (" + formatCurrency(Math.abs(diff)) + ")";
-                if (diff > 0.01) {
-                    text = "Genel durum: Borç fazlası (" + formatCurrency(diff) + ")";
-                } else if (diff < -0.01) {
-                    text = "Genel durum: Alacak fazlası (" + formatCurrency(Math.abs(diff)) + ")";
-                }
-                statusTotalBalance.textContent = text;
-            }
-        }
-
-        function renderAll() {
-            renderPayments();
-            renderScheduled();
-        }
-
-        function renderPayments() {
-            const tbody = document.getElementById("payments-body");
-            if (!tbody) return;
-            tbody.innerHTML = "";
-
-            const monthFilter = document.getElementById("month-filter").value;
-            const statusFilter = document.getElementById("status-filter").value;
-            const typeFilter = document.getElementById("type-filter").value;
-            const searchFilter = document.getElementById("search-filter").value.toLowerCase();
-
-            const basePayments = payments
-                .filter(p => p.mode !== "scheduled")
-                .slice()
-                .sort((a, b) => a.date.localeCompare(b.date));
-
-            let filtered = basePayments;
-
-            if (monthFilter) {
-                filtered = filtered.filter(p => p.date && p.date.startsWith(monthFilter));
-            }
-
-            if (statusFilter === "paid") {
-                filtered = filtered.filter(p => p.isPaid);
-            } else if (statusFilter === "unpaid") {
-                filtered = filtered.filter(p => !p.isPaid);
-            }
-
-            if (typeFilter === "incoming") {
-                filtered = filtered.filter(p => p.type === "incoming");
-            } else if (typeFilter === "outgoing") {
-                filtered = filtered.filter(p => p.type === "outgoing");
-            }
-
-            if (searchFilter) {
-                filtered = filtered.filter(p =>
-                    (p.title || "").toLowerCase().includes(searchFilter) ||
-                    (p.category || "").toLowerCase().includes(searchFilter)
-                );
-            }
-
-            // Aylık (tekrarlayan) kayıtları aynı ay içinde tekilleştir (DB çoğalmış olsa bile)
-            filtered = dedupeRecurring(filtered);
-
-            filtered.forEach(p => {
-                const tr = document.createElement("tr");
-                tr.className = "hover:bg-slate-900/60";
-
-                const typeBadgeClass =
-                    p.type === "outgoing"
-                        ? "bg-red-500/15 text-red-300 border border-red-500/30"
-                        : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30";
-
-                const statusBadgeClass = p.isPaid
-                    ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                    : "bg-amber-500/15 text-amber-300 border border-amber-500/30";
-
-                const statusText =
-                    p.type === "incoming"
-                        ? (p.isPaid ? "Alındı" : "Alınmadı")
-                        : (p.isPaid ? "Ödendi" : "Ödenmedi");
-
-                const recurringBadge = p.isRecurring
-                    ? `<span class="inline-flex w-fit px-2 py-0.5 rounded-full text-[10px] md:text-[11px] font-medium bg-sky-500/15 text-sky-300 border border-sky-500/30">
-                            Aylık
-                       </span>`
-                    : "";
-
-                tr.innerHTML = `
-                    <td class="px-3 py-2 whitespace-nowrap text-[11px] md:text-xs text-slate-200">${formatDate(p.date)}</td>
-                    <td class="px-3 py-2 text-[11px] md:text-xs text-slate-50">
-                        <div class="flex flex-col gap-1">
-                            <span>${p.title}</span>
-                            ${recurringBadge}
-                        </div>
-                    </td>
-                    <td class="px-3 py-2 text-[11px] md:text-xs text-slate-400">${p.category || "-"}</td>
-                    <td class="px-3 py-2 text-[11px] md:text-xs text-right font-semibold ${p.type === "outgoing" ? "text-red-300" : "text-emerald-300"}">
-                        ${formatCurrency(p.amount)}
-                    </td>
-                    <td class="px-3 py-2 text-[11px] md:text-xs text-center">
-                        <label class="inline-flex items-center justify-center gap-1 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                class="w-4 h-4 chk-paid"
-                                data-id="${p.id}"
-                                ${p.isPaid ? "checked" : ""}
-                            />
-                            <span class="inline-flex px-2 py-1 rounded-full text-[10px] md:text-[11px] font-medium ${statusBadgeClass}">
-                                ${statusText}
-                            </span>
-                        </label>
-                    </td>
-                    <td class="px-3 py-2 text-[11px] md:text-xs text-center">
-                        <span class="inline-flex px-2 py-1 rounded-full text-[10px] md:text-[11px] font-medium ${typeBadgeClass}">
-                            ${p.type === "outgoing" ? "Borç / Çıkış" : "Alacak / Giriş"}
-                        </span>
-                    </td>
-                    <td class="px-3 py-2 text-[11px] md:text-xs text-center space-x-2">
-                        <button
-                            class="text-slate-300 hover:text-slate-50 btn-edit"
-                            data-id="${p.id}"
-                        >
-                            Düzenle
-                        </button>
-                        <button
-                            class="text-red-300 hover:text-red-200 btn-delete"
-                            data-id="${p.id}"
-                        >
-                            Sil
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById("empty-state").classList.toggle("hidden", filtered.length !== 0);
-
-            let totalOutgoing = 0;
-            let totalIncoming = 0;
-
-            let paidOutgoing = 0;
-            let unpaidOutgoing = 0;
-            let paidIncoming = 0;
-            let unpaidIncoming = 0;
-
-            filtered.forEach(p => {
-                if (p.type === "outgoing") {
-                    totalOutgoing += p.amount;
-                    if (p.isPaid) {
-                        paidOutgoing += p.amount;
-                    } else {
-                        unpaidOutgoing += p.amount;
-                    }
-                } else if (p.type === "incoming") {
-                    totalIncoming += p.amount;
-                    if (p.isPaid) {
-                        paidIncoming += p.amount;
-                    } else {
-                        unpaidIncoming += p.amount;
-                    }
-                }
-            });
-
-            document.getElementById("total-outgoing").textContent = formatCurrency(totalOutgoing);
-            document.getElementById("total-incoming").textContent = formatCurrency(totalIncoming);
-
-            const diff = totalOutgoing - totalIncoming;
-
-            const unpaidLabelEl = document.getElementById("total-unpaid-label");
-            const unpaidEl = document.getElementById("total-unpaid");
-
-            if (diff > 0.01) {
-                unpaidLabelEl.textContent = "Borç Fazlası";
-                unpaidEl.className = "text-xs md:text-xl font-semibold mt-1 text-red-300 text-center";
-            } else if (diff < -0.01) {
-                unpaidLabelEl.textContent = "Alacak Fazlası";
-                unpaidEl.className = "text-xs md:text-xl font-semibold mt-1 text-emerald-300 text-center";
-            } else {
-                unpaidLabelEl.textContent = "Dengede";
-                unpaidEl.className = "text-xs md:text-xl font-semibold mt-1 text-slate-100 text-center";
-            }
-
-            unpaidEl.textContent = formatCurrency(Math.abs(diff));
-
-            const countInfoEl = document.getElementById("count-info");
-            if (countInfoEl) {
-                countInfoEl.textContent =
-                    filtered.length + " kayıt gösteriliyor (toplam gerçek: " + basePayments.length + ")";
-            }
-
-            updateStatusCharts({
-                paidOutgoing,
-                unpaidOutgoing,
-                paidIncoming,
-                unpaidIncoming,
-                totalOutgoing,
-                totalIncoming
-            });
-        }
-
-        function getMonthNameTR(monthIndex) {
-            const names = [
-                "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-                "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
-            ];
-            return names[monthIndex] || "";
-        }
-
-        function renderScheduled() {
-            const labelEl = document.getElementById("cal-label");
-            const gridEl = document.getElementById("calendar-grid");
-            const listEl = document.getElementById("scheduled-list");
-            if (!labelEl || !gridEl || !listEl) return;
-
-            const year = calendarYear;
-            const month = calendarMonth;
-
-            labelEl.textContent = `${getMonthNameTR(month)} ${year}`;
-
-            gridEl.innerHTML = "";
-
-            const daysShort = ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"];
-            daysShort.forEach(d => {
-                const div = document.createElement("div");
-                div.className = "font-semibold text-[10px] md:text-xs text-slate-400";
-                div.textContent = d;
-                gridEl.appendChild(div);
-            });
-
-            const first = new Date(year, month, 1);
-            let startDay = first.getDay(); // 0=Pazar
-            if (startDay === 0) startDay = 7;
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            const scheduledPayments = payments.filter(p => p.mode === "scheduled");
-
-            const byDate = {};
-            scheduledPayments.forEach(p => {
-                if (!p.date) return;
-                if (!byDate[p.date]) byDate[p.date] = [];
-                byDate[p.date].push(p);
-            });
-
-            for (let i = 1; i < startDay; i++) {
-                const empty = document.createElement("div");
-                empty.className = "h-8 md:h-9";
-                gridEl.appendChild(empty);
-            }
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dStr = String(day).padStart(2, "0");
-                const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${dStr}`;
-
-                const hasItems = !!byDate[dateStr];
-
-                const cell = document.createElement("div");
-                cell.className =
-                    "relative h-8 md:h-9 flex flex-col items-center justify-center rounded-lg border text-[10px] md:text-xs cursor-pointer " +
-                    (hasItems
-                        ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-100"
-                        : "border-slate-800 hover:bg-slate-800/60 text-slate-100");
-                cell.dataset.date = dateStr;
-                cell.innerHTML = `
-                    <span>${day}</span>
-                    ${
-                        hasItems
-                            ? `<span class="absolute bottom-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400"></span>`
-                            : ""
-                    }
-                `;
-                gridEl.appendChild(cell);
-            }
-
-            listEl.innerHTML = "";
-
-            const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
-            const monthItems = scheduledPayments
-                .filter(p => p.date && p.date.startsWith(monthStr))
-                .sort((a, b) => a.date.localeCompare(b.date));
-
-            if (monthItems.length === 0) {
-                listEl.innerHTML = `
-                    <p class="text-[11px] md:text-xs text-slate-400">
-                        Bu ay için planlı ödeme yok. Takvimden bir gün seçerek veya “Yeni Planlı Ödeme” ile ekleyebilirsin.
-                    </p>
-                `;
-                return;
-            }
-
-            monthItems.forEach(p => {
-                const row = document.createElement("div");
-                row.className = "flex items-center justify-between gap-2 bg-slate-950/40 border border-slate-800 rounded-lg px-2 py-1.5";
-
-                const [y, m, d] = p.date.split("-");
-                const shortDate = `${d}.${m}`;
-                const typeLabel = p.type === "outgoing" ? "Borç" : "Alacak";
-                const typeClass = p.type === "outgoing"
-                    ? "bg-red-500/15 text-red-300 border-red-500/30"
-                    : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
-
-                row.innerHTML = `
-                    <div class="flex flex-col">
-                        <span class="font-semibold text-slate-100">${p.title}</span>
-                        <span class="text-slate-400">${shortDate} · ${p.category || "-"}</span>
-                    </div>
-                    <div class="flex flex-col items-end gap-1">
-                        <span class="font-semibold ${p.type === "outgoing" ? "text-red-300" : "text-emerald-300"}">
-                            ${formatCurrency(p.amount)}
-                        </span>
-                        <div class="flex items-center gap-1">
-                            <span class="inline-flex px-2 py-0.5 rounded-full border ${typeClass}">
-                                ${typeLabel}
-                            </span>
-                            <button
-                                class="text-[10px] text-red-300 hover:text-red-200"
-                                onclick="deletePayment('${p.id}')"
-                            >
-                                Sil
-                            </button>
-                        </div>
-                    </div>
-                `;
-                listEl.appendChild(row);
-            });
-        }
-    </script>
+        const clsMuted = inMonth ? "" : "muted";
+        const clsToday = (inMonth && selectedMonth === todayYM && dayNum === todayD) ? "today" : "";
+        grid.insertAdjacentHTML("beforeend", `
+          <div class="day ${clsMuted} ${clsToday}" data-date="${dateStr}">
+            <div class="n">
+              <span>${inMonth ? dayNum : ""}</span>
+              <span style="opacity:.75">${inMonth ? "" : ""}</span>
+            </div>
+            ${inMonth ? `
+              <div class="mini">
+                <div class="g">+ ${fmt.format(inc).replace("₺","₺")}</div>
+                <div class="c">- ${fmt.format(exp).replace("₺","₺")}</div>
+              </div>
+            ` : ``}
+          </div>
+        `);
+      }
+
+      // click handlers
+      grid.querySelectorAll(".day").forEach(cell=>{
+        cell.addEventListener("click", ()=>{
+          const d = cell.getAttribute("data-date");
+          if(!d) return;
+          const dayItems = items.filter(it => it.date === d);
+          // de-dup recurring per day
+          const seen = new Set();
+          const list = [];
+          dayItems.forEach(it=>{
+            const k = (it.source==="recurring" && it.recurrenceId) ? (it.recurrenceId+"_"+it.date) : it.id;
+            if(seen.has(k)) return;
+            seen.add(k);
+            list.push(it);
+          });
+          list.sort((a,b)=> (b.amount||0)-(a.amount||0));
+          openSheet(d + " • Detay", list);
+        });
+      });
+    }
+
+    function renderSettings(){
+      const wrap = $("listWrap");
+      wrap.innerHTML = `
+        <div class="rowItem" style="grid-template-columns: 1fr;">
+          <div class="meta">
+            <div class="desc">Ayarlar (Demo)</div>
+            <div class="sub">
+              <span class="tag">Para Birimi: TRY</span>
+              <span class="tag">Tema: Koyu</span>
+              <span class="tag rec">Tekrarlayan: UI demo</span>
+            </div>
+            <div class="hint" style="margin-top:8px;">
+              Bir sonraki adım: Bu UI’yi Firebase’e bağlayıp (Auth + Firestore) gerçek veriyle çalıştıracağız.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // init
+    $("mDate").value = todayStr();
+    seedDemo();
+    renderAll();
+  </script>
 </body>
 </html>
