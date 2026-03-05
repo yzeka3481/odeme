@@ -418,6 +418,70 @@
       align-self:flex-start;
     }
 
+
+    /* --- Hero Dashboard (blended design) --- */
+    .heroCard{
+      position:relative;
+      overflow:hidden;
+      background:
+        radial-gradient(600px 240px at 20% -20%, rgba(79,124,255,.22), transparent 60%),
+        radial-gradient(520px 220px at 110% 10%, rgba(45,212,191,.16), transparent 60%),
+        linear-gradient(180deg, rgba(17,26,46,.62), rgba(17,26,46,.44));
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .heroTop{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .heroTitle{ display:flex; flex-direction:column; gap:4px; }
+    .heroTitle .t1{ font-size:12px; color:var(--muted); font-weight:650; }
+    .heroTitle .t2{ font-size:20px; font-weight:850; letter-spacing:.2px; }
+    .heroGrid{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap:10px;
+      align-items:stretch;
+    }
+    .heroMini{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(14,22,42,.55);
+      border-radius: 16px;
+      padding:10px;
+      min-width:0;
+    }
+    .heroMini .lbl{ font-size:11px; color:var(--muted); font-weight:700; display:flex; align-items:center; gap:6px; }
+    .heroMini .val{ font-size:16px; font-weight:850; margin-top:6px; }
+    .heroMini .val.good{ color:var(--good); }
+    .heroMini .val.bad{ color:var(--bad); }
+    .heroBar{
+      width: 26px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(14,22,42,.55);
+      padding:4px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      gap:4px;
+    }
+    .heroBar .seg{ width:100%; border-radius:999px; }
+    .heroBar .inc{ background: rgba(45,212,191,.85); }
+    .heroBar .exp{ background: rgba(251,113,133,.85); }
+    .heroFooter{
+      margin-top:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .heroFooter .muted{ color:var(--muted); font-size:12px; font-weight:650; }
+
+    @media (max-width: 680px){
+      .dashGrid{ grid-template-columns: 1fr !important; }
+      .dashGrid > .card{ grid-column: 1 / -1 !important; }
+      .heroTitle .t2{ font-size:18px; }
+      .heroGrid{ grid-template-columns: 1fr 1fr auto; }
+    }
+
 </style>
 </head>
 <body>
@@ -581,15 +645,13 @@
   const BUILD_DATE = "2026-03-05";
   (function(){
     var firebaseConfig = {
-      apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
-          authDomain: "gezi-5b54b.firebaseapp.com",
-          projectId: "gezi-5b54b",
-          storageBucket: "gezi-5b54b.firebasestorage.app",
-          messagingSenderId: "926426747002",
-          appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
-          measurementId: "G-KB8SKRCQ9X"
-        };
-
+      apiKey: "PASTE_YOUR_API_KEY",
+      authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+      projectId: "PASTE_YOUR_PROJECT_ID",
+      storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+      messagingSenderId: "PASTE_YOUR_SENDER_ID",
+      appId: "PASTE_YOUR_APP_ID"
+    };
 
     function $(id){ return document.getElementById(id); }
     var __verEl = document.getElementById("appVer");
@@ -1560,28 +1622,52 @@
       var k = kpisFor(rowsMonth);
 
       if(currentPage === "dashboard"){
+        // Blended hero dashboard
+        var total = Math.max(0.0001, (k.inc||0) + (k.exp||0));
+        var incPct = Math.round(((k.inc||0) / total) * 100);
+        var expPct = 100 - incPct;
+        var incH = Math.max(12, Math.round((incPct/100) * 120));
+        var expH = Math.max(12, Math.round((expPct/100) * 120));
+
         content.innerHTML =
           '<div class="grid dashGrid">'+
-            '<div class="card kpiCard kpi-exp" style="grid-column: span 4;">'+
-              '<h2><span class="ttl"><span class="kico">💸</span><span>Gider</span></span><span class="tag bad">Bu ay</span></h2>'+
-              '<div class="kpi"><div class="value bad">'+fmt.format(k.exp)+'</div><div class="sub"><span class="chip">✅ '+k.expPaid+'</span><span class="chip bad">⏳ '+k.expUn+'</span></div></div>'+
+            '<div class="card heroCard" style="grid-column: span 12;">'+
+              '<div class="heroTop">'+
+                '<div class="heroTitle">'+
+                  '<div class="t1">HESAPLARIM</div>'+
+                  '<div class="t2">'+fmt.format(k.net)+'</div>'+
+                '</div>'+
+                '<span class="tag">Bu ay</span>'+
+              '</div>'+
+
+              '<div class="heroGrid">'+
+                '<div class="heroMini">'+
+                  '<div class="lbl">💰 Gelir</div>'+
+                  '<div class="val good">'+fmt.format(k.inc)+'</div>'+
+                '</div>'+
+                '<div class="heroMini">'+
+                  '<div class="lbl">💸 Gider</div>'+
+                  '<div class="val bad">'+fmt.format(k.exp)+'</div>'+
+                '</div>'+
+                '<div class="heroBar" title="Gelir/Gider oranı">'+
+                  '<div class="seg exp" style="height:'+expH+'px"></div>'+
+                  '<div class="seg inc" style="height:'+incH+'px"></div>'+
+                '</div>'+
+              '</div>'+
+
+              '<div class="heroFooter">'+
+                '<div class="muted">Genel Durum: <b>'+fmt.format(k.net)+'</b></div>'+
+                '<div class="muted">'+incPct+'% gelir • '+expPct+'% gider</div>'+
+              '</div>'+
             '</div>'+
-            '<div class="card kpiCard kpi-inc" style="grid-column: span 4;">'+
-              '<h2><span class="ttl"><span class="kico">💰</span><span>Gelir</span></span><span class="tag good">Bu ay</span></h2>'+
-              '<div class="kpi"><div class="value good">'+fmt.format(k.inc)+'</div><div class="sub"><span class="chip good">✅ '+k.incPaid+'</span><span class="chip">⏳ '+k.incUn+'</span></div></div>'+
-            '</div>'+
-            '<div class="card kpiCard kpi-net" style="grid-column: span 4;">'+
-              '<h2><span class="ttl"><span class="kico">🧾</span><span>Net</span></span><span class="tag">Bu ay</span></h2>'+
-              '<div class="kpi"><div class="value '+(k.net>=0?'good':'bad')+'">'+fmt.format(k.net)+'</div><div class="sub"><span class="hint">Gelir − Gider</span></div></div>'+
-            '</div>'+
-            renderSpendingChart(rowsMonth)+
-            '<div class="card" style="grid-column: span 4;">'+
+
+            renderSpendingChart(groups.expByCat, k.exp)+
+
+            '<div class="card quick" style="grid-column: span 12;">'+
               '<h2>Kısa</h2>'+
-              '<div class="hint">• Takvim: güne tıkla → detay</div>'+
-              '<div class="hint">• Tekrarlayanlar: ay değişince otomatik gelir</div>'+
-              '<div class="hint">• Kategori renkleri: listede ve grafikte aynı</div>'+
-            '</div>'
-'</div>';
+              '<div class="hint">• Takvim: güne tıkla → detay<br>• Tekrarlayanlar: ay değişince otomatik gelir<br>• Kategori renkleri: listede ve grafikte aynı</div>'+
+            '</div>'+
+          '</div>';
 
         bindTableActions();
         return;
