@@ -1,372 +1,202 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ödeme Takip — Uyumlu Dashboard (Firebase)</title>
-  <meta name="theme-color" content="#0b1220" />
-  <style>
-    :root{
-      --bg:#0b1220; --panel:#111a2e; --card:#0f1730;
-      --text:#e8f0ff; --muted:#8ea3c7; --line:#1e2a46;
-      --good:#2dd4bf; --bad:#fb7185; --warn:#fbbf24; --brand:#4f7cff;
-      --shadow: 0 18px 45px rgba(0,0,0,.32);
-      --r:16px;
-    }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: radial-gradient(1100px 600px at 20% -10%, rgba(79,124,255,.25), transparent 55%),
-                  radial-gradient(900px 500px at 90% 0%, rgba(45,212,191,.16), transparent 55%),
-                  linear-gradient(180deg,#071022,#0b1220 40%, #081025);
-      color:var(--text);
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      padding:16px;
-      padding-bottom: 98px; /* bottom tab bar space */
-    }
-    .app{
-      width:min(1100px, 100%);
-      border:1px solid rgba(255,255,255,.06);
-      background: rgba(12,18,35,.65);
-      backdrop-filter: blur(10px);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      min-height: calc(100vh - 32px - 98px);
-    }
-
-    /* Header */
-    .header{
-      padding:14px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      background: linear-gradient(180deg, rgba(17,26,46,.7), rgba(17,26,46,.25));
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
-    .brand{ display:flex; flex-direction:column; gap:4px; }
-    .brand h1{ margin:0; font-size:14px; letter-spacing:.2px; }
-    .brand small{ color:var(--muted); font-size:12px; }
-
-    .pill{
-      border:1px solid var(--line);
-      background: rgba(14,22,42,.9);
-      padding:8px 10px;
-      border-radius: 999px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      color: #cfe0ff;
-      font-weight:800;
-      font-size:12px;
-      white-space:nowrap;
-    }
-    .btn{
-      border:1px solid var(--line);
-      background: rgba(15,23,48,.9);
-      color:var(--text);
-      border-radius: 14px;
-      padding:10px 12px;
-      font-weight:800;
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      user-select:none;
-    }
-    .btn:hover{ filter:brightness(1.08); }
-    .btn.primary{ background: rgba(79,124,255,.95); border-color: rgba(79,124,255,.55); }
-    .btn.small{ padding:8px 10px; border-radius: 12px; font-size:12px; }
-    .btn.warn{ background: rgba(251,191,36,.16); border-color: rgba(251,191,36,.35); }
-
-    input, select{
-      border:1px solid var(--line);
-      background: rgba(14,22,42,.9);
-      color: var(--text);
-      padding:10px 12px;
-      border-radius: 14px;
-      outline:none;
-      font-weight:700;
-    }
-    input::placeholder{ color:#6f86b2; }
-
-    .header .left{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .header .right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .hint{ color:var(--muted); font-size:12px; }
-
-    .content{
-      padding:14px;
-      overflow:auto;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap:12px;
-    }
-    .card{
-      background: rgba(17,26,46,.55);
-      border:1px solid var(--line);
-      border-radius: var(--r);
-      padding:12px;
-      min-width:0;
-    }
-    .card h2{ margin:0 0 10px; font-size:13px; color:#cfe0ff; }
-    .kpi{ display:flex; flex-direction:column; gap:6px; }
-    .kpi .value{ font-size:22px; font-weight:950; letter-spacing:.2px; }
-    .value.bad{ color:var(--bad); }
-    .value.good{ color:var(--good); }
-    .hr{ height:1px; background: rgba(255,255,255,.06); margin:10px 0; }
-
-    /* Table */
-    table{ width:100%; border-collapse:collapse; }
-    th, td{ border-bottom:1px solid rgba(255,255,255,.06); padding:10px 8px; text-align:left; font-size:13px; }
-    th{ color:#bcd1ff; font-size:12px; }
-    .right{ text-align:right; }
-    .nowrap{ white-space:nowrap; }
-    .tag{
-      font-size:12px; font-weight:800;
-      padding:4px 8px; border-radius: 999px;
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(14,22,42,.9);
-      color:#cfe0ff;
-      display:inline-block;
-    }
-    .tag.bad{ border-color: rgba(251,113,133,.35); background: rgba(42,16,24,.85); color:#ffb3c2; }
-    .tag.good{ border-color: rgba(45,212,191,.35); background: rgba(13,42,34,.85); color:#8ff6e4; }
-    .tag.rec{ border-color: rgba(79,124,255,.35); background: rgba(27,35,56,.85); color:#c5d3ff; }
-
-    /* Calendar */
-    .calGrid{
-      display:grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap:8px;
-      margin-top:10px;
-    }
-    .calCell{
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(14,22,42,.55);
-      border-radius: 14px;
-      padding:8px;
-      min-height:76px;
-    }
-    .calTop{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
-    .calDay{ font-weight:950; font-size:12px; color:#cfe0ff; }
-    .calAmt{ font-weight:950; font-size:12px; }
-    .calAmt.good{ color:var(--good); }
-    .calAmt.bad{ color:var(--bad); }
-    .calMini{ margin-top:8px; display:flex; flex-direction:column; gap:4px; }
-    .calMini span{ font-size:11px; color:var(--muted); }
-
-    /* Bottom Tab Bar */
-    .tabbarWrap{
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      display:flex;
-      justify-content:center;
-      padding: 10px 12px 14px;
-      background: linear-gradient(180deg, rgba(11,18,32,0), rgba(11,18,32,.72) 22%, rgba(11,18,32,.96));
-      border-top:1px solid rgba(255,255,255,.06);
-      z-index: 9999;
-    }
-    .tabbar{
-      width: min(1100px, calc(100% - 24px));
-      display:flex;
-      gap:10px;
-    }
-    .tab{
-      flex:1;
-      border:1px solid rgba(255,255,255,.06);
-      background: rgba(14,22,42,.7);
-      border-radius: 16px;
-      padding:10px 10px;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-      color:var(--muted);
-      font-weight:900;
-      font-size:11px;
-      user-select:none;
-    }
-    .tab.active{
-      color: var(--text);
-      border-color: rgba(79,124,255,.35);
-      background: rgba(79,124,255,.14);
-    }
-    .ico{ font-size:16px; line-height:1; }
-
-    /* Modals */
-    .modalBg{
-      position:fixed; inset:0; background: rgba(0,0,0,.55);
-      display:none; align-items:center; justify-content:center; padding:14px;
-      z-index: 10000;
-    }
-    .modalBg.show{ display:flex; }
-    .modal{
-      width:min(560px, 100%);
-      background: rgba(15,23,48,.98);
-      border:1px solid var(--line);
-      border-radius: 20px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .modalTop{
-      padding:10px 12px;
-      display:flex; justify-content:space-between; align-items:center;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .modalTop strong{ font-size:13px; }
-    .modalBody{ padding:12px; display:flex; flex-direction:column; gap:10px; }
-    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    .modal .actions{ display:flex; gap:10px; padding:12px; border-top:1px solid rgba(255,255,255,.06); }
-
-    .toast{
-      position:fixed; left:50%; bottom: 92px; transform:translateX(-50%);
-      background: rgba(14,22,42,.95);
-      border:1px solid var(--line);
-      padding:10px 12px;
-      border-radius: 14px;
-      display:none;
-      max-width:min(920px, calc(100% - 24px));
-      color:#dbe8ff;
-      box-shadow: var(--shadow);
-      font-weight:750;
-      font-size:13px;
-      z-index: 10001;
-    }
-    .toast.show{ display:block; }
-
-    @media (max-width: 860px){
-      .grid { grid-template-columns: repeat(6, 1fr); }
-      .tabbar{ width: calc(100% - 24px); }
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Ödeme Takip — Uyumlu Dashboard v4</title>
+<meta name="theme-color" content="#0b1220"/>
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--card:#0f1730;--text:#e8f0ff;--muted:#8ea3c7;--line:#1e2a46;--good:#2dd4bf;--bad:#fb7185;--warn:#fbbf24;--brand:#4f7cff;--shadow:0 18px 45px rgba(0,0,0,.32);--r:16px}
+*{box-sizing:border-box}
+body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:radial-gradient(1100px 600px at 20% -10%,rgba(79,124,255,.25),transparent 55%),radial-gradient(900px 500px at 90% 0%,rgba(45,212,191,.16),transparent 55%),linear-gradient(180deg,#071022,#0b1220 40%,#081025);color:var(--text);min-height:100vh;display:flex;justify-content:center;padding:16px;padding-bottom:98px}
+.app{width:min(1100px,100%);border:1px solid rgba(255,255,255,.06);background:rgba(12,18,35,.65);backdrop-filter:blur(10px);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:calc(100vh - 32px - 98px)}
+.header{padding:14px;border-bottom:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(17,26,46,.7),rgba(17,26,46,.25));display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:4px}
+.brand h1{margin:0;font-size:14px;letter-spacing:.2px;font-weight:750}
+.brand small{color:var(--muted);font-size:12px}
+.pill{border:1px solid var(--line);background:rgba(14,22,42,.9);padding:8px 10px;border-radius:999px;display:flex;gap:10px;align-items:center;color:#cfe0ff;font-weight:650;font-size:12px;white-space:nowrap}
+.btn{border:1px solid var(--line);background:rgba(15,23,48,.9);color:var(--text);border-radius:14px;padding:10px 12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;user-select:none}
+.btn:hover{filter:brightness(1.08)}
+.btn.primary{background:rgba(79,124,255,.95);border-color:rgba(79,124,255,.55)}
+.btn.small{padding:8px 10px;border-radius:12px;font-size:12px;font-weight:700}
+.btn.danger{background:rgba(251,113,133,.14);border-color:rgba(251,113,133,.35)}
+input,select{border:1px solid var(--line);background:rgba(14,22,42,.9);color:var(--text);padding:10px 12px;border-radius:14px;outline:none;font-weight:650}
+input::placeholder{color:#6f86b2}
+.header .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.header .right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hint{color:var(--muted);font-size:12px;font-weight:550}
+.content{padding:14px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.card{background:rgba(17,26,46,.55);border:1px solid var(--line);border-radius:var(--r);padding:12px;min-width:0}
+.card h2{margin:0 0 10px;font-size:13px;color:#cfe0ff;font-weight:750}
+.kpi{display:flex;flex-direction:column;gap:6px}
+.kpi .value{font-size:22px;font-weight:800;letter-spacing:.2px}
+.value.bad{color:var(--bad)}
+.value.good{color:var(--good)}
+.hr{height:1px;background:rgba(255,255,255,.06);margin:10px 0}
+table{width:100%;border-collapse:collapse}
+th,td{border-bottom:1px solid rgba(255,255,255,.06);padding:10px 8px;text-align:left;font-size:13px}
+th{color:#bcd1ff;font-size:12px;font-weight:650}
+.right{text-align:right}
+.nowrap{white-space:nowrap}
+.tag{font-size:12px;font-weight:650;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(14,22,42,.9);color:#cfe0ff;display:inline-block}
+.tag.bad{border-color:rgba(251,113,133,.35);background:rgba(42,16,24,.85);color:#ffb3c2}
+.tag.good{border-color:rgba(45,212,191,.35);background:rgba(13,42,34,.85);color:#8ff6e4}
+.tag.rec{border-color:rgba(79,124,255,.35);background:rgba(27,35,56,.85);color:#c5d3ff}
+.dot{width:10px;height:10px;border-radius:999px;display:inline-block;vertical-align:middle;margin-right:8px;box-shadow:0 0 0 2px rgba(255,255,255,.06)}
+.chartRow{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+.donutWrap{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.donut{width:180px;height:180px;display:grid;place-items:center;position:relative}
+.donut svg{width:180px;height:180px;transform:rotate(-90deg)}
+.donutCenter{position:absolute;width:120px;height:120px;border-radius:999px;background:rgba(11,18,32,.55);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px}
+.donutCenter .big{font-weight:800;font-size:14px}
+.donutCenter .small{font-size:12px;color:var(--muted);margin-top:4px}
+.legend{display:flex;flex-direction:column;gap:8px;min-width:240px}
+.legItem{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.legLeft{display:flex;align-items:center;gap:10px;min-width:0}
+.legName{color:#dbe8ff;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legVal{color:var(--muted);font-size:12px;white-space:nowrap}
+.barList{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.bar{height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+.bar>div{height:100%;border-radius:999px}
+.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:10px}
+.calCell{border:1px solid rgba(255,255,255,.08);background:rgba(14,22,42,.55);border-radius:14px;padding:8px;min-height:76px;cursor:pointer;user-select:none;transition:filter .12s ease,transform .12s ease}
+.calCell:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.calCell.disabled{opacity:.25;cursor:default}
+.calTop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.calDay{font-weight:750;font-size:12px;color:#cfe0ff}
+.calAmt{font-weight:750;font-size:12px}
+.calAmt.good{color:var(--good)}
+.calAmt.bad{color:var(--bad)}
+.calMini{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.calMini span{font-size:11px;color:var(--muted)}
+.tabbarWrap{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:10px 12px 14px;background:linear-gradient(180deg,rgba(11,18,32,0),rgba(11,18,32,.72) 22%,rgba(11,18,32,.96));border-top:1px solid rgba(255,255,255,.06);z-index:9999}
+.tabbar{width:min(1100px,calc(100% - 24px));display:flex;gap:10px}
+.tab{flex:1;border:1px solid rgba(255,255,255,.06);background:rgba(14,22,42,.7);border-radius:16px;padding:10px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);font-weight:700;font-size:11px;user-select:none}
+.tab.active{color:var(--text);border-color:rgba(79,124,255,.35);background:rgba(79,124,255,.14)}
+.ico{font-size:16px;line-height:1}
+.modalBg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:10000}
+.modalBg.show{display:flex}
+.modal{width:min(600px,100%);background:rgba(15,23,48,.98);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.modalTop{padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.06)}
+.modalTop strong{font-size:13px;font-weight:750}
+.modalBody{padding:12px;display:flex;flex-direction:column;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal .actions{display:flex;gap:10px;padding:12px;border-top:1px solid rgba(255,255,255,.06)}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:rgba(14,22,42,.95);border:1px solid var(--line);padding:10px 12px;border-radius:14px;display:none;max-width:min(920px,calc(100% - 24px));color:#dbe8ff;box-shadow:var(--shadow);font-weight:650;font-size:13px;z-index:10001}
+.toast.show{display:block}
+@media (max-width:860px){.grid{grid-template-columns:repeat(6,1fr)}.tabbar{width:calc(100% - 24px)}}
+</style>
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <div class="left">
-        <div class="brand">
-          <h1>Ödeme Takip</h1>
-          <small id="subline">Dashboard</small>
-        </div>
-
-        <button id="btnPrev" class="btn small">◀</button>
-        <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
-        <button id="btnNext" class="btn small">▶</button>
-
-        <select id="statusFilter">
-          <option value="all">Durum: Hepsi</option>
-          <option value="unpaid">Durum: Alınmadı/Ödenmedi</option>
-          <option value="paid">Durum: Alındı/Ödendi</option>
-        </select>
-
-        <input id="search" placeholder="Ara (başlık / kategori)" />
-      </div>
-
-      <div class="right">
-        <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
-        <button id="btnGen" class="btn warn" style="display:none;">⟳ Bu ay tekrarlayanları üret</button>
-        <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
-        <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
-        <button id="btnLoginOpen" class="btn primary">Giriş</button>
-        <span class="hint" id="topHint"></span>
-      </div>
-    </header>
-
-    <div id="content" class="content"></div>
+<div class="app">
+<header class="header">
+  <div class="left">
+    <div class="brand"><h1>Ödeme Takip</h1><small id="subline">Dashboard</small></div>
+    <button id="btnPrev" class="btn small">◀</button>
+    <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
+    <button id="btnNext" class="btn small">▶</button>
+    <select id="statusFilter">
+      <option value="all">Durum: Hepsi</option>
+      <option value="unpaid">Durum: Alınmadı/Ödenmedi</option>
+      <option value="paid">Durum: Alındı/Ödendi</option>
+    </select>
+    <input id="search" placeholder="Ara (başlık / kategori)"/>
   </div>
+  <div class="right">
+    <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
+    <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
+    <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
+    <button id="btnLoginOpen" class="btn primary">Giriş</button>
+    <span class="hint" id="topHint"></span>
+  </div>
+</header>
+<div id="content" class="content"></div>
+</div>
 
-  <!-- Bottom Tabs -->
-  <div class="tabbarWrap">
-    <div class="tabbar">
-      <div class="tab active" data-page="dashboard"><div class="ico">📊</div>Dashboard</div>
-      <div class="tab" data-page="expense"><div class="ico">💸</div>Gider</div>
-      <div class="tab" data-page="income"><div class="ico">💰</div>Gelir</div>
-      <div class="tab" data-page="calendar"><div class="ico">📆</div>Takvim</div>
-      <div class="tab" data-page="settings"><div class="ico">⚙️</div>Ayarlar</div>
+<div class="tabbarWrap">
+  <div class="tabbar">
+    <div class="tab active" data-page="dashboard"><div class="ico">📊</div>Dashboard</div>
+    <div class="tab" data-page="expense"><div class="ico">💸</div>Gider</div>
+    <div class="tab" data-page="income"><div class="ico">💰</div>Gelir</div>
+    <div class="tab" data-page="calendar"><div class="ico">📆</div>Takvim</div>
+    <div class="tab" data-page="settings"><div class="ico">⚙️</div>Ayarlar</div>
+  </div>
+</div>
+
+<div id="authBg" class="modalBg">
+  <div class="modal">
+    <div class="modalTop"><strong>Giriş / Kayıt</strong><button id="authClose" class="btn small">✕</button></div>
+    <div class="modalBody">
+      <div class="hint">Dosyada <b>firebaseConfig</b> alanını kendi projenle doldur.</div>
+      <input id="aEmail" type="email" placeholder="E-posta" autocomplete="email"/>
+      <input id="aPass" type="password" placeholder="Şifre" autocomplete="current-password"/>
+      <div class="grid2">
+        <button id="btnLogin" class="btn primary">Giriş Yap</button>
+        <button id="btnRegister" class="btn">Kayıt Ol</button>
+      </div>
+      <div class="hint" id="authErr" style="display:none;"></div>
     </div>
   </div>
+</div>
 
-  <!-- AUTH MODAL -->
-  <div id="authBg" class="modalBg">
-    <div class="modal">
-      <div class="modalTop">
-        <strong>Giriş / Kayıt</strong>
-        <button id="authClose" class="btn small">✕</button>
+<div id="addBg" class="modalBg">
+  <div class="modal">
+    <div class="modalTop"><strong>Yeni Kayıt</strong><button id="addClose" class="btn small">✕</button></div>
+    <div class="modalBody">
+      <div class="grid2">
+        <select id="mDir"><option value="expense">Gider</option><option value="income">Gelir</option></select>
+        <select id="mPaid"><option value="false">Alınmadı/Ödenmedi</option><option value="true">Alındı/Ödendi</option></select>
       </div>
-      <div class="modalBody">
-        <div class="hint">Dosyada <b>firebaseConfig</b> alanını kendi projenle doldur.</div>
-        <input id="aEmail" type="email" placeholder="E-posta" autocomplete="email" />
-        <input id="aPass" type="password" placeholder="Şifre" autocomplete="current-password" />
-        <div class="grid2">
-          <button id="btnLogin" class="btn primary">Giriş Yap</button>
-          <button id="btnRegister" class="btn">Kayıt Ol</button>
+      <div class="grid2">
+        <input id="mAmount" type="number" step="0.01" placeholder="Tutar (₺)"/>
+        <input id="mDate" type="date"/>
+      </div>
+      <div class="grid2">
+        <select id="mCategorySel"></select>
+        <input id="mCategoryOther" placeholder="Diğer kategori yaz" style="display:none;"/>
+      </div>
+      <input id="mTitle" placeholder="Başlık (örn: Derya, Macbook)"/>
+      <div class="card" style="padding:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input id="mRecurring" type="checkbox"/>
+            <span style="font-weight:650;">Tekrarlayan ödeme/gelir</span>
+          </label>
+          <span class="hint">Ay bazında otomatik üretim</span>
         </div>
-        <div class="hint" id="authErr" style="display:none;"></div>
+        <div id="recBox" class="grid2" style="margin-top:10px;display:none;">
+          <input id="mRecMonths" type="number" min="1" step="1" placeholder="Kaç ay sürecek? (örn: 4)"/>
+          <div class="hint" style="display:flex;align-items:center;">Girdiğin ay dahil sayılır</div>
+        </div>
       </div>
+      <div class="hint">Şema uyumu: <b>userId, type(incoming/payment), isPaid, isRecurring, recurrenceId</b></div>
+    </div>
+    <div class="actions">
+      <button id="addSave" class="btn primary" style="flex:1;">Kaydet</button>
+      <button id="addCancel" class="btn" style="flex:1;">Vazgeç</button>
     </div>
   </div>
+</div>
 
-  <!-- ADD MODAL -->
-  <div id="addBg" class="modalBg">
-    <div class="modal">
-      <div class="modalTop">
-        <strong>Yeni Kayıt</strong>
-        <button id="addClose" class="btn small">✕</button>
-      </div>
-      <div class="modalBody">
-        <div class="grid2">
-          <select id="mDir">
-            <option value="expense">Gider (payment)</option>
-            <option value="income">Gelir (incoming)</option>
-          </select>
-          <select id="mPaid">
-            <option value="false">Alınmadı/Ödenmedi</option>
-            <option value="true">Alındı/Ödendi</option>
-          </select>
-        </div>
-        <div class="grid2">
-          <input id="mAmount" type="number" step="0.01" placeholder="Tutar (₺)" />
-          <input id="mDate" type="date" />
-        </div>
-        <div class="grid2">
-          <input id="mCategory" placeholder="Kategori (örn: Nakit, Kira)" />
-          <input id="mTitle" placeholder="Başlık (örn: Derya, Macbook)" />
-        </div>
-        <div class="hint">Bu sürüm senin şemana göre yazar: <b>userId, type(incoming/payment), mode(payment), isPaid, isRecurring</b> vb.</div>
-      </div>
-      <div class="actions">
-        <button id="addSave" class="btn primary" style="flex:1;">Kaydet</button>
-        <button id="addCancel" class="btn" style="flex:1;">Vazgeç</button>
-      </div>
-    </div>
+<div id="dayBg" class="modalBg">
+  <div class="modal">
+    <div class="modalTop"><strong id="dayTitle">Gün Detayı</strong><button id="dayClose" class="btn small">✕</button></div>
+    <div class="modalBody" id="dayBody"></div>
+    <div class="actions"><button id="dayOk" class="btn primary" style="flex:1;">Kapat</button></div>
   </div>
+</div>
 
-  <div id="toast" class="toast"></div>
+<div id="toast" class="toast"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import {
-      getFirestore,
-      collection, query, where, onSnapshot,
-      addDoc, doc, setDoc, updateDoc, deleteDoc, getDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, query, where, onSnapshot, addDoc, doc, setDoc, updateDoc, deleteDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // 1) BURAYI DOLDUR (senin config)
-    const firebaseConfig = {
+// 1) BURAYI DOLDUR (senin config)
+const firebaseConfig = {
+  const firebaseConfig = {
           apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
           authDomain: "gezi-5b54b.firebaseapp.com",
           projectId: "gezi-5b54b",
@@ -376,600 +206,458 @@
           measurementId: "G-KB8SKRCQ9X"
         };
 
-    const $ = (id) => document.getElementById(id);
-    const fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
+const $ = (id) => document.getElementById(id);
+const fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
 
-    function toast(msg){
-      const t = $("toast");
-      t.textContent = msg;
-      t.classList.add("show");
-      setTimeout(()=>t.classList.remove("show"), 2400);
-    }
-    function pad2(n){ return String(n).padStart(2,"0"); }
-    function ymFromDate(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1); }
-    function nextMonth(ym){
-      const [y,m] = ym.split("-").map(Number);
-      const d = new Date(y, m-1, 1); d.setMonth(d.getMonth()+1);
-      return ymFromDate(d);
-    }
-    function prevMonth(ym){
-      const [y,m] = ym.split("-").map(Number);
-      const d = new Date(y, m-1, 1); d.setMonth(d.getMonth()-1);
-      return ymFromDate(d);
-    }
-    function todayStr(){
-      const d = new Date();
-      return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
-    }
-    function escapeHtml(s){
-      return String(s ?? "").replace(/[&<>"']/g, (m) => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
-      }[m]));
-    }
+const CATEGORY_COLORS = {
+  "Kira":"#7c9cff","Market":"#2dd4bf","Fatura":"#fbbf24","Ulaşım":"#fb7185","Eğlence":"#a78bfa",
+  "Sağlık":"#34d399","Eğitim":"#60a5fa","Yemek":"#f472b6","Giyim":"#f59e0b","Kredi/Kart":"#f97316",
+  "Nakit":"#93c5fd","Diğer":"#9ca3af"
+};
+const PRESET_CATS = ["Kira","Market","Fatura","Ulaşım","Yemek","Eğlence","Sağlık","Eğitim","Giyim","Kredi/Kart","Nakit","Diğer"];
+const colorForCategory = (cat)=> CATEGORY_COLORS[(cat||"Diğer").trim()||"Diğer"] || CATEGORY_COLORS["Diğer"];
 
-    function monthOfDoc(d){
-      const date = (d?.date || "").slice(0,7);
-      if(date && date.length === 7) return date;
-      const rs = (d?.recurrenceStart || "").slice(0,7);
-      return rs && rs.length===7 ? rs : "";
-    }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2400); }
+const pad2 = (n)=> String(n).padStart(2,"0");
+const ymFromDate = (d)=> d.getFullYear()+"-"+pad2(d.getMonth()+1);
+const nextMonth = (ym)=>{ const [y,m]=ym.split("-").map(Number); const d=new Date(y,m-1,1); d.setMonth(d.getMonth()+1); return ymFromDate(d); };
+const prevMonth = (ym)=>{ const [y,m]=ym.split("-").map(Number); const d=new Date(y,m-1,1); d.setMonth(d.getMonth()-1); return ymFromDate(d); };
+const todayStr = ()=>{ const d=new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); };
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, (m) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+  }[m]));
+}
+const uuid = ()=> (Math.random().toString(16).slice(2)+Math.random().toString(16).slice(2));
+const monthOfDoc = (d)=> ((d?.date||"").slice(0,7) || (d?.recurrenceStart||"").slice(0,7) || "");
+const normalizeDir = (d)=> (d?.type==="incoming") ? "income" : "expense";
+const isPaid = (d)=> !!d?.isPaid;
+const isRecurring = (d)=> !!d?.isRecurring;
+const isTemplate = (d)=> !!d?.isTemplate;
 
-    function normalizeDir(d){
-      // Senin verin: type="incoming" => gelir
-      // Giderler genelde type="payment" (veya incoming değilse) sayıyoruz
-      return (d?.type === "incoming") ? "income" : "expense";
-    }
-    function isPaid(d){
-      return !!d?.isPaid;
-    }
-    function isRecurring(d){
-      return !!d?.isRecurring;
-    }
+let app, auth, db;
+try{ app=initializeApp(firebaseConfig); auth=getAuth(app); db=getFirestore(app); }
+catch(e){ console.error(e); toast("Firebase config eksik/yanlış. Dosyada firebaseConfig'i doldur."); }
 
-    let app, auth, db;
-    try{
-      app = initializeApp(firebaseConfig);
-      auth = getAuth(app);
-      db = getFirestore(app);
-    }catch(e){
-      console.error(e);
-      toast("Firebase config eksik/yanlış. Dosyada firebaseConfig'i doldur.");
-    }
+let selectedMonth = ymFromDate(new Date());
+let currentPage = "dashboard";
+let unsub = null;
+let allRows = [];
+let user = null;
 
-    let selectedMonth = ymFromDate(new Date());
-    let currentPage = "dashboard";
-    let unsub = null;
-    let allRows = [];
-    let user = null;
+// Tabs
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    currentPage = tab.dataset.page;
+    $("subline").textContent = currentPage==="dashboard"?"Dashboard":currentPage==="expense"?"Gider":currentPage==="income"?"Gelir":currentPage==="calendar"?"Takvim":"Ayarlar";
+    renderPage();
+  });
+});
 
-    // Tabs
-    document.querySelectorAll(".tab").forEach(tab=>{
-      tab.addEventListener("click", ()=>{
-        document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-        tab.classList.add("active");
-        currentPage = tab.dataset.page;
-        $("subline").textContent =
-          currentPage === "dashboard" ? "Dashboard" :
-          currentPage === "expense" ? "Gider" :
-          currentPage === "income" ? "Gelir" :
-          currentPage === "calendar" ? "Takvim" : "Ayarlar";
-        renderPage();
-      });
-    });
+// Month
+$("btnPrev").addEventListener("click", async ()=>{ selectedMonth=prevMonth(selectedMonth); await onMonthChanged(); });
+$("btnNext").addEventListener("click", async ()=>{ selectedMonth=nextMonth(selectedMonth); await onMonthChanged(); });
+$("statusFilter").addEventListener("change", ()=>renderPage());
+$("search").addEventListener("input", ()=>renderPage());
 
-    $("btnPrev").addEventListener("click", ()=>{ selectedMonth = prevMonth(selectedMonth); onMonthChanged(); });
-    $("btnNext").addEventListener("click", ()=>{ selectedMonth = nextMonth(selectedMonth); onMonthChanged(); });
-    $("statusFilter").addEventListener("change", ()=>renderPage());
-    $("search").addEventListener("input", ()=>renderPage());
+// Auth modal
+const authBg=$("authBg");
+$("btnLoginOpen").addEventListener("click", ()=>authBg.classList.add("show"));
+$("authClose").addEventListener("click", ()=>authBg.classList.remove("show"));
+authBg.addEventListener("click", (e)=>{ if(e.target===authBg) authBg.classList.remove("show"); });
+function showAuthErr(msg){ const el=$("authErr"); el.style.display=""; el.textContent=msg; }
+function hideAuthErr(){ const el=$("authErr"); el.style.display="none"; el.textContent=""; }
+$("btnLogin").addEventListener("click", async ()=>{
+  const email=$("aEmail").value.trim(), pass=$("aPass").value;
+  if(!email||!pass) return showAuthErr("E-posta/şifre gir.");
+  try{ await signInWithEmailAndPassword(auth,email,pass); hideAuthErr(); authBg.classList.remove("show"); }
+  catch(e){ console.error(e); showAuthErr(e.code||e.message); }
+});
+$("btnRegister").addEventListener("click", async ()=>{
+  const email=$("aEmail").value.trim(), pass=$("aPass").value;
+  if(!email||!pass) return showAuthErr("E-posta/şifre gir.");
+  try{ await createUserWithEmailAndPassword(auth,email,pass); hideAuthErr(); authBg.classList.remove("show"); }
+  catch(e){ console.error(e); showAuthErr(e.code||e.message); }
+});
+$("btnLogout").addEventListener("click", async ()=>{ try{ await signOut(auth);}catch(e){console.error(e);} });
 
-    // Auth modal
-    const authBg = $("authBg");
-    $("btnLoginOpen").addEventListener("click", ()=>authBg.classList.add("show"));
-    $("authClose").addEventListener("click", ()=>authBg.classList.remove("show"));
-    authBg.addEventListener("click", (e)=>{ if(e.target===authBg) authBg.classList.remove("show"); });
+// Add modal
+const addBg=$("addBg");
+function fillCategorySelect(){
+  const sel=$("mCategorySel");
+  sel.innerHTML = PRESET_CATS.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  sel.value="Market";
+  $("mCategoryOther").style.display="none";
+}
+$("mCategorySel").addEventListener("change", ()=>{ $("mCategoryOther").style.display = ($("mCategorySel").value==="Diğer") ? "" : "none"; });
+$("mRecurring").addEventListener("change", ()=>{ $("recBox").style.display = $("mRecurring").checked ? "grid" : "none"; });
 
-    $("btnLogin").addEventListener("click", async ()=>{
-      const email = $("aEmail").value.trim();
-      const pass = $("aPass").value;
-      if(!email || !pass) return showAuthErr("E-posta/şifre gir.");
-      try{
-        await signInWithEmailAndPassword(auth, email, pass);
-        hideAuthErr();
-        authBg.classList.remove("show");
-      }catch(e){
-        console.error(e);
-        showAuthErr(e.code || e.message);
-      }
-    });
+$("btnAdd").addEventListener("click", ()=>{
+  if(!user) return toast("Önce giriş yap.");
+  $("mDir").value="expense"; $("mPaid").value="false"; $("mAmount").value=""; $("mDate").value=selectedMonth+"-01";
+  fillCategorySelect(); $("mCategoryOther").value=""; $("mTitle").value="";
+  $("mRecurring").checked=false; $("recBox").style.display="none"; $("mRecMonths").value="";
+  addBg.classList.add("show");
+});
+$("addClose").addEventListener("click", ()=>addBg.classList.remove("show"));
+$("addCancel").addEventListener("click", ()=>addBg.classList.remove("show"));
+addBg.addEventListener("click", (e)=>{ if(e.target===addBg) addBg.classList.remove("show"); });
 
-    $("btnRegister").addEventListener("click", async ()=>{
-      const email = $("aEmail").value.trim();
-      const pass = $("aPass").value;
-      if(!email || !pass) return showAuthErr("E-posta/şifre gir.");
-      try{
-        await createUserWithEmailAndPassword(auth, email, pass);
-        hideAuthErr();
-        authBg.classList.remove("show");
-      }catch(e){
-        console.error(e);
-        showAuthErr(e.code || e.message);
-      }
-    });
+function categoryValueFromForm(){
+  const sel=$("mCategorySel").value;
+  if(sel==="Diğer"){ const other=$("mCategoryOther").value.trim(); return other||"Diğer"; }
+  return sel;
+}
 
-    function showAuthErr(msg){
-      const el = $("authErr");
-      el.style.display = "";
-      el.textContent = msg;
-    }
-    function hideAuthErr(){
-      const el = $("authErr");
-      el.style.display = "none";
-      el.textContent = "";
-    }
+$("addSave").addEventListener("click", async ()=>{
+  if(!user) return;
+  const dir=$("mDir").value;
+  const paid=$("mPaid").value==="true";
+  const amount=Number($("mAmount").value);
+  const date=$("mDate").value;
+  const category=categoryValueFromForm();
+  const title=$("mTitle").value.trim();
+  const recurring=$("mRecurring").checked;
+  const recMonths=Number($("mRecMonths").value);
 
-    $("btnLogout").addEventListener("click", async ()=>{ try{ await signOut(auth); }catch(e){ console.error(e); } });
+  if(!amount||amount<=0) return toast("Tutar gir.");
+  if(!date) return toast("Tarih seç.");
+  if(recurring && (!recMonths||recMonths<1)) return toast("Tekrarlayan için ay sayısı gir.");
 
-    // Add modal
-    const addBg = $("addBg");
-    $("btnAdd").addEventListener("click", ()=>{
-      if(!user) return toast("Önce giriş yap.");
-      $("mDir").value = "expense";
-      $("mPaid").value = "false";
-      $("mAmount").value = "";
-      $("mDate").value = todayStr();
-      $("mCategory").value = "";
-      $("mTitle").value = "";
-      addBg.classList.add("show");
-    });
-    $("addClose").addEventListener("click", ()=>addBg.classList.remove("show"));
-    $("addCancel").addEventListener("click", ()=>addBg.classList.remove("show"));
-    addBg.addEventListener("click",(e)=>{ if(e.target===addBg) addBg.classList.remove("show"); });
+  const month=date.slice(0,7);
 
-    $("addSave").addEventListener("click", async ()=>{
-      if(!user) return;
-      const dir = $("mDir").value; // income|expense
-      const paid = $("mPaid").value === "true";
-      const amount = Number($("mAmount").value);
-      const date = $("mDate").value;
-      const category = $("mCategory").value.trim();
-      const title = $("mTitle").value.trim();
-      if(!amount || amount<=0) return toast("Tutar gir.");
-      if(!date) return toast("Tarih seç.");
+  try{
+    if(recurring){
+      const rid=uuid().slice(0,8);
+      const templateId="T_"+rid;
 
-      // Senin şeman:
-      const payload = {
-        userId: user.uid,
-        amount,
-        category,
-        date,
-        isPaid: paid,
-        isRecurring: false,
-        mode: "payment", // sende mode="payment" görülüyor; uyumluluk için sabit
-        title: title || "",
-        type: dir === "income" ? "incoming" : "payment",
-        recurrenceId: null,
-        recurrenceStart: null,
-        recurrenceTotalMonths: null,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+      const common={
+        userId:user.uid, amount, category,
+        isRecurring:true, mode:"payment",
+        recurrenceId:rid, recurrenceStart:month, recurrenceTotalMonths:recMonths,
+        title:title||"", type:(dir==="income"?"incoming":"payment"), updatedAt:serverTimestamp()
       };
 
-      try{
-        await addDoc(collection(db, "payments"), payload);
-        addBg.classList.remove("show");
-        toast("Kaydedildi.");
-      }catch(e){
-        console.error(e);
-        toast("Kaydetme hatası: " + (e.code || e.message));
-      }
+      await setDoc(doc(db,"payments",templateId), {...common, isTemplate:true, date:month+"-01", isPaid:false, createdAt:serverTimestamp()}, {merge:true});
+      await setDoc(doc(db,"payments", rid+"_"+month), {...common, isTemplate:false, date, isPaid:paid, createdAt:serverTimestamp()}, {merge:true});
+
+      addBg.classList.remove("show");
+      toast("Tekrarlayan kaydedildi.");
+      await generateRecurringForMonth(month);
+      return;
+    }
+
+    await addDoc(collection(db,"payments"), {
+      userId:user.uid, amount, category, date,
+      isPaid:paid, isRecurring:false, isTemplate:false, mode:"payment",
+      title:title||"", type:(dir==="income"?"incoming":"payment"),
+      recurrenceId:null, recurrenceStart:null, recurrenceTotalMonths:null,
+      createdAt:serverTimestamp(), updatedAt:serverTimestamp()
     });
 
-    // Listener: SADECE userId filtresi (index istemesin diye orderBy yok)
-    function startListener(){
-      if(!user || !db) return;
-      if(unsub){ unsub(); unsub = null; }
+    addBg.classList.remove("show");
+    toast("Kaydedildi.");
+  }catch(e){
+    console.error(e);
+    toast("Kaydetme hatası: "+(e.code||e.message));
+  }
+});
 
-      const q = query(
-        collection(db, "payments"),
-        where("userId", "==", user.uid)
-      );
+// data
+function startListener(){
+  if(!user||!db) return;
+  if(unsub){unsub();unsub=null;}
+  const q=query(collection(db,"payments"), where("userId","==",user.uid));
+  unsub = onSnapshot(q, async (snap)=>{
+    allRows=snap.docs.map(d=>({id:d.id, ...d.data()}));
+    $("topHint").textContent="";
+    await generateRecurringForMonth(selectedMonth);
+    renderPage();
+  }, (err)=>{
+    console.error(err);
+    $("topHint").textContent="Okuma hatası: "+(err.code||err.message);
+    toast("Veri okunamadı. Rules/index kontrol et.");
+  });
+}
 
-      unsub = onSnapshot(q, (snap)=>{
-        allRows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        $("topHint").textContent = "";
-        renderPage();
-      }, (err)=>{
-        console.error(err);
-        const msg = (err.code || err.message || "").toString();
-        $("topHint").textContent = "Okuma hatası: " + msg;
-        toast("Veri okunamadı. Rules/index kontrol et.");
-      });
-    }
+async function onMonthChanged(){
+  $("monthLabel").textContent=selectedMonth;
+  if(user) await generateRecurringForMonth(selectedMonth);
+  renderPage();
+}
 
-    function onMonthChanged(){
-      $("monthLabel").textContent = selectedMonth;
-      renderPage();
-    }
+function filteredRowsForMonth(dirFilter){
+  const st=$("statusFilter").value;
+  const q=($("search").value||"").trim().toLowerCase();
+  let rows=allRows.filter(r=>!isTemplate(r)).filter(r=>monthOfDoc(r)===selectedMonth);
+  if(dirFilter) rows=rows.filter(r=>normalizeDir(r)===dirFilter);
+  if(st!=="all") rows=rows.filter(r=>st==="paid"?isPaid(r):!isPaid(r));
+  if(q) rows=rows.filter(r=>((r.title||"")+" "+(r.category||"")).toLowerCase().includes(q));
+  const seen=new Set(), out=[];
+  for(const r of rows){
+    const key = isRecurring(r)&&r.recurrenceId ? (r.recurrenceId+"_"+selectedMonth) : r.id;
+    if(seen.has(key)) continue; seen.add(key); out.push(r);
+  }
+  out.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+  return out;
+}
 
-    function filteredRowsForMonth(dirFilter){
-      const st = $("statusFilter").value;
-      const q = $("search").value.trim().toLowerCase();
+function kpisFor(rows){
+  const exp=rows.filter(r=>normalizeDir(r)==="expense").reduce((s,r)=>s+Number(r.amount||0),0);
+  const inc=rows.filter(r=>normalizeDir(r)==="income").reduce((s,r)=>s+Number(r.amount||0),0);
+  const net=inc-exp;
+  const expPaid=rows.filter(r=>normalizeDir(r)==="expense"&&isPaid(r)).length;
+  const expUn=rows.filter(r=>normalizeDir(r)==="expense"&&!isPaid(r)).length;
+  const incPaid=rows.filter(r=>normalizeDir(r)==="income"&&isPaid(r)).length;
+  const incUn=rows.filter(r=>normalizeDir(r)==="income"&&!isPaid(r)).length;
+  return {exp,inc,net,expPaid,expUn,incPaid,incUn};
+}
 
-      // filter by month (date alanından)
-      let rows = allRows.filter(r => monthOfDoc(r) === selectedMonth);
+function groupExpensesByCategory(rows){
+  const exp=rows.filter(r=>normalizeDir(r)==="expense");
+  const map=new Map();
+  for(const r of exp){
+    const c=(r.category||"Diğer").trim()||"Diğer";
+    map.set(c,(map.get(c)||0)+Number(r.amount||0));
+  }
+  const arr=[...map.entries()].map(([category,amount])=>({category,amount}));
+  arr.sort((a,b)=>b.amount-a.amount);
+  return arr;
+}
 
-      // normalize direction
-      if(dirFilter){
-        rows = rows.filter(r => normalizeDir(r) === dirFilter);
-      }
+function makeDonutSVG(parts){
+  const r=70, cx=90, cy=90, C=2*Math.PI*r;
+  let acc=0;
+  const base=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="transparent" stroke="rgba(255,255,255,.08)" stroke-width="18"></circle>`;
+  const circles=parts.map(p=>{
+    const frac=p.value;
+    const dash=(frac*C).toFixed(3)+" "+C.toFixed(3);
+    const off=(C*(1-acc)).toFixed(3);
+    acc+=frac;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="transparent" stroke="${p.color}" stroke-width="18" stroke-linecap="round" stroke-dasharray="${dash}" stroke-dashoffset="${off}"></circle>`;
+  }).join("");
+  return `<svg viewBox="0 0 180 180" aria-hidden="true">${base}${circles}</svg>`;
+}
 
-      // status
-      if(st !== "all"){
-        rows = rows.filter(r => st === "paid" ? isPaid(r) : !isPaid(r));
-      }
+function renderSpendingChart(rowsMonth){
+  const cats=groupExpensesByCategory(rowsMonth);
+  const total=cats.reduce((s,x)=>s+x.amount,0);
+  if(!total){
+    return `<div class="card" style="grid-column:span 8;"><h2>Nereye ne harcadım?</h2><div class="hint">Bu ay gider yok.</div></div>`;
+  }
+  const top=cats.slice(0,6), rest=cats.slice(6);
+  const restSum=rest.reduce((s,x)=>s+x.amount,0);
+  const viz=top.slice(); if(restSum>0) viz.push({category:"Diğer", amount:restSum});
+  const parts=viz.map(x=>({value:x.amount/total, color:colorForCategory(x.category)}));
+  const svg=makeDonutSVG(parts);
 
-      // search title+category
-      if(q){
-        rows = rows.filter(r=>{
-          const blob = ((r.title||"") + " " + (r.category||"")).toLowerCase();
-          return blob.includes(q);
-        });
-      }
+  const legend=viz.map(x=>{
+    const pct=Math.round((x.amount/total)*100);
+    return `<div class="legItem"><div class="legLeft"><span class="dot" style="background:${colorForCategory(x.category)}"></span><div class="legName">${escapeHtml(x.category)}</div></div><div class="legVal">${pct}% • ${fmt.format(x.amount)}</div></div>`;
+  }).join("");
 
-      // De-dup for recurring safety: recurrenceId + month (senin id zaten böyle ama yine de)
-      const seen = new Set();
-      const out = [];
-      for(const r of rows){
-        const key = isRecurring(r) && r.recurrenceId ? (r.recurrenceId + "_" + selectedMonth) : r.id;
-        if(seen.has(key)) continue;
-        seen.add(key);
-        out.push(r);
-      }
+  const max=viz[0].amount||1;
+  const bars=viz.map(x=>{
+    const w=Math.max(6,Math.round((x.amount/max)*100));
+    return `<div><div class="hint" style="display:flex;justify-content:space-between;gap:10px;"><span><span class="dot" style="background:${colorForCategory(x.category)}"></span>${escapeHtml(x.category)}</span><span>${fmt.format(x.amount)}</span></div><div class="bar"><div style="width:${w}%;background:${colorForCategory(x.category)}"></div></div></div>`;
+  }).join("");
 
-      // sort by date desc (client)
-      out.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
-      return out;
-    }
+  return `<div class="card" style="grid-column:span 8;"><h2>Nereye ne harcadım?</h2><div class="chartRow"><div class="donutWrap"><div class="donut">${svg}<div class="donutCenter"><div class="big">${fmt.format(total)}</div><div class="small">Toplam gider</div></div></div><div class="legend">${legend}</div></div><div style="flex:1;min-width:260px;"><div class="hint">Kategori dağılımı (gider)</div><div class="barList">${bars}</div></div></div></div>`;
+}
 
-    function kpisFor(rows){
-      const exp = rows.filter(r=>normalizeDir(r)==="expense").reduce((s,r)=>s+Number(r.amount||0),0);
-      const inc = rows.filter(r=>normalizeDir(r)==="income").reduce((s,r)=>s+Number(r.amount||0),0);
-      const net = inc - exp;
+function renderTable(rows){
+  if(!rows.length) return `<div class="hint">Kayıt yok.</div>`;
+  const head=`<table><thead><tr><th class="nowrap">Tarih</th><th>Tür</th><th>Başlık</th><th>Kategori</th><th class="right nowrap">Tutar</th><th>Durum</th><th>Tekrar</th><th class="right">İşlem</th></tr></thead><tbody>`;
+  const body=rows.map(r=>{
+    const dir=normalizeDir(r);
+    const t=dir==="income"?`<span class="tag good">Gelir</span>`:`<span class="tag bad">Gider</span>`;
+    const s=isPaid(r)?`<span class="tag good">Alındı/Ödendi</span>`:`<span class="tag">Alınmadı</span>`;
+    const rec=isRecurring(r)?`<span class="tag rec">Aylık</span>`:`<span class="tag">—</span>`;
+    const amtColor=dir==="income"?"var(--good)":"var(--bad)";
+    const title=escapeHtml(r.title||"—");
+    const cat=escapeHtml(r.category||"Diğer");
+    const dot=`<span class="dot" style="background:${colorForCategory(r.category)}"></span>`;
+    return `<tr><td class="nowrap">${escapeHtml((r.date||"").slice(0,10)||"-")}</td><td>${t}</td><td><div style="font-weight:650">${title}</div></td><td>${dot}<span>${cat}</span></td><td class="right nowrap" style="font-weight:750;color:${amtColor}">${fmt.format(Number(r.amount||0))}</td><td>${s}</td><td>${rec}</td><td class="right nowrap"><button class="btn small" data-act="toggle" data-id="${r.id}">${isPaid(r)?"Geri Al":"Ödendi"}</button> <button class="btn small danger" data-act="del" data-id="${r.id}">Sil</button></td></tr>`;
+  }).join("");
+  return head+body+`</tbody></table>`;
+}
 
-      const expPaid = rows.filter(r=>normalizeDir(r)==="expense" && isPaid(r)).length;
-      const expUn   = rows.filter(r=>normalizeDir(r)==="expense" && !isPaid(r)).length;
-
-      const incPaid = rows.filter(r=>normalizeDir(r)==="income" && isPaid(r)).length;
-      const incUn   = rows.filter(r=>normalizeDir(r)==="income" && !isPaid(r)).length;
-
-      return { exp, inc, net, expPaid, expUn, incPaid, incUn };
-    }
-
-    function renderTable(rows){
-      if(!rows.length) return `<div class="hint">Kayıt yok.</div>`;
-
-      const head = `
-        <table>
-          <thead>
-            <tr>
-              <th class="nowrap">Tarih</th>
-              <th>Tür</th>
-              <th>Başlık</th>
-              <th>Kategori</th>
-              <th class="right nowrap">Tutar</th>
-              <th>Durum</th>
-              <th>Tekrar</th>
-              <th class="right">İşlem</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      const body = rows.map(r=>{
-        const dir = normalizeDir(r);
-        const t = dir === "income" ? `<span class="tag good">Gelir</span>` : `<span class="tag bad">Gider</span>`;
-        const s = isPaid(r) ? `<span class="tag good">Alındı/Ödendi</span>` : `<span class="tag">Alınmadı</span>`;
-        const rec = isRecurring(r) ? `<span class="tag rec">Aylık</span>` : `<span class="tag">—</span>`;
-        const amtColor = dir === "income" ? "var(--good)" : "var(--bad)";
-        const title = escapeHtml(r.title || "—");
-        const cat = escapeHtml(r.category || "—");
-
-        return `
-          <tr>
-            <td class="nowrap">${escapeHtml((r.date||"").slice(0,10) || "-")}</td>
-            <td>${t}</td>
-            <td><div style="font-weight:950">${title}</div></td>
-            <td>${cat}</td>
-            <td class="right nowrap" style="font-weight:950; color:${amtColor}">${fmt.format(Number(r.amount||0))}</td>
-            <td>${s}</td>
-            <td>${rec}</td>
-            <td class="right nowrap">
-              <button class="btn small" data-act="toggle" data-id="${r.id}">${isPaid(r) ? "Geri Al" : "Ödendi"}</button>
-              <button class="btn small" data-act="del" data-id="${r.id}">Sil</button>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-      return head + body + `</tbody></table>`;
-    }
-
-    function bindTableActions(){
-      document.querySelectorAll("button[data-act]").forEach(btn=>{
-        btn.addEventListener("click", async ()=>{
-          const act = btn.dataset.act;
-          const id = btn.dataset.id;
-          if(!user) return;
-
-          try{
-            const row = allRows.find(r=>r.id===id);
-            const ref = doc(db, "payments", id);
-
-            if(act === "toggle"){
-              await updateDoc(ref, { isPaid: !isPaid(row), updatedAt: serverTimestamp() });
-              toast("Güncellendi.");
-            }
-            if(act === "del"){
-              await deleteDoc(ref);
-              toast("Silindi.");
-            }
-          }catch(e){
-            console.error(e);
-            toast("İşlem hatası: " + (e.code || e.message));
-          }
-        });
-      });
-    }
-
-    // === Recurring generator: create missing doc for selectedMonth (NO duplicates)
-    $("btnGen").addEventListener("click", async ()=>{
+function bindTableActions(){
+  document.querySelectorAll("button[data-act]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const act=btn.dataset.act, id=btn.dataset.id;
       if(!user) return;
       try{
-        const monthRows = allRows.filter(r => monthOfDoc(r) === selectedMonth);
-        const recurringBases = allRows.filter(r => !!r.isRecurring && !!r.recurrenceId);
-
-        // We'll generate from bases that started at/before selectedMonth.
-        // If recurrenceTotalMonths is set, stop after that many months (inclusive of start).
-        let created = 0, skipped = 0;
-
-        for(const base of recurringBases){
-          const rid = String(base.recurrenceId);
-          const start = String(base.recurrenceStart || "").slice(0,7);
-          if(!start) continue;
-          if(selectedMonth < start) continue;
-
-          const total = (base.recurrenceTotalMonths === null || base.recurrenceTotalMonths === undefined)
-            ? null
-            : Number(base.recurrenceTotalMonths);
-
-          if(total && total > 0){
-            // monthsDiff = (selected - start) + 1 must be <= total
-            const [sy,sm] = start.split("-").map(Number);
-            const [ty,tm] = selectedMonth.split("-").map(Number);
-            const diff = (ty*12 + tm) - (sy*12 + sm) + 1;
-            if(diff > total) continue;
-          }
-
-          // Deterministic id like your existing docs: recurrenceId_YYYY-MM
-          const docId = rid + "_" + selectedMonth;
-          const ref = doc(db, "payments", docId);
-          const exists = await getDoc(ref);
-          if(exists.exists()){
-            skipped++;
-            continue;
-          }
-
-          // Create a copy with date set to same day-of-month if possible
-          const day = (base.date || (start + "-01")).slice(8,10) || "01";
-          let newDate = selectedMonth + "-" + day;
-          // guard invalid dates (e.g., 31 in Feb)
-          const test = new Date(newDate + "T00:00:00");
-          if(isNaN(test.getTime()) || ymFromDate(test) !== selectedMonth){
-            newDate = selectedMonth + "-01";
-          }
-
-          const payload = {
-            userId: user.uid,
-            amount: Number(base.amount || 0),
-            category: base.category || "",
-            date: newDate,
-            isPaid: false, // new month starts unpaid
-            isRecurring: true,
-            mode: base.mode || "payment",
-            recurrenceId: rid,
-            recurrenceStart: start,
-            recurrenceTotalMonths: (base.recurrenceTotalMonths ?? null),
-            title: base.title || "",
-            type: base.type || "payment",
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          };
-
-          await setDoc(ref, payload, { merge: true });
-          created++;
-        }
-
-        toast(`Tekrarlayan üretildi: ${created} yeni, ${skipped} zaten vardı.`);
-      }catch(e){
-        console.error(e);
-        toast("Üretim hatası: " + (e.code || e.message));
-      }
+        const row=allRows.find(r=>r.id===id);
+        const ref=doc(db,"payments",id);
+        if(act==="toggle"){ await updateDoc(ref,{isPaid:!isPaid(row), updatedAt:serverTimestamp()}); toast("Güncellendi."); }
+        if(act==="del"){ if(!confirm("Silinsin mi?")) return; await deleteDoc(ref); toast("Silindi."); }
+      }catch(e){ console.error(e); toast("İşlem hatası: "+(e.code||e.message)); }
     });
+  });
+}
 
-    function renderCalendar(rows){
-      // rows: all rows of month (both dirs)
-      // Build per-day totals
-      const daysInMonth = (ym)=>{
-        const [y,m] = ym.split("-").map(Number);
-        return new Date(y, m, 0).getDate();
-      }
-      const firstDayOfWeek = (ym)=>{
-        const [y,m] = ym.split("-").map(Number);
-        return new Date(y, m-1, 1).getDay(); // 0=Sun
-      }
-      const dim = daysInMonth(selectedMonth);
-      const start = firstDayOfWeek(selectedMonth);
-      // Convert to Mon-first indexing (Mon=0)
-      const pad = (start + 6) % 7;
+// Recurring auto
+async function generateRecurringForMonth(targetMonth){
+  if(!user||!db) return;
+  const templates=allRows.filter(r=>isTemplate(r)&&r.isRecurring&&r.recurrenceId&&r.recurrenceStart);
+  const fallback=allRows.filter(r=>!isTemplate(r)).filter(r=>r.isRecurring&&r.recurrenceId&&r.recurrenceStart).filter(r=>monthOfDoc(r)===String(r.recurrenceStart).slice(0,7));
+  const bases=templates.length?templates:fallback;
 
-      const dayMap = new Map(); // day -> {inc, exp}
-      for(const r of rows){
-        const d = (r.date||"").slice(8,10);
-        const day = Number(d);
-        if(!day || day<1 || day>31) continue;
-        if(!dayMap.has(day)) dayMap.set(day, {inc:0, exp:0});
-        const x = dayMap.get(day);
-        if(normalizeDir(r)==="income") x.inc += Number(r.amount||0);
-        else x.exp += Number(r.amount||0);
-      }
-
-      const labels = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
-      const head = `<div class="calGrid">${labels.map(l=>`<div class="hint" style="text-align:center; font-weight:900">${l}</div>`).join("")}</div>`;
-
-      let cells = [];
-      for(let i=0;i<pad;i++){
-        cells.push(`<div class="calCell" style="opacity:.25"></div>`);
-      }
-      for(let day=1; day<=dim; day++){
-        const v = dayMap.get(day) || {inc:0, exp:0};
-        const net = v.inc - v.exp;
-        const netCls = net>=0 ? "good" : "bad";
-        cells.push(`
-          <div class="calCell">
-            <div class="calTop">
-              <div class="calDay">${day}</div>
-              <div class="calAmt ${netCls}">${fmt.format(net)}</div>
-            </div>
-            <div class="calMini">
-              <span>Gelir: ${fmt.format(v.inc)}</span>
-              <span>Gider: ${fmt.format(v.exp)}</span>
-            </div>
-          </div>
-        `);
-      }
-
-      return head + `<div class="calGrid">${cells.join("")}</div>`;
+  let created=0;
+  for(const base of bases){
+    const rid=String(base.recurrenceId);
+    const start=String(base.recurrenceStart||"").slice(0,7);
+    if(!start) continue;
+    if(targetMonth<start) continue;
+    const total = (base.recurrenceTotalMonths==null) ? null : Number(base.recurrenceTotalMonths);
+    if(total && total>0){
+      const [sy,sm]=start.split("-").map(Number);
+      const [ty,tm]=targetMonth.split("-").map(Number);
+      const diff=(ty*12+tm)-(sy*12+sm)+1;
+      if(diff>total) continue;
     }
+    const docId=rid+"_"+targetMonth;
+    const ref=doc(db,"payments",docId);
+    const exists=await getDoc(ref);
+    if(exists.exists()) continue;
 
-    function renderPage(){
-      $("monthLabel").textContent = selectedMonth;
-      const content = $("content");
+    const day=(base.date || (start+"-01")).slice(8,10) || "01";
+    let newDate=targetMonth+"-"+day;
+    const test=new Date(newDate+"T00:00:00");
+    if(isNaN(test.getTime()) || ymFromDate(test)!==targetMonth) newDate=targetMonth+"-01";
 
-      if(!user){
-        content.innerHTML = `
-          <div class="card">
-            <h2>Başlamak için giriş yap</h2>
-            <div class="hint">Sağ üstten <b>Giriş</b> butonuna bas. firebaseConfig'i doldurduğundan emin ol.</div>
-            <div class="hr"></div>
-            <div class="hint">Bu sürüm senin verine göre çalışır:</div>
-            <div class="hint">• user alanı: <b>userId</b></div>
-            <div class="hint">• gelir: <b>type = incoming</b></div>
-            <div class="hint">• ödeme durumu: <b>isPaid</b></div>
-          </div>
-        `;
-        return;
-      }
+    await setDoc(ref,{
+      userId:user.uid,
+      amount:Number(base.amount||0),
+      category:base.category||"Diğer",
+      date:newDate,
+      isPaid:false,
+      isRecurring:true,
+      isTemplate:false,
+      mode:base.mode||"payment",
+      recurrenceId:rid,
+      recurrenceStart:start,
+      recurrenceTotalMonths:(base.recurrenceTotalMonths ?? null),
+      title:base.title||"",
+      type:base.type||"payment",
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    }, {merge:true});
+    created++;
+  }
+  if(created>0) toast("Tekrarlayanlar eklendi: "+created);
+}
 
-      const rowsMonth = filteredRowsForMonth(null);
-      const k = kpisFor(rowsMonth);
+// Day modal
+const dayBg=$("dayBg");
+$("dayClose").addEventListener("click", ()=>dayBg.classList.remove("show"));
+$("dayOk").addEventListener("click", ()=>dayBg.classList.remove("show"));
+dayBg.addEventListener("click", (e)=>{ if(e.target===dayBg) dayBg.classList.remove("show"); });
 
-      if(currentPage === "dashboard"){
-        content.innerHTML = `
-          <div class="grid">
-            <div class="card" style="grid-column: span 4;">
-              <h2>Bu Ay Gider</h2>
-              <div class="kpi">
-                <div class="value bad">${fmt.format(k.exp)}</div>
-                <div class="hint">Ödendi ${k.expPaid} • Ödenmedi ${k.expUn}</div>
-              </div>
-            </div>
-            <div class="card" style="grid-column: span 4;">
-              <h2>Bu Ay Gelir</h2>
-              <div class="kpi">
-                <div class="value good">${fmt.format(k.inc)}</div>
-                <div class="hint">Alındı ${k.incPaid} • Alınmadı ${k.incUn}</div>
-              </div>
-            </div>
-            <div class="card" style="grid-column: span 4;">
-              <h2>Net</h2>
-              <div class="kpi">
-                <div class="value ${k.net>=0 ? "good" : "bad"}">${fmt.format(k.net)}</div>
-                <div class="hint">Net = Gelir − Gider</div>
-              </div>
-            </div>
+function openDayDetail(dateStr){
+  const dayRows=filteredRowsForMonth(null).filter(r=>(r.date||"").slice(0,10)===dateStr);
+  const exp=dayRows.filter(r=>normalizeDir(r)==="expense").reduce((s,r)=>s+Number(r.amount||0),0);
+  const inc=dayRows.filter(r=>normalizeDir(r)==="income").reduce((s,r)=>s+Number(r.amount||0),0);
+  const net=inc-exp;
+  $("dayTitle").textContent=dateStr+" • Detay";
+  $("dayBody").innerHTML = `<div class="grid" style="grid-template-columns:repeat(12,1fr);gap:10px;">
+    <div class="card" style="grid-column:span 4;"><div class="hint">Gelir</div><div class="kpi"><div class="value good">${fmt.format(inc)}</div></div></div>
+    <div class="card" style="grid-column:span 4;"><div class="hint">Gider</div><div class="kpi"><div class="value bad">${fmt.format(exp)}</div></div></div>
+    <div class="card" style="grid-column:span 4;"><div class="hint">Net</div><div class="kpi"><div class="value ${net>=0?"good":"bad"}">${fmt.format(net)}</div></div></div>
+  </div><div class="hr"></div><div style="overflow:auto;">${renderTable(dayRows)}</div>`;
+  bindTableActions();
+  dayBg.classList.add("show");
+}
 
-            <div class="card" style="grid-column: span 8;">
-              <h2>Son İşlemler</h2>
-              <div class="hint">${selectedMonth} içinde ${rowsMonth.length} kayıt</div>
-              <div style="overflow:auto; margin-top:10px;">
-                ${renderTable(rowsMonth.slice(0, 12))}
-              </div>
-            </div>
+function renderCalendar(rows){
+  const daysInMonth=(ym)=>{ const [y,m]=ym.split("-").map(Number); return new Date(y,m,0).getDate(); };
+  const firstDayOfWeek=(ym)=>{ const [y,m]=ym.split("-").map(Number); return new Date(y,m-1,1).getDay(); };
+  const dim=daysInMonth(selectedMonth);
+  const start=firstDayOfWeek(selectedMonth);
+  const pad=(start+6)%7;
 
-            <div class="card" style="grid-column: span 4;">
-              <h2>Hızlı Notlar</h2>
-              <div class="hint">• Menü: alttaki sekmeler</div>
-              <div class="hint">• Yeni kayıt: üstte <b>＋ Yeni</b></div>
-              <div class="hr"></div>
-              <div class="hint"><b>Tekrarlayan çoğalma</b> için: “⟳ Bu ay tekrarlayanları üret” butonu <b>setDoc(deterministicId)</b> ile tekilleştirir.</div>
-            </div>
-          </div>
-        `;
-        bindTableActions();
-        return;
-      }
+  const dayMap=new Map();
+  for(const r of rows){
+    const d=(r.date||"").slice(8,10);
+    const day=Number(d);
+    if(!day||day<1||day>31) continue;
+    if(!dayMap.has(day)) dayMap.set(day,{inc:0,exp:0});
+    const x=dayMap.get(day);
+    if(normalizeDir(r)==="income") x.inc+=Number(r.amount||0);
+    else x.exp+=Number(r.amount||0);
+  }
+  const labels=["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
+  const head=`<div class="calGrid">${labels.map(l=>`<div class="hint" style="text-align:center;font-weight:650">${l}</div>`).join("")}</div>`;
+  let cells=[];
+  for(let i=0;i<pad;i++) cells.push(`<div class="calCell disabled"></div>`);
+  for(let day=1;day<=dim;day++){
+    const v=dayMap.get(day)||{inc:0,exp:0};
+    const net=v.inc-v.exp;
+    const netCls=net>=0?"good":"bad";
+    const dateStr=selectedMonth+"-"+pad2(day);
+    cells.push(`<div class="calCell" data-date="${dateStr}">
+      <div class="calTop"><div class="calDay">${day}</div><div class="calAmt ${netCls}">${fmt.format(net)}</div></div>
+      <div class="calMini"><span>G: ${fmt.format(v.inc)}</span><span>H: ${fmt.format(v.exp)}</span></div>
+    </div>`);
+  }
+  return head+`<div class="calGrid" id="calCells">${cells.join("")}</div>`;
+}
+function bindCalendarClicks(){
+  const wrap=document.getElementById("calCells"); if(!wrap) return;
+  wrap.querySelectorAll(".calCell[data-date]").forEach(cell=>{
+    cell.addEventListener("click", ()=> openDayDetail(cell.getAttribute("data-date")));
+  });
+}
 
-      if(currentPage === "expense"){
-        const rows = filteredRowsForMonth("expense");
-        content.innerHTML = `
-          <div class="card">
-            <h2>Gider • ${selectedMonth}</h2>
-            <div class="hint">${rows.length} kayıt</div>
-            <div style="overflow:auto; margin-top:10px;">
-              ${renderTable(rows)}
-            </div>
-          </div>
-        `;
-        bindTableActions();
-        return;
-      }
+// Render
+function renderPage(){
+  $("monthLabel").textContent=selectedMonth;
+  const content=$("content");
+  if(!user){
+    content.innerHTML=`<div class="card"><h2>Başlamak için giriş yap</h2><div class="hint">Sağ üstten <b>Giriş</b> butonuna bas.</div></div>`;
+    return;
+  }
+  const rowsMonth=filteredRowsForMonth(null);
+  const k=kpisFor(rowsMonth);
 
-      if(currentPage === "income"){
-        const rows = filteredRowsForMonth("income");
-        content.innerHTML = `
-          <div class="card">
-            <h2>Gelir • ${selectedMonth}</h2>
-            <div class="hint">${rows.length} kayıt</div>
-            <div style="overflow:auto; margin-top:10px;">
-              ${renderTable(rows)}
-            </div>
-          </div>
-        `;
-        bindTableActions();
-        return;
-      }
+  if(currentPage==="dashboard"){
+    content.innerHTML = `<div class="grid">
+      <div class="card" style="grid-column:span 4;"><h2>Bu Ay Gider</h2><div class="kpi"><div class="value bad">${fmt.format(k.exp)}</div><div class="hint">Ödendi ${k.expPaid} • Ödenmedi ${k.expUn}</div></div></div>
+      <div class="card" style="grid-column:span 4;"><h2>Bu Ay Gelir</h2><div class="kpi"><div class="value good">${fmt.format(k.inc)}</div><div class="hint">Alındı ${k.incPaid} • Alınmadı ${k.incUn}</div></div></div>
+      <div class="card" style="grid-column:span 4;"><h2>Net</h2><div class="kpi"><div class="value ${k.net>=0?"good":"bad"}">${fmt.format(k.net)}</div><div class="hint">Net = Gelir − Gider</div></div></div>
+      ${renderSpendingChart(rowsMonth)}
+      <div class="card" style="grid-column:span 4;"><h2>Kısa</h2><div class="hint">• Takvim: güne tıkla → detay</div><div class="hint">• Tekrarlayanlar: ay değişince otomatik gelir</div><div class="hint">• Kategori renkleri: listede ve grafikte aynı</div></div>
+      <div class="card" style="grid-column:span 12;"><h2>Son İşlemler</h2><div class="hint">${selectedMonth} içinde ${rowsMonth.length} kayıt</div><div style="overflow:auto;margin-top:10px;">${renderTable(rowsMonth.slice(0,10))}</div></div>
+    </div>`;
+    bindTableActions();
+    return;
+  }
 
-      if(currentPage === "calendar"){
-        content.innerHTML = `
-          <div class="card">
-            <h2>Takvim • ${selectedMonth}</h2>
-            <div class="hint">Günlük net/gelir/gider toplamları</div>
-            ${renderCalendar(rowsMonth)}
-          </div>
-        `;
-        return;
-      }
-
-      if(currentPage === "settings"){
-        content.innerHTML = `
-          <div class="card">
-            <h2>Ayarlar</h2>
-            <div class="hint"><b>Koleksiyon:</b> payments</div>
-            <div class="hint"><b>Kullanıcı alanı:</b> userId</div>
-            <div class="hint"><b>Gelir:</b> type=incoming • <b>Gider:</b> type!=incoming</div>
-            <div class="hr"></div>
-            <div class="hint">Rules (öneri):</div>
-            <pre class="hint" style="white-space:pre-wrap; background:rgba(14,22,42,.6); border:1px solid rgba(255,255,255,.06); padding:10px; border-radius:14px; margin:10px 0 0;">rules_version = '2';
+  if(currentPage==="expense"){
+    const rows=filteredRowsForMonth("expense");
+    content.innerHTML=`<div class="card"><h2>Gider • ${selectedMonth}</h2><div class="hint">${rows.length} kayıt</div><div style="overflow:auto;margin-top:10px;">${renderTable(rows)}</div></div>`;
+    bindTableActions(); return;
+  }
+  if(currentPage==="income"){
+    const rows=filteredRowsForMonth("income");
+    content.innerHTML=`<div class="card"><h2>Gelir • ${selectedMonth}</h2><div class="hint">${rows.length} kayıt</div><div style="overflow:auto;margin-top:10px;">${renderTable(rows)}</div></div>`;
+    bindTableActions(); return;
+  }
+  if(currentPage==="calendar"){
+    content.innerHTML=`<div class="card"><h2>Takvim • ${selectedMonth}</h2><div class="hint">Güne tıkla → o günün detayları</div>${renderCalendar(rowsMonth)}</div>`;
+    bindCalendarClicks(); return;
+  }
+  if(currentPage==="settings"){
+    content.innerHTML=`<div class="card"><h2>Ayarlar</h2>
+      <div class="hint"><b>Koleksiyon:</b> payments</div>
+      <div class="hint"><b>Kullanıcı alanı:</b> userId</div>
+      <div class="hint"><b>Gelir:</b> type=incoming • <b>Gider:</b> type!=incoming</div>
+      <div class="hr"></div>
+      <div class="hint">Rules (öneri):</div>
+      <pre class="hint" style="white-space:pre-wrap;background:rgba(14,22,42,.6);border:1px solid rgba(255,255,255,.06);padding:10px;border-radius:14px;margin:10px 0 0;">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /payments/{docId} {
@@ -984,48 +672,44 @@ service cloud.firestore {
     }
   }
 }</pre>
-            <div class="hint">Bu HTML, index istememek için <b>orderBy</b> kullanmadan userId ile çekip tarayıcıda filtreler/sıralar.</div>
-          </div>
-        `;
-        return;
-      }
-    }
+      <div class="hint">Bu sürüm index istememek için <b>orderBy</b> kullanmadan userId ile çekip tarayıcıda filtreler/sıralar.</div>
+    </div>`;
+    return;
+  }
+}
 
-    // Auth state
-    onAuthStateChanged(auth, (u)=>{
-      user = u;
-      $("monthLabel").textContent = selectedMonth;
+// Auth state
+onAuthStateChanged(auth, async (u)=>{
+  user=u;
+  $("monthLabel").textContent=selectedMonth;
 
-      if(!u){
-        $("userPill").style.display = "none";
-        $("btnLogout").style.display = "none";
-        $("btnAdd").style.display = "none";
-        $("btnGen").style.display = "none";
-        $("btnLoginOpen").style.display = "inline-flex";
-        $("userEmail").textContent = "";
-        $("topHint").textContent = "";
-        allRows = [];
-        if(unsub){ unsub(); unsub = null; }
-        renderPage();
-        return;
-      }
-
-      $("userPill").style.display = "inline-flex";
-      $("btnLogout").style.display = "inline-flex";
-      $("btnAdd").style.display = "inline-flex";
-      $("btnGen").style.display = "inline-flex";
-      $("btnLoginOpen").style.display = "none";
-      $("userEmail").textContent = u.email || "—";
-      $("topHint").textContent = "";
-
-      startListener();
-      renderPage();
-    });
-
-    // init
-    $("mDate").value = todayStr();
-    $("monthLabel").textContent = selectedMonth;
+  if(!u){
+    $("userPill").style.display="none";
+    $("btnLogout").style.display="none";
+    $("btnAdd").style.display="none";
+    $("btnLoginOpen").style.display="inline-flex";
+    $("userEmail").textContent="";
+    $("topHint").textContent="";
+    allRows=[];
+    if(unsub){unsub();unsub=null;}
     renderPage();
-  </script>
+    return;
+  }
+
+  $("userPill").style.display="inline-flex";
+  $("btnLogout").style.display="inline-flex";
+  $("btnAdd").style.display="inline-flex";
+  $("btnLoginOpen").style.display="none";
+  $("userEmail").textContent=u.email||"—";
+  $("topHint").textContent="";
+
+  startListener();
+  renderPage();
+});
+
+$("monthLabel").textContent=selectedMonth;
+$("mDate").value=todayStr();
+renderPage();
+</script>
 </body>
 </html>
