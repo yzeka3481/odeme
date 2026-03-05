@@ -224,9 +224,13 @@ const nextMonth = (ym)=>{ const [y,m]=ym.split("-").map(Number); const d=new Dat
 const prevMonth = (ym)=>{ const [y,m]=ym.split("-").map(Number); const d=new Date(y,m-1,1); d.setMonth(d.getMonth()-1); return ymFromDate(d); };
 const todayStr = ()=>{ const d=new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); };
 function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
-  }[m]));
+  return String(s ?? "").replace(/[&<>"']/g, (ch) => {
+    if (ch === "&") return "&amp;";
+    if (ch === "<") return "&lt;";
+    if (ch === ">") return "&gt;";
+    if (ch === '"') return "&quot;";
+    return "&#039;";
+  });
 }
 const uuid = ()=> (Math.random().toString(16).slice(2)+Math.random().toString(16).slice(2));
 const monthOfDoc = (d)=> ((d?.date||"").slice(0,7) || (d?.recurrenceStart||"").slice(0,7) || "");
