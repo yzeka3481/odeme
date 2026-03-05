@@ -90,7 +90,7 @@
     .header .left{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .header .right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .hint{ color:var(--muted); font-size:12px; font-weight:550; }
-    .content{ padding:14px; overflow:auto; display:flex; flex-direction:column; gap:12px; }
+    .content{ padding:14px; overflow:auto; display:flex; flex-direction:column; gap:12px; min-height: 280px; }
     .grid{ display:grid; grid-template-columns: repeat(12, 1fr); gap:12px; }
     .card{ background: rgba(17,26,46,.55); border:1px solid var(--line); border-radius: var(--r); padding:12px; min-width:0; }
     .card h2{ margin:0 0 10px; font-size:13px; color:#cfe0ff; font-weight:700; }
@@ -562,7 +562,6 @@
           measurementId: "G-KB8SKRCQ9X"
         };
 
-
     function $(id){ return document.getElementById(id); }
     var fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
 
@@ -694,14 +693,14 @@
 
       if(act === "toggle"){
         ref.update({ isPaid: !isPaid(row), updatedAt: serverTs() })
-          .then(function(){ toast("Güncellendi."); })
+          .then(function(){ toast("Güncellendi."); renderPage(); })
           .catch(function(err){ console.error(err); toast("İşlem hatası: " + (err.code || err.message)); });
       }
 
       if(act === "del"){
         if(!confirm("Silinsin mi?")) return;
         ref.delete()
-          .then(function(){ toast("Silindi."); })
+          .then(function(){ toast("Silindi."); renderPage(); })
           .catch(function(err){ console.error(err); toast("İşlem hatası: " + (err.code || err.message)); });
       }
 
@@ -956,7 +955,7 @@
           })
           .then(function(){
             addBg.classList.remove("show");
-            toast("Tekrarlayan kaydedildi.");
+            toast("Tekrarlayan kaydedildi."); renderPage();
             return generateRecurringForMonth(month);
           })
           .catch(function(e){
@@ -985,7 +984,7 @@
         updatedAt: serverTs()
       }).then(function(){
         addBg.classList.remove("show");
-        toast("Kaydedildi.");
+        toast("Kaydedildi."); renderPage();
       }).catch(function(e){
         console.error(e);
         toast("Kaydetme hatası: " + (e.code || e.message));
@@ -1007,7 +1006,7 @@
           return data;
         });
         $("topHint").textContent = "";
-        generateRecurringForMonth(selectedMonth).then(renderPage);
+        generateRecurringForMonth(selectedMonth).then(renderPage).catch(function(){ renderPage(); });
       }, function(err){
         console.error(err);
         $("topHint").textContent = "Okuma hatası: " + (err.code || err.message);
@@ -1017,7 +1016,7 @@
 
     function onMonthChanged(){
       $("monthLabel").textContent = selectedMonth;
-      if(user) generateRecurringForMonth(selectedMonth).then(renderPage);
+      if(user) generateRecurringForMonth(selectedMonth).then(renderPage).catch(function(){ renderPage(); });
       else renderPage();
     }
 
@@ -1461,6 +1460,7 @@
     }
 
     function renderPage(){
+      try{
       $("monthLabel").textContent = selectedMonth;
       var content = $("content");
 
@@ -1559,6 +1559,7 @@
           '</div>';
         return;
       }
+      }catch(e){ console.error(e); toast('Ekran hatası: ' + (e.message||e)); }
     }
 
     auth.onAuthStateChanged(function(u){
@@ -1587,6 +1588,7 @@
 
       startListener();
       renderPage();
+      setTimeout(renderPage, 0);
     });
 
     $("monthLabel").textContent = selectedMonth;
