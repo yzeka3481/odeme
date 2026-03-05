@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ödeme Takip — Dashboard (Firebase)</title>
+  <title>Ödeme Takip — Uyumlu Dashboard (Firebase)</title>
   <meta name="theme-color" content="#0b1220" />
   <style>
     :root{
@@ -65,6 +65,7 @@
       color: #cfe0ff;
       font-weight:800;
       font-size:12px;
+      white-space:nowrap;
     }
     .btn{
       border:1px solid var(--line);
@@ -82,6 +83,7 @@
     .btn:hover{ filter:brightness(1.08); }
     .btn.primary{ background: rgba(79,124,255,.95); border-color: rgba(79,124,255,.55); }
     .btn.small{ padding:8px 10px; border-radius: 12px; font-size:12px; }
+    .btn.warn{ background: rgba(251,191,36,.16); border-color: rgba(251,191,36,.35); }
 
     input, select{
       border:1px solid var(--line);
@@ -142,6 +144,28 @@
     .tag.good{ border-color: rgba(45,212,191,.35); background: rgba(13,42,34,.85); color:#8ff6e4; }
     .tag.rec{ border-color: rgba(79,124,255,.35); background: rgba(27,35,56,.85); color:#c5d3ff; }
 
+    /* Calendar */
+    .calGrid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:8px;
+      margin-top:10px;
+    }
+    .calCell{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(14,22,42,.55);
+      border-radius: 14px;
+      padding:8px;
+      min-height:76px;
+    }
+    .calTop{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .calDay{ font-weight:950; font-size:12px; color:#cfe0ff; }
+    .calAmt{ font-weight:950; font-size:12px; }
+    .calAmt.good{ color:var(--good); }
+    .calAmt.bad{ color:var(--bad); }
+    .calMini{ margin-top:8px; display:flex; flex-direction:column; gap:4px; }
+    .calMini span{ font-size:11px; color:var(--muted); }
+
     /* Bottom Tab Bar */
     .tabbarWrap{
       position: fixed;
@@ -189,7 +213,7 @@
     }
     .modalBg.show{ display:flex; }
     .modal{
-      width:min(520px, 100%);
+      width:min(560px, 100%);
       background: rgba(15,23,48,.98);
       border:1px solid var(--line);
       border-radius: 20px;
@@ -247,11 +271,12 @@
           <option value="paid">Durum: Alındı/Ödendi</option>
         </select>
 
-        <input id="search" placeholder="Ara (açıklama / kategori / kişi)" />
+        <input id="search" placeholder="Ara (başlık / kategori)" />
       </div>
 
       <div class="right">
-        <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail" class="nowrap"></span></span>
+        <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
+        <button id="btnGen" class="btn warn" style="display:none;">⟳ Bu ay tekrarlayanları üret</button>
         <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
         <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
         <button id="btnLoginOpen" class="btn primary">Giriş</button>
@@ -302,13 +327,13 @@
       </div>
       <div class="modalBody">
         <div class="grid2">
-          <select id="mType">
-            <option value="expense">Gider</option>
-            <option value="income">Gelir</option>
+          <select id="mDir">
+            <option value="expense">Gider (payment)</option>
+            <option value="income">Gelir (incoming)</option>
           </select>
-          <select id="mStatus">
-            <option value="unpaid">Alınmadı/Ödenmedi</option>
-            <option value="paid">Alındı/Ödendi</option>
+          <select id="mPaid">
+            <option value="false">Alınmadı/Ödenmedi</option>
+            <option value="true">Alındı/Ödendi</option>
           </select>
         </div>
         <div class="grid2">
@@ -316,11 +341,10 @@
           <input id="mDate" type="date" />
         </div>
         <div class="grid2">
-          <input id="mPerson" placeholder="Kişi (opsiyon)" />
-          <input id="mCategory" placeholder="Kategori (örn: Kira, Maaş)" />
+          <input id="mCategory" placeholder="Kategori (örn: Nakit, Kira)" />
+          <input id="mTitle" placeholder="Başlık (örn: Derya, Macbook)" />
         </div>
-        <input id="mDesc" placeholder="Açıklama" />
-        <div class="hint">Bu sürüm: <b>payments</b> koleksiyonuna kaydeder (uid ile ayırır).</div>
+        <div class="hint">Bu sürüm senin şemana göre yazar: <b>userId, type(incoming/payment), mode(payment), isPaid, isRecurring</b> vb.</div>
       </div>
       <div class="actions">
         <button id="addSave" class="btn primary" style="flex:1;">Kaydet</button>
@@ -334,18 +358,22 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import {
+      getFirestore,
+      collection, query, where, onSnapshot,
+      addDoc, doc, setDoc, updateDoc, deleteDoc, getDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     // 1) BURAYI DOLDUR (senin config)
     const firebaseConfig = {
-          apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
-          authDomain: "gezi-5b54b.firebaseapp.com",
-          projectId: "gezi-5b54b",
-          storageBucket: "gezi-5b54b.firebasestorage.app",
-          messagingSenderId: "926426747002",
-          appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
-          measurementId: "G-KB8SKRCQ9X"
-        };
+      apiKey: "PASTE_YOUR_API_KEY",
+      authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+      projectId: "PASTE_YOUR_PROJECT_ID",
+      storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+      messagingSenderId: "PASTE_YOUR_SENDER_ID",
+      appId: "PASTE_YOUR_APP_ID"
+    };
 
     const $ = (id) => document.getElementById(id);
     const fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
@@ -378,6 +406,25 @@
       }[m]));
     }
 
+    function monthOfDoc(d){
+      const date = (d?.date || "").slice(0,7);
+      if(date && date.length === 7) return date;
+      const rs = (d?.recurrenceStart || "").slice(0,7);
+      return rs && rs.length===7 ? rs : "";
+    }
+
+    function normalizeDir(d){
+      // Senin verin: type="incoming" => gelir
+      // Giderler genelde type="payment" (veya incoming değilse) sayıyoruz
+      return (d?.type === "incoming") ? "income" : "expense";
+    }
+    function isPaid(d){
+      return !!d?.isPaid;
+    }
+    function isRecurring(d){
+      return !!d?.isRecurring;
+    }
+
     let app, auth, db;
     try{
       app = initializeApp(firebaseConfig);
@@ -391,10 +438,10 @@
     let selectedMonth = ymFromDate(new Date());
     let currentPage = "dashboard";
     let unsub = null;
-    let lastRows = [];
+    let allRows = [];
     let user = null;
 
-    // Tabs (bottom)
+    // Tabs
     document.querySelectorAll(".tab").forEach(tab=>{
       tab.addEventListener("click", ()=>{
         document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
@@ -409,7 +456,6 @@
       });
     });
 
-    // Month nav & filters
     $("btnPrev").addEventListener("click", ()=>{ selectedMonth = prevMonth(selectedMonth); onMonthChanged(); });
     $("btnNext").addEventListener("click", ()=>{ selectedMonth = nextMonth(selectedMonth); onMonthChanged(); });
     $("statusFilter").addEventListener("change", ()=>renderPage());
@@ -466,13 +512,12 @@
     const addBg = $("addBg");
     $("btnAdd").addEventListener("click", ()=>{
       if(!user) return toast("Önce giriş yap.");
-      $("mType").value = "expense";
-      $("mStatus").value = "unpaid";
+      $("mDir").value = "expense";
+      $("mPaid").value = "false";
       $("mAmount").value = "";
       $("mDate").value = todayStr();
-      $("mPerson").value = "";
       $("mCategory").value = "";
-      $("mDesc").value = "";
+      $("mTitle").value = "";
       addBg.classList.add("show");
     });
     $("addClose").addEventListener("click", ()=>addBg.classList.remove("show"));
@@ -481,28 +526,35 @@
 
     $("addSave").addEventListener("click", async ()=>{
       if(!user) return;
-      const type = $("mType").value;
-      const status = $("mStatus").value;
+      const dir = $("mDir").value; // income|expense
+      const paid = $("mPaid").value === "true";
       const amount = Number($("mAmount").value);
       const date = $("mDate").value;
-      const person = $("mPerson").value.trim();
       const category = $("mCategory").value.trim();
-      const description = $("mDesc").value.trim();
+      const title = $("mTitle").value.trim();
       if(!amount || amount<=0) return toast("Tutar gir.");
       if(!date) return toast("Tarih seç.");
 
-      const month = date.slice(0,7);
+      // Senin şeman:
+      const payload = {
+        userId: user.uid,
+        amount,
+        category,
+        date,
+        isPaid: paid,
+        isRecurring: false,
+        mode: "payment", // sende mode="payment" görülüyor; uyumluluk için sabit
+        title: title || "",
+        type: dir === "income" ? "incoming" : "payment",
+        recurrenceId: null,
+        recurrenceStart: null,
+        recurrenceTotalMonths: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
 
       try{
-        await addDoc(collection(db, "payments"), {
-          uid: user.uid,
-          type, status, amount,
-          date, month,
-          person, category, description,
-          source: "manual",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
+        await addDoc(collection(db, "payments"), payload);
         addBg.classList.remove("show");
         toast("Kaydedildi.");
       }catch(e){
@@ -511,116 +563,133 @@
       }
     });
 
+    // Listener: SADECE userId filtresi (index istemesin diye orderBy yok)
     function startListener(){
       if(!user || !db) return;
       if(unsub){ unsub(); unsub = null; }
 
       const q = query(
         collection(db, "payments"),
-        where("userId", "==", user.uid),
-        where("month", "==", selectedMonth),
-        orderBy("date", "desc")
+        where("userId", "==", user.uid)
       );
 
       unsub = onSnapshot(q, (snap)=>{
-        lastRows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        allRows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         $("topHint").textContent = "";
         renderPage();
       }, (err)=>{
         console.error(err);
         const msg = (err.code || err.message || "").toString();
-        if(msg.includes("failed-precondition") || msg.includes("requires an index")){
-          $("topHint").textContent = "Index gerekli: Firestore hata mesajındaki link → Create Index.";
-        }else{
-          $("topHint").textContent = "Okuma hatası: " + msg;
-        }
-        toast("Veri okunamadı. Konsolu kontrol et.");
+        $("topHint").textContent = "Okuma hatası: " + msg;
+        toast("Veri okunamadı. Rules/index kontrol et.");
       });
     }
 
     function onMonthChanged(){
       $("monthLabel").textContent = selectedMonth;
-      if(user) startListener();
       renderPage();
     }
 
-    function filteredRows(base, typeFilter){
+    function filteredRowsForMonth(dirFilter){
       const st = $("statusFilter").value;
       const q = $("search").value.trim().toLowerCase();
-      let rows = base.slice();
-      if(typeFilter) rows = rows.filter(r => r.type === typeFilter);
-      if(st !== "all") rows = rows.filter(r => (r.status || "unpaid") === st);
+
+      // filter by month (date alanından)
+      let rows = allRows.filter(r => monthOfDoc(r) === selectedMonth);
+
+      // normalize direction
+      if(dirFilter){
+        rows = rows.filter(r => normalizeDir(r) === dirFilter);
+      }
+
+      // status
+      if(st !== "all"){
+        rows = rows.filter(r => st === "paid" ? isPaid(r) : !isPaid(r));
+      }
+
+      // search title+category
       if(q){
         rows = rows.filter(r=>{
-          const blob = ((r.description||"") + " " + (r.category||"") + " " + (r.person||"")).toLowerCase();
+          const blob = ((r.title||"") + " " + (r.category||"")).toLowerCase();
           return blob.includes(q);
         });
       }
-      // safety net de-dup
+
+      // De-dup for recurring safety: recurrenceId + month (senin id zaten böyle ama yine de)
       const seen = new Set();
       const out = [];
       for(const r of rows){
-        const key = (r.source === "recurring" && r.recurrenceId) ? (r.recurrenceId + "_" + r.month) : r.id;
+        const key = isRecurring(r) && r.recurrenceId ? (r.recurrenceId + "_" + selectedMonth) : r.id;
         if(seen.has(key)) continue;
         seen.add(key);
         out.push(r);
       }
+
+      // sort by date desc (client)
+      out.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
       return out;
     }
 
     function kpisFor(rows){
-      const exp = rows.filter(r=>r.type==="expense").reduce((s,r)=>s+Number(r.amount||0),0);
-      const inc = rows.filter(r=>r.type==="income").reduce((s,r)=>s+Number(r.amount||0),0);
+      const exp = rows.filter(r=>normalizeDir(r)==="expense").reduce((s,r)=>s+Number(r.amount||0),0);
+      const inc = rows.filter(r=>normalizeDir(r)==="income").reduce((s,r)=>s+Number(r.amount||0),0);
       const net = inc - exp;
-      const expPaid = rows.filter(r=>r.type==="expense" && r.status==="paid").length;
-      const expUn   = rows.filter(r=>r.type==="expense" && r.status!=="paid").length;
-      const incPaid = rows.filter(r=>r.type==="income" && r.status==="paid").length;
-      const incUn   = rows.filter(r=>r.type==="income" && r.status!=="paid").length;
+
+      const expPaid = rows.filter(r=>normalizeDir(r)==="expense" && isPaid(r)).length;
+      const expUn   = rows.filter(r=>normalizeDir(r)==="expense" && !isPaid(r)).length;
+
+      const incPaid = rows.filter(r=>normalizeDir(r)==="income" && isPaid(r)).length;
+      const incUn   = rows.filter(r=>normalizeDir(r)==="income" && !isPaid(r)).length;
+
       return { exp, inc, net, expPaid, expUn, incPaid, incUn };
     }
 
     function renderTable(rows){
       if(!rows.length) return `<div class="hint">Kayıt yok.</div>`;
+
       const head = `
         <table>
           <thead>
             <tr>
               <th class="nowrap">Tarih</th>
               <th>Tür</th>
-              <th>Açıklama</th>
+              <th>Başlık</th>
+              <th>Kategori</th>
               <th class="right nowrap">Tutar</th>
               <th>Durum</th>
-              <th>Kaynak</th>
+              <th>Tekrar</th>
               <th class="right">İşlem</th>
             </tr>
           </thead>
           <tbody>
       `;
+
       const body = rows.map(r=>{
-        const t = r.type === "income" ? `<span class="tag good">Gelir</span>` : `<span class="tag bad">Gider</span>`;
-        const s = r.status === "paid" ? `<span class="tag good">Alındı/Ödendi</span>` : `<span class="tag">Alınmadı</span>`;
-        const src = r.source === "recurring" ? `<span class="tag rec">Aylık</span>` : `<span class="tag">Manuel</span>`;
-        const amtColor = r.type === "income" ? "var(--good)" : "var(--bad)";
-        const desc = escapeHtml(r.description || "");
-        const meta = [r.person, r.category].filter(Boolean).join(" • ");
+        const dir = normalizeDir(r);
+        const t = dir === "income" ? `<span class="tag good">Gelir</span>` : `<span class="tag bad">Gider</span>`;
+        const s = isPaid(r) ? `<span class="tag good">Alındı/Ödendi</span>` : `<span class="tag">Alınmadı</span>`;
+        const rec = isRecurring(r) ? `<span class="tag rec">Aylık</span>` : `<span class="tag">—</span>`;
+        const amtColor = dir === "income" ? "var(--good)" : "var(--bad)";
+        const title = escapeHtml(r.title || "—");
+        const cat = escapeHtml(r.category || "—");
+
         return `
           <tr>
             <td class="nowrap">${escapeHtml((r.date||"").slice(0,10) || "-")}</td>
             <td>${t}</td>
-            <td>
-              <div style="font-weight:900">${desc || "—"}</div>
-              <div class="hint">${escapeHtml(meta || "")}</div>
-            </td>
+            <td><div style="font-weight:950">${title}</div></td>
+            <td>${cat}</td>
             <td class="right nowrap" style="font-weight:950; color:${amtColor}">${fmt.format(Number(r.amount||0))}</td>
             <td>${s}</td>
-            <td>${src}</td>
+            <td>${rec}</td>
             <td class="right nowrap">
-              <button class="btn small" data-act="toggle" data-id="${r.id}">${r.status==="paid" ? "Geri Al" : "Ödendi"}</button>
+              <button class="btn small" data-act="toggle" data-id="${r.id}">${isPaid(r) ? "Geri Al" : "Ödendi"}</button>
               <button class="btn small" data-act="del" data-id="${r.id}">Sil</button>
             </td>
           </tr>
         `;
       }).join("");
+
       return head + body + `</tbody></table>`;
     }
 
@@ -630,13 +699,13 @@
           const act = btn.dataset.act;
           const id = btn.dataset.id;
           if(!user) return;
+
           try{
+            const row = allRows.find(r=>r.id===id);
             const ref = doc(db, "payments", id);
+
             if(act === "toggle"){
-              const row = lastRows.find(r=>r.id===id);
-              const cur = row?.status || "unpaid";
-              const next = (cur === "paid") ? "unpaid" : "paid";
-              await updateDoc(ref, { status: next, updatedAt: serverTimestamp() });
+              await updateDoc(ref, { isPaid: !isPaid(row), updatedAt: serverTimestamp() });
               toast("Güncellendi.");
             }
             if(act === "del"){
@@ -651,11 +720,139 @@
       });
     }
 
+    // === Recurring generator: create missing doc for selectedMonth (NO duplicates)
+    $("btnGen").addEventListener("click", async ()=>{
+      if(!user) return;
+      try{
+        const monthRows = allRows.filter(r => monthOfDoc(r) === selectedMonth);
+        const recurringBases = allRows.filter(r => !!r.isRecurring && !!r.recurrenceId);
+
+        // We'll generate from bases that started at/before selectedMonth.
+        // If recurrenceTotalMonths is set, stop after that many months (inclusive of start).
+        let created = 0, skipped = 0;
+
+        for(const base of recurringBases){
+          const rid = String(base.recurrenceId);
+          const start = String(base.recurrenceStart || "").slice(0,7);
+          if(!start) continue;
+          if(selectedMonth < start) continue;
+
+          const total = (base.recurrenceTotalMonths === null || base.recurrenceTotalMonths === undefined)
+            ? null
+            : Number(base.recurrenceTotalMonths);
+
+          if(total && total > 0){
+            // monthsDiff = (selected - start) + 1 must be <= total
+            const [sy,sm] = start.split("-").map(Number);
+            const [ty,tm] = selectedMonth.split("-").map(Number);
+            const diff = (ty*12 + tm) - (sy*12 + sm) + 1;
+            if(diff > total) continue;
+          }
+
+          // Deterministic id like your existing docs: recurrenceId_YYYY-MM
+          const docId = rid + "_" + selectedMonth;
+          const ref = doc(db, "payments", docId);
+          const exists = await getDoc(ref);
+          if(exists.exists()){
+            skipped++;
+            continue;
+          }
+
+          // Create a copy with date set to same day-of-month if possible
+          const day = (base.date || (start + "-01")).slice(8,10) || "01";
+          let newDate = selectedMonth + "-" + day;
+          // guard invalid dates (e.g., 31 in Feb)
+          const test = new Date(newDate + "T00:00:00");
+          if(isNaN(test.getTime()) || ymFromDate(test) !== selectedMonth){
+            newDate = selectedMonth + "-01";
+          }
+
+          const payload = {
+            userId: user.uid,
+            amount: Number(base.amount || 0),
+            category: base.category || "",
+            date: newDate,
+            isPaid: false, // new month starts unpaid
+            isRecurring: true,
+            mode: base.mode || "payment",
+            recurrenceId: rid,
+            recurrenceStart: start,
+            recurrenceTotalMonths: (base.recurrenceTotalMonths ?? null),
+            title: base.title || "",
+            type: base.type || "payment",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+
+          await setDoc(ref, payload, { merge: true });
+          created++;
+        }
+
+        toast(`Tekrarlayan üretildi: ${created} yeni, ${skipped} zaten vardı.`);
+      }catch(e){
+        console.error(e);
+        toast("Üretim hatası: " + (e.code || e.message));
+      }
+    });
+
+    function renderCalendar(rows){
+      // rows: all rows of month (both dirs)
+      // Build per-day totals
+      const daysInMonth = (ym)=>{
+        const [y,m] = ym.split("-").map(Number);
+        return new Date(y, m, 0).getDate();
+      }
+      const firstDayOfWeek = (ym)=>{
+        const [y,m] = ym.split("-").map(Number);
+        return new Date(y, m-1, 1).getDay(); // 0=Sun
+      }
+      const dim = daysInMonth(selectedMonth);
+      const start = firstDayOfWeek(selectedMonth);
+      // Convert to Mon-first indexing (Mon=0)
+      const pad = (start + 6) % 7;
+
+      const dayMap = new Map(); // day -> {inc, exp}
+      for(const r of rows){
+        const d = (r.date||"").slice(8,10);
+        const day = Number(d);
+        if(!day || day<1 || day>31) continue;
+        if(!dayMap.has(day)) dayMap.set(day, {inc:0, exp:0});
+        const x = dayMap.get(day);
+        if(normalizeDir(r)==="income") x.inc += Number(r.amount||0);
+        else x.exp += Number(r.amount||0);
+      }
+
+      const labels = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
+      const head = `<div class="calGrid">${labels.map(l=>`<div class="hint" style="text-align:center; font-weight:900">${l}</div>`).join("")}</div>`;
+
+      let cells = [];
+      for(let i=0;i<pad;i++){
+        cells.push(`<div class="calCell" style="opacity:.25"></div>`);
+      }
+      for(let day=1; day<=dim; day++){
+        const v = dayMap.get(day) || {inc:0, exp:0};
+        const net = v.inc - v.exp;
+        const netCls = net>=0 ? "good" : "bad";
+        cells.push(`
+          <div class="calCell">
+            <div class="calTop">
+              <div class="calDay">${day}</div>
+              <div class="calAmt ${netCls}">${fmt.format(net)}</div>
+            </div>
+            <div class="calMini">
+              <span>Gelir: ${fmt.format(v.inc)}</span>
+              <span>Gider: ${fmt.format(v.exp)}</span>
+            </div>
+          </div>
+        `);
+      }
+
+      return head + `<div class="calGrid">${cells.join("")}</div>`;
+    }
+
     function renderPage(){
       $("monthLabel").textContent = selectedMonth;
       const content = $("content");
-      const rowsMonth = filteredRows(lastRows, null);
-      const k = kpisFor(rowsMonth);
 
       if(!user){
         content.innerHTML = `
@@ -663,11 +860,17 @@
             <h2>Başlamak için giriş yap</h2>
             <div class="hint">Sağ üstten <b>Giriş</b> butonuna bas. firebaseConfig'i doldurduğundan emin ol.</div>
             <div class="hr"></div>
-            <div class="hint">Bu arayüz <b>payments</b> koleksiyonunu kullanır ve kayıtları <b>uid</b> ile ayırır.</div>
+            <div class="hint">Bu sürüm senin verine göre çalışır:</div>
+            <div class="hint">• user alanı: <b>userId</b></div>
+            <div class="hint">• gelir: <b>type = incoming</b></div>
+            <div class="hint">• ödeme durumu: <b>isPaid</b></div>
           </div>
         `;
         return;
       }
+
+      const rowsMonth = filteredRowsForMonth(null);
+      const k = kpisFor(rowsMonth);
 
       if(currentPage === "dashboard"){
         content.innerHTML = `
@@ -696,7 +899,7 @@
 
             <div class="card" style="grid-column: span 8;">
               <h2>Son İşlemler</h2>
-              <div class="hint">${selectedMonth} içinde ${rowsMonth.length} kayıt (UI tekilleştirme aktif)</div>
+              <div class="hint">${selectedMonth} içinde ${rowsMonth.length} kayıt</div>
               <div style="overflow:auto; margin-top:10px;">
                 ${renderTable(rowsMonth.slice(0, 12))}
               </div>
@@ -704,10 +907,10 @@
 
             <div class="card" style="grid-column: span 4;">
               <h2>Hızlı Notlar</h2>
-              <div class="hint">• Yeni kayıt: üstte <b>＋ Yeni</b></div>
               <div class="hint">• Menü: alttaki sekmeler</div>
+              <div class="hint">• Yeni kayıt: üstte <b>＋ Yeni</b></div>
               <div class="hr"></div>
-              <div class="hint"><b>Tekrarlayan çoğalma</b> için “ay üretimi”ni <i>addDoc</i> yerine <i>setDoc(deterministicId)</i> ile kurgulayacağız.</div>
+              <div class="hint"><b>Tekrarlayan çoğalma</b> için: “⟳ Bu ay tekrarlayanları üret” butonu <b>setDoc(deterministicId)</b> ile tekilleştirir.</div>
             </div>
           </div>
         `;
@@ -716,7 +919,7 @@
       }
 
       if(currentPage === "expense"){
-        const rows = filteredRows(lastRows, "expense");
+        const rows = filteredRowsForMonth("expense");
         content.innerHTML = `
           <div class="card">
             <h2>Gider • ${selectedMonth}</h2>
@@ -731,7 +934,7 @@
       }
 
       if(currentPage === "income"){
-        const rows = filteredRows(lastRows, "income");
+        const rows = filteredRowsForMonth("income");
         content.innerHTML = `
           <div class="card">
             <h2>Gelir • ${selectedMonth}</h2>
@@ -748,8 +951,9 @@
       if(currentPage === "calendar"){
         content.innerHTML = `
           <div class="card">
-            <h2>Takvim</h2>
-            <div class="hint">Bu ekranı bir sonraki adımda aktif ediyoruz: seçili ayın tüm kayıtlarını çekip günlere dağıtacağız.</div>
+            <h2>Takvim • ${selectedMonth}</h2>
+            <div class="hint">Günlük net/gelir/gider toplamları</div>
+            ${renderCalendar(rowsMonth)}
           </div>
         `;
         return;
@@ -760,21 +964,26 @@
           <div class="card">
             <h2>Ayarlar</h2>
             <div class="hint"><b>Koleksiyon:</b> payments</div>
-            <div class="hint"><b>Kullanıcı ayrımı:</b> uid alanı</div>
+            <div class="hint"><b>Kullanıcı alanı:</b> userId</div>
+            <div class="hint"><b>Gelir:</b> type=incoming • <b>Gider:</b> type!=incoming</div>
             <div class="hr"></div>
-            <div class="hint">Rules sıkılaştırma örneği (global payments):</div>
+            <div class="hint">Rules (öneri):</div>
             <pre class="hint" style="white-space:pre-wrap; background:rgba(14,22,42,.6); border:1px solid rgba(255,255,255,.06); padding:10px; border-radius:14px; margin:10px 0 0;">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /payments/{docId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+
       allow create: if request.auth != null
-        && request.resource.data.uid == request.auth.uid;
+        && request.resource.data.userId == request.auth.uid;
+
       allow update, delete: if request.auth != null
-        && resource.data.uid == request.auth.uid;
+        && resource.data.userId == request.auth.uid;
     }
   }
 }</pre>
+            <div class="hint">Bu HTML, index istememek için <b>orderBy</b> kullanmadan userId ile çekip tarayıcıda filtreler/sıralar.</div>
           </div>
         `;
         return;
@@ -790,10 +999,11 @@ service cloud.firestore {
         $("userPill").style.display = "none";
         $("btnLogout").style.display = "none";
         $("btnAdd").style.display = "none";
+        $("btnGen").style.display = "none";
         $("btnLoginOpen").style.display = "inline-flex";
         $("userEmail").textContent = "";
         $("topHint").textContent = "";
-        lastRows = [];
+        allRows = [];
         if(unsub){ unsub(); unsub = null; }
         renderPage();
         return;
@@ -802,6 +1012,7 @@ service cloud.firestore {
       $("userPill").style.display = "inline-flex";
       $("btnLogout").style.display = "inline-flex";
       $("btnAdd").style.display = "inline-flex";
+      $("btnGen").style.display = "inline-flex";
       $("btnLoginOpen").style.display = "none";
       $("userEmail").textContent = u.email || "—";
       $("topHint").textContent = "";
