@@ -342,7 +342,7 @@
     }
     .rowCard:hover{ filter:brightness(1.05); transform: translateY(-1px); }
     .rowMain{ min-width:0; display:flex; flex-direction:column; gap:6px; }
-    .rowTitle{ font-weight:750; color:#e8f0ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rowTitle{ font-weight:650; color:#e8f0ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .rowMeta{ display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px; font-weight:650; }
     .rowAmt{ font-weight:850; white-space:nowrap; }
 
@@ -497,17 +497,17 @@
 
     /* --- Theme (Dark/Light) --- */
     body.light{
-      --bg: #eef2ff;
-      --panel: rgba(255,255,255,.82);
-      --panel2: rgba(255,255,255,.72);
-      --txt: #0b1220;
-      --muted: rgba(11,18,32,.62);
-      --line: rgba(11,18,32,.12);
-      --shadow: 0 18px 50px rgba(11,18,32,.12);
+      --bg: #f6f7fb;
+      --panel: rgba(255,255,255,.92);
+      --panel2: rgba(255,255,255,.86);
+      --txt: #0f172a;
+      --muted: rgba(15,23,42,.62);
+      --line: rgba(15,23,42,.12);
+      --shadow: 0 18px 46px rgba(15,23,42,.10);
     }
     body.light .tabbarWrap{
-      background: linear-gradient(180deg, rgba(238,242,255,0), rgba(238,242,255,.78) 22%, rgba(238,242,255,.96));
-      border-top:1px solid rgba(11,18,32,.10);
+      background: linear-gradient(180deg, rgba(246,247,251,0), rgba(246,247,251,.86) 22%, rgba(246,247,251,.98));
+      border-top:1px solid rgba(15,23,42,.10);
     }
     body.light .tab{
       background: rgba(255,255,255,.78);
@@ -545,7 +545,19 @@
     body.light .incHead{ color:#056b60; background: rgba(45,212,191,.18); }
     body.light .expHead{ color:#8b1e33; background: rgba(251,113,133,.18); }
 
-</style>
+
+    /* --- Tabbar: no horizontal scrolling --- */
+    .tabbar{ display:flex; justify-content:space-between; }
+    .tab{ flex:1; justify-content:center; }
+    @media (max-width: 420px){
+      .tab{ padding:8px 6px; }
+      .tab .label{ display:none; }
+    }
+
+
+body.light .btn{ background: rgba(255,255,255,.92); border-color: rgba(15,23,42,.12); color: var(--txt);} 
+body.light .btn.primary{ background: rgba(79,124,255,.92); color:white; border-color: rgba(79,124,255,.0);} 
+
 </head>
 <body>
   <div class="app">
@@ -555,7 +567,7 @@
           <h1>Ödeme Takip</h1>
           <small id="subline">Dashboard</small>
         </div>
-        <div class="versionTag" id="appVer"></div>
+        
         <button id="btnPrev" class="btn small">◀</button>
         <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
         <button id="btnNext" class="btn small">▶</button>
@@ -718,7 +730,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-  const APP_VERSION = "v9.2";
+  const APP_VERSION = "v9.3";
   const BUILD_DATE = "2026-03-05";
   (function(){
     var firebaseConfig = {
@@ -860,6 +872,17 @@
       $("policyOk").onclick = closePolicyModal;
     }
     function closePolicyModal(){ $("policyBg").classList.remove("show"); }
+
+    function hexToRgba(hex, a){
+      try{
+        hex = String(hex||"").replace("#","").trim();
+        if(hex.length===3){ hex = hex.split("").map(function(c){return c+c;}).join(""); }
+        var r = parseInt(hex.slice(0,2),16);
+        var g = parseInt(hex.slice(2,4),16);
+        var b = parseInt(hex.slice(4,6),16);
+        return "rgba("+r+","+g+","+b+","+a+")";
+      }catch(e){ return "rgba(255,255,255,"+a+")"; }
+    }
 function toast(msg){
       var t = $("toast");
       t.textContent = msg;
@@ -900,7 +923,17 @@ function toast(msg){
     var editingId = null; // doc id
     var editingRow = null;
 
-    function openAddModalForCreate(){
+    
+    function applyRecurringUI(){
+      var cb = $("fRecurring");
+      var box = $("fRecurringBox");
+      var months = $("fRecurringMonths");
+      if(!cb || !box || !months) return;
+      box.style.display = cb.checked ? "block" : "none";
+      months.disabled = !cb.checked;
+      if(!cb.checked) months.value = "";
+    }
+function openAddModalForCreate(){
       editingId = null;
       editingRow = null;
       $("addTitle").textContent = "Yeni Kayıt";
@@ -1408,22 +1441,40 @@ function toast(msg){
         return '<div class="card spending" style="grid-column: span 12;"><h2>Nereye ne harcadım?</h2><div class="hint">Bu ay gider yok.</div></div>';
       }
 
-      var top = cats.slice(0,8);
-      var bars = top.map(function(x){
-        var pct = Math.max(1, Math.round((x.amount/total)*100));
-        var color = colorForCategory(x.category);
+      var slices = cats.slice(0,8);
+      var other = cats.slice(8).reduce(function(s,x){ return s + x.amount; }, 0);
+      if(other>0) slices.push({category:"Diğer", amount:other});
+
+      var cx = 90, cy = 90, r = 78;
+      var start = -Math.PI/2;
+      function arcPath(a0, a1){
+        var x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+        var x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+        var large = (a1-a0) > Math.PI ? 1 : 0;
+        return "M "+cx+" "+cy+" L "+x0.toFixed(2)+" "+y0.toFixed(2)+" A "+r+" "+r+" 0 "+large+" 1 "+x1.toFixed(2)+" "+y1.toFixed(2)+" Z";
+      }
+      var paths = "";
+      slices.forEach(function(s){
+        var frac = s.amount/total;
+        var a1 = start + frac*2*Math.PI;
+        var color = colorForCategory(s.category);
+        paths += '<path d="'+arcPath(start,a1)+'" fill="'+color+'" opacity="0.95"></path>';
+        start = a1;
+      });
+
+      var legend = slices.map(function(s){
+        var pct = Math.round((s.amount/total)*100);
+        var color = colorForCategory(s.category);
         return ''+
-          '<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0;">'+
+          '<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0;">'+
             '<div style="display:flex; align-items:center; gap:10px; min-width:0;">'+
               '<span class="dot" style="background:'+color+'"></span>'+
               '<div style="min-width:0;">'+
-                '<div style="font-weight:800; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+escapeHtml(x.category)+'</div>'+
-                '<div class="hint" style="margin-top:2px;">'+pct+'% • '+fmt.format(x.amount)+'</div>'+
+                '<div style="font-weight:800; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+escapeHtml(s.category)+'</div>'+
+                '<div class="hint" style="margin-top:2px;">'+pct+'%</div>'+
               '</div>'+
             '</div>'+
-            '<div style="flex:1; max-width:44%; height:10px; border-radius:999px; background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.06); overflow:hidden;">'+
-              '<div style="height:100%; width:'+pct+'%; background:'+color+'; opacity:.95;"></div>'+
-            '</div>'+
+            '<div style="font-weight:850;">'+fmt.format(s.amount)+'</div>'+
           '</div>';
       }).join("");
 
@@ -1432,7 +1483,12 @@ function toast(msg){
           '<h2>Nereye ne harcadım?</h2>'+
           '<div class="hint" style="margin-top:6px;">Toplam gider: <b>'+fmt.format(total)+'</b></div>'+
           '<div class="hr"></div>'+
-          bars+
+          '<div class="chartRow" style="align-items:center;">'+
+            '<div class="donutWrap" style="display:flex; justify-content:center;">'+
+              '<svg width="180" height="180" viewBox="0 0 180 180" style="filter: drop-shadow(0 10px 22px rgba(0,0,0,.25));">'+paths+'</svg>'+
+            '</div>'+
+            '<div class="legend" style="flex:1;">'+legend+'</div>'+
+          '</div>'+
         '</div>';
     }
 
@@ -1495,7 +1551,7 @@ function toast(msg){
           : '<span class="miniPill unpaid">'+(dir==="income" ? "Bekliyor" : "Ödenmedi")+'</span>';
 
         return ''+
-          '<div class="rowCard" data-open="item" data-id="'+escapeHtml(r.id)+'">'+
+          '<div class=\"rowCard\" data-open=\"item\" data-id=\"'+escapeHtml(r.id)+'\" style=\"background:'+hexToRgba(colorForCategory(r.category), (document.body.classList.contains('light')?0.16:0.10))+'; border-color:'+hexToRgba(colorForCategory(r.category), (document.body.classList.contains('light')?0.20:0.14))+'\">'+
             '<div class="rowMain">'+
               '<div class="rowTitle">'+title+'</div>'+
               '<div class="rowMeta">'+dot+'<span>'+cat+'</span></div>'+
