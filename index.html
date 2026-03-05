@@ -245,7 +245,53 @@
       .grid{ grid-template-columns: repeat(6, 1fr); }
       .tabbar{ width: calc(100% - 24px); }
     }
-  </style>
+  
+    /* --- Mobile polish --- */
+    @media (max-width: 640px){
+      body{ padding:12px; padding-bottom:110px; }
+      .app{ border-radius:18px; min-height: calc(100vh - 24px - 110px); }
+      .header{ padding:12px; gap:10px; }
+      .header .left, .header .right{ width:100%; }
+      .header .right{ justify-content:space-between; }
+      .pill{ padding:7px 9px; font-size:12px; }
+      .btn{ padding:10px 12px; }
+      .btn.small{ padding:9px 10px; }
+      input, select{ width:100%; }
+      #search{ min-width: 100%; }
+      .content{ padding:12px; }
+      .grid{ grid-template-columns: repeat(6, 1fr); }
+      .card{ padding:11px; }
+      .chartRow{ gap:10px; }
+      .donut{ width:150px; height:150px; }
+      .donut svg{ width:150px; height:150px; }
+      .donutCenter{ width:104px; height:104px; }
+      .legend{ min-width: 200px; }
+      th, td{ padding:9px 7px; }
+      .tabbarWrap{ padding: 10px 10px 16px; }
+      .tabbar{ gap:8px; }
+      .tab{ padding:10px 8px; border-radius: 16px; }
+      .ico{ font-size:18px; }
+    }
+    @media (max-width: 420px){
+      .brand h1{ font-size:13px; }
+      .brand small{ font-size:11px; }
+      .tab{ font-size:10px; gap:5px; }
+      .tabbar{ gap:7px; }
+      .btn{ border-radius: 13px; }
+      .modal{ border-radius: 18px; }
+      .grid2{ grid-template-columns: 1fr; }
+      .donutWrap{ width:100%; }
+      .legend{ width:100%; min-width: 0; }
+    }
+    /* Make modals more usable on mobile */
+    @media (max-width: 520px){
+      .modalBg{ padding:10px; }
+      .modal{ width: 100%; }
+      .modalBody{ padding:10px; }
+      .modal .actions{ padding:10px; }
+    }
+
+</style>
 </head>
 <body>
   <div class="app">
@@ -383,14 +429,13 @@
   <script>
   (function(){
     var firebaseConfig = {
-      apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
-          authDomain: "gezi-5b54b.firebaseapp.com",
-          projectId: "gezi-5b54b",
-          storageBucket: "gezi-5b54b.firebasestorage.app",
-          messagingSenderId: "926426747002",
-          appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
-          measurementId: "G-KB8SKRCQ9X"
-        };
+      apiKey: "PASTE_YOUR_API_KEY",
+      authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+      projectId: "PASTE_YOUR_PROJECT_ID",
+      storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+      messagingSenderId: "PASTE_YOUR_SENDER_ID",
+      appId: "PASTE_YOUR_APP_ID"
+    };
 
     function $(id){ return document.getElementById(id); }
     var fmt = new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY" });
