@@ -291,6 +291,21 @@
       .modal .actions{ padding:10px; }
     }
 
+
+    /* --- Mobile layout fixes (KPI + cards) --- */
+    @media (max-width: 640px){
+      .card.kpi-exp{ grid-column: span 3 !important; }
+      .card.kpi-inc{ grid-column: span 3 !important; }
+      .card.kpi-net{ grid-column: span 6 !important; }
+      .card.spending{ grid-column: span 6 !important; }
+      .card.quick{ grid-column: span 6 !important; }
+      .card.recent{ grid-column: span 6 !important; }
+    }
+    @media (max-width: 420px){
+      .card.kpi-exp, .card.kpi-inc, .card.kpi-net,
+      .card.spending, .card.quick, .card.recent{ grid-column: span 6 !important; }
+    }
+
 </style>
 </head>
 <body>
@@ -429,7 +444,7 @@
   <script>
   (function(){
     var firebaseConfig = {
-    	 apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
+     apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
           authDomain: "gezi-5b54b.firebaseapp.com",
           projectId: "gezi-5b54b",
           storageBucket: "gezi-5b54b.firebasestorage.app",
@@ -785,7 +800,7 @@
       var total = cats.reduce(function(s,x){ return s + x.amount; }, 0);
 
       if(!total){
-        return '<div class="card" style="grid-column: span 8;"><h2>Nereye ne harcadım?</h2><div class="hint">Bu ay gider yok.</div></div>';
+        return '<div class="card spending" style="grid-column: span 8;"><h2>Nereye ne harcadım?</h2><div class="hint">Bu ay gider yok.</div></div>';
       }
 
       var top = cats.slice(0,6);
