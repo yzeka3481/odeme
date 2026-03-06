@@ -342,9 +342,9 @@
     }
     .rowCard:hover{ filter:brightness(1.05); transform: translateY(-1px); }
     .rowMain{ min-width:0; display:flex; flex-direction:column; gap:6px; }
-    .rowTitle{ font-weight:650; color:#e8f0ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rowTitle{ font-weight:600; color:#e8f0ff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .rowMeta{ display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px; font-weight:650; }
-    .rowAmt{ font-weight:850; white-space:nowrap; }
+    .rowAmt{ font-weight:650; white-space:nowrap; }
 
 
     /* --- App-like KPI cards + list status badge --- */
@@ -555,6 +555,85 @@
       .tab .ico{ font-size:18px; }
     }
 
+
+    /* --- Extra refinements v9.4 --- */
+    .secHead{
+      width:100%;
+      padding:7px 10px;
+      border-radius: 14px;
+      font-weight:800;
+      letter-spacing:.4px;
+      font-size:11px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .incHead{ background: rgba(45,212,191,.12); border-color: rgba(45,212,191,.24); color: #b9fff4; }
+    .expHead{ background: rgba(251,113,133,.12); border-color: rgba(251,113,133,.24); color: #ffd0d8; }
+
+    .miniPill{ font-weight:700; font-size:11px; }
+    .rowRight{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+    .rowCard{ border:1px solid rgba(255,255,255,.08); }
+
+    /* Calendar compact + dots */
+    .calGrid{ gap:6px !important; }
+    .calCell{ min-height:58px !important; padding:6px !important; }
+    .calAmt{ display:none !important; }
+    .calMini{ display:none !important; }
+    .calDots{ margin-top:8px; display:flex; gap:5px; flex-wrap:wrap; }
+    .calDot{ width:8px; height:8px; border-radius:999px; display:inline-block; }
+    .calDot.income{ background: rgba(45,212,191,.95); }
+    .calDot.expense{ background: rgba(251,113,133,.95); }
+
+    /* Tabbar fit */
+    .tabbar{ display:flex; justify-content:space-between; }
+    .tab{ flex:1; justify-content:center; }
+
+    /* better light theme */
+    body.light{
+      --bg: #f6f7fb;
+      --panel: rgba(255,255,255,.92);
+      --panel2: rgba(255,255,255,.86);
+      --txt: #0f172a;
+      --muted: rgba(15,23,42,.62);
+      --line: rgba(15,23,42,.12);
+      --shadow: 0 18px 46px rgba(15,23,42,.10);
+    }
+    body.light .tabbarWrap{
+      background: linear-gradient(180deg, rgba(246,247,251,0), rgba(246,247,251,.86) 22%, rgba(246,247,251,.98));
+      border-top:1px solid rgba(15,23,42,.10);
+    }
+    body.light .tab{
+      background: rgba(255,255,255,.86);
+      border-color: rgba(15,23,42,.12);
+      color: #475569;
+    }
+    body.light .tab.active{ color:#0f172a; }
+    body.light .card, body.light .modal{
+      background: rgba(255,255,255,.90);
+      border-color: rgba(15,23,42,.12);
+      color:#0f172a;
+    }
+    body.light .btn{
+      background: rgba(255,255,255,.92);
+      border-color: rgba(15,23,42,.12);
+      color:#0f172a;
+    }
+    body.light .btn.primary{ background: rgba(79,124,255,.92); color:white; border-color: transparent; }
+    body.light .hint{ color: rgba(15,23,42,.60); }
+    body.light .pill{ color:#0f172a; background: rgba(255,255,255,.92); border-color: rgba(15,23,42,.12); }
+    body.light .incHead{ color:#056b60; background: rgba(45,212,191,.18); }
+    body.light .expHead{ color:#8b1e33; background: rgba(251,113,133,.18); }
+
+    @media (max-width: 420px){
+      .tab{ padding:8px 6px; }
+      .tab .label{ display:none; }
+      .calGrid{ gap:4px !important; }
+      .calCell{ min-height:48px !important; padding:5px !important; border-radius:12px; }
+      .calDot{ width:7px; height:7px; }
+    }
+
 </style>
 </head>
 <body>
@@ -583,6 +662,7 @@
         <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
         <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
         <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
+        <button id="eyeToggle" class="btn small" title="Tutarları gizle/göster">👁️</button>
         <button id="btnLoginOpen" class="btn primary">Giriş</button>
         <span class="hint" id="topHint"></span>
       </div>
@@ -592,11 +672,11 @@
 
   <div class="tabbarWrap">
     <div class="tabbar">
-      <div class="tab active" data-page="dashboard"><div class="ico">📊</div>Dashboard</div>
-      <div class="tab" data-page="expense"><div class="ico">💸</div>Gider</div>
-      <div class="tab" data-page="income"><div class="ico">💰</div>Gelir</div>
-      <div class="tab" data-page="calendar"><div class="ico">📆</div>Takvim</div>
-      <div class="tab" data-page="settings"><div class="ico">⚙️</div>Ayarlar</div>
+      <div class="tab active" data-page="dashboard"><div class="ico">📊</div> <span class="label">Dashboard</span> </div>
+      <div class="tab" data-page="expense"><div class="ico">💸</div> <span class="label">Gider</span> </div>
+      <div class="tab" data-page="income"><div class="ico">💰</div> <span class="label">Gelir</span> </div>
+      <div class="tab" data-page="calendar"><div class="ico">📆</div> <span class="label">Takvim</span> </div>
+      <div class="tab" data-page="settings"><div class="ico">⚙️</div> <span class="label">Ayarlar</span> </div>
     </div>
   </div>
 
@@ -728,8 +808,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-  const APP_VERSION = "v9.3a";
-  const BUILD_DATE = "2026-03-05";
+  const APP_VERSION = "v9.4";
+  const BUILD_DATE = "2026-03-06";
   (function(){
     var firebaseConfig = {
       apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
@@ -881,6 +961,29 @@
         return "rgba("+r+","+g+","+b+","+a+")";
       }catch(e){ return "rgba(255,255,255,"+a+")"; }
     }
+
+    var amountsHidden = false;
+    function fmtMoney(v){ return amountsHidden ? "***" : fmt.format(Number(v||0)); }
+    function toggleAmountsHidden(){
+      amountsHidden = !amountsHidden;
+      try{ localStorage.setItem("ot_hide_amounts", amountsHidden ? "1" : "0"); }catch(e){}
+      var eye = $("eyeToggle");
+      if(eye) eye.textContent = amountsHidden ? "🙈" : "👁️";
+      renderPage();
+    }
+    function initAmountsHidden(){
+      try{ amountsHidden = localStorage.getItem("ot_hide_amounts") === "1"; }catch(e){ amountsHidden = false; }
+    }
+    function hexToRgba(hex, a){
+      try{
+        hex = String(hex||"").replace("#","").trim();
+        if(hex.length===3){ hex = hex.split("").map(function(c){ return c+c; }).join(""); }
+        var r = parseInt(hex.slice(0,2),16);
+        var g = parseInt(hex.slice(2,4),16);
+        var b = parseInt(hex.slice(4,6),16);
+        return "rgba("+r+","+g+","+b+","+a+")";
+      }catch(e){ return "rgba(255,255,255,"+a+")"; }
+    }
 function toast(msg){
       var t = $("toast");
       t.textContent = msg;
@@ -921,7 +1024,16 @@ function toast(msg){
     var editingId = null; // doc id
     var editingRow = null;
 
-    function openAddModalForCreate(){
+    
+    function applyRecurringUI(){
+      var cb = $("fRecurring");
+      var box = $("fRecurringBox");
+      var months = $("fRecurringMonths");
+      if(!cb || !box || !months) return;
+      box.style.display = cb.checked ? "block" : "none";
+      months.disabled = !cb.checked;
+    }
+function openAddModalForCreate(){
       editingId = null;
       editingRow = null;
       $("addTitle").textContent = "Yeni Kayıt";
@@ -1353,6 +1465,9 @@ function toast(msg){
 
     function onMonthChanged(){
       $("monthLabel").textContent = selectedMonth;
+    initAmountsHidden();
+    $("eyeToggle").addEventListener("click", toggleAmountsHidden);
+    $("eyeToggle").textContent = amountsHidden ? "🙈" : "👁️";
       if(user) generateRecurringForMonth(selectedMonth).then(renderPage).catch(function(){ renderPage(); });
       else renderPage();
     }
@@ -1435,14 +1550,12 @@ function toast(msg){
 
       var cx = 90, cy = 90, r = 78;
       var start = -Math.PI/2;
-
       function arcPath(a0, a1){
         var x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
         var x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
         var large = (a1-a0) > Math.PI ? 1 : 0;
         return "M "+cx+" "+cy+" L "+x0.toFixed(2)+" "+y0.toFixed(2)+" A "+r+" "+r+" 0 "+large+" 1 "+x1.toFixed(2)+" "+y1.toFixed(2)+" Z";
       }
-
       var paths = "";
       slices.forEach(function(s){
         var frac = s.amount/total;
@@ -1460,18 +1573,18 @@ function toast(msg){
             '<div style="display:flex; align-items:center; gap:10px; min-width:0;">'+
               '<span class="dot" style="background:'+color+'"></span>'+
               '<div style="min-width:0;">'+
-                '<div style="font-weight:800; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+escapeHtml(s.category)+'</div>'+
+                '<div style="font-weight:650; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+escapeHtml(s.category)+'</div>'+
                 '<div class="hint" style="margin-top:2px;">'+pct+'%</div>'+
               '</div>'+
             '</div>'+
-            '<div style="font-weight:850;">'+fmt.format(s.amount)+'</div>'+
+            '<div style="font-weight:700;">'+fmtMoney(s.amount)+'</div>'+
           '</div>';
       }).join("");
 
       return ''+
         '<div class="card spending" style="grid-column: span 12;">'+
           '<h2>Nereye ne harcadım?</h2>'+
-          '<div class="hint" style="margin-top:6px;">Toplam gider: <b>'+fmt.format(total)+'</b></div>'+
+          '<div class="hint" style="margin-top:6px;">Toplam gider: <b>'+fmtMoney(total)+'</b></div>'+
           '<div class="hr"></div>'+
           '<div class="chartRow" style="align-items:center;">'+
             '<div class="donutWrap" style="display:flex; justify-content:center;">'+
@@ -1513,7 +1626,7 @@ function toast(msg){
             '<td>'+t+'</td>'+
             '<td><div style="font-weight:650">'+title+'</div></td>'+
             '<td>'+dot+'<span>'+cat+'</span></td>'+
-            '<td class="right nowrap" style="font-weight:750;color:'+amtColor+'">'+fmt.format(Number(r.amount||0))+'</td>'+
+            '<td class="right nowrap" style="font-weight:750;color:'+amtColor+'">'+fmtMoney(r.amount)+'</td>'+
             '<td>'+s+'</td>'+
             '<td>'+rec+'</td>'+
             '<td class="right nowrap">'+
@@ -1539,15 +1652,17 @@ function toast(msg){
         var st = isPaid(r)
           ? '<span class="miniPill paid">'+(dir==="income" ? "Alındı" : "Ödendi")+'</span>'
           : '<span class="miniPill unpaid">'+(dir==="income" ? "Bekliyor" : "Ödenmedi")+'</span>';
+        var bg = hexToRgba(colorForCategory(r.category), document.body.classList.contains("light") ? 0.16 : 0.10);
+        var bd = hexToRgba(colorForCategory(r.category), document.body.classList.contains("light") ? 0.22 : 0.16);
 
         return ''+
-          '<div class=\"rowCard\" data-open=\"item\" data-id=\"'+escapeHtml(r.id)+'\" style=\"background:'+hexToRgba(colorForCategory(r.category), 0.10)+'; border-color:'+hexToRgba(colorForCategory(r.category), 0.14)+'\">'+
+          '<div class="rowCard" data-open="item" data-id="'+escapeHtml(r.id)+'" style="background:'+bg+'; border-color:'+bd+';">'+
             '<div class="rowMain">'+
-              '<div class="rowTitle">'+title+'</div>'+
+              '<div class="rowTitle" style="font-weight:600;">'+title+'</div>'+
               '<div class="rowMeta">'+dot+'<span>'+cat+'</span></div>'+
             '</div>'+
             '<div class="rowRight">'+
-              '<div class="rowAmt" style="color:'+amtColor+'">'+fmt.format(Number(r.amount||0))+'</div>'+
+              '<div class="rowAmt" style="color:'+amtColor+'; font-weight:650;">'+fmtMoney(r.amount)+'</div>'+
               st+
             '</div>'+
           '</div>';
@@ -1577,7 +1692,7 @@ function toast(msg){
         '<div style="display:flex; flex-direction:column; gap:12px;">'+
           '<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">'+
             '<div style="min-width:0;">'+
-              '<div style="font-size:14px; font-weight:850; letter-spacing:.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+escapeHtml(row.title||"—")+'</div>'+
+              '<div style="font-size:14px; font-weight:700; letter-spacing:.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+escapeHtml(row.title||"—")+'</div>'+
               '<div class="hint" style="margin-top:4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">'+
                 '<span class="chip">'+escapeHtml(row.date||"")+'</span>'+
                 '<span class="chip">'+dot+'<span>'+escapeHtml(row.category||"Diğer")+'</span></span>'+
@@ -1586,25 +1701,14 @@ function toast(msg){
               '</div>'+
             '</div>'+
             '<div style="text-align:right; white-space:nowrap;">'+
-              '<div style="font-size:18px; font-weight:900; color:'+(dir==="income" ? "var(--good)" : "var(--bad)")+';">'+fmt.format(Number(row.amount||0))+'</div>'+
+              '<div style="font-size:18px; font-weight:800; color:'+(dir==="income" ? "var(--good)" : "var(--bad)")+';">'+fmtMoney(row.amount)+'</div>'+
               '<div style="margin-top:6px;">'+(isPaid(row)?'<span class="miniPill paid">'+(dir==="income"?'Alındı':'Ödendi')+'</span>':'<span class="miniPill unpaid">'+(dir==="income"?'Bekliyor':'Ödenmedi')+'</span>')+'</div>'+
             '</div>'+
           '</div>'+
-
           '<div class="hr"></div>'+
-
-          '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">'+
-            '<div class="heroMini">'+
-              '<div class="lbl">Açıklama</div>'+
-              '<div class="hint" style="margin-top:6px; white-space:pre-wrap;">'+escapeHtml(row.note||"—")+'</div>'+
-            '</div>'+
-            '<div class="heroMini">'+
-              '<div class="lbl">Detay</div>'+
-              '<div class="hint" style="margin-top:6px;">'+
-                '<div><b>Mod:</b> '+escapeHtml(row.mode||"payment")+'</div>'+
-                '<div><b>Durum:</b> '+(isPaid(row)?'Tamamlandı':'Bekliyor')+'</div>'+
-              '</div>'+
-            '</div>'+
+          '<div class="heroMini">'+
+            '<div class="lbl">Açıklama</div>'+
+            '<div class="hint" style="margin-top:6px; white-space:pre-wrap;">'+escapeHtml(row.note||"—")+'</div>'+
           '</div>'+
         '</div>';
 
@@ -1711,9 +1815,9 @@ function toast(msg){
       $("dayTitle").textContent = dateStr + " • Detay";
       $("dayBody").innerHTML =
         '<div class="grid" style="grid-template-columns:repeat(12,1fr);gap:10px;">'+
-          '<div class="card" style="grid-column:span 4;"><div class="hint">Gelir</div><div class="kpi"><div class="value good">'+fmt.format(inc)+'</div></div></div>'+
-          '<div class="card" style="grid-column:span 4;"><div class="hint">Gider</div><div class="kpi"><div class="value bad">'+fmt.format(exp)+'</div></div></div>'+
-          '<div class="card" style="grid-column:span 4;"><div class="hint">Net</div><div class="kpi"><div class="value '+(net>=0?'good':'bad')+'">'+fmt.format(net)+'</div></div></div>'+
+          '<div class="card" style="grid-column:span 4;"><div class="hint">Gelir</div><div class="kpi"><div class="value good">'+fmtMoney(inc)+'</div></div></div>'+
+          '<div class="card" style="grid-column:span 4;"><div class="hint">Gider</div><div class="kpi"><div class="value bad">'+fmtMoney(exp)+'</div></div></div>'+
+          '<div class="card" style="grid-column:span 4;"><div class="hint">Net</div><div class="kpi"><div class="value '+(net>=0?'good':'bad')+'">'+fmtMoney(net)+'</div></div></div>'+
         '</div>'+
         '<div class="hr"></div>'+
         '<div style="overflow:auto;">'+renderTable(dayRows)+'</div>';
@@ -1734,10 +1838,10 @@ function toast(msg){
         var d = String(r.date||"").slice(8,10);
         var day = Number(d);
         if(!day || day<1 || day>31) return;
-        if(!dayMap.has(day)) dayMap.set(day, {inc:0, exp:0});
+        if(!dayMap.has(day)) dayMap.set(day, {hasInc:false, hasExp:false});
         var x = dayMap.get(day);
-        if(normalizeDir(r)==="income") x.inc += Number(r.amount||0);
-        else x.exp += Number(r.amount||0);
+        if(normalizeDir(r)==="income") x.hasInc = true;
+        else x.hasExp = true;
       });
 
       var labels = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
@@ -1748,24 +1852,19 @@ function toast(msg){
       var cells = [];
       for(var i=0;i<pad;i++) cells.push('<div class="calCell disabled"></div>');
       for(var day=1; day<=dim; day++){
-        var v = dayMap.get(day) || {inc:0, exp:0};
-        var net = v.inc - v.exp;
-        var netCls = net>=0 ? "good" : "bad";
+        var v = dayMap.get(day) || {hasInc:false, hasExp:false};
         var dateStr = selectedMonth + "-" + pad2(day);
+        var dots = '<div class="calDots">';
+        if(v.hasInc) dots += '<span class="calDot income"></span>';
+        if(v.hasExp) dots += '<span class="calDot expense"></span>';
+        dots += '</div>';
         cells.push(
           '<div class="calCell" data-date="'+dateStr+'">'+
-            '<div class="calTop">'+
-              '<div class="calDay">'+day+'</div>'+
-              '<div class="calAmt '+netCls+'">'+fmt.format(net)+'</div>'+
-            '</div>'+
-            '<div class="calMini">'+
-              '<span>G: '+fmt.format(v.inc)+'</span>'+
-              '<span>H: '+fmt.format(v.exp)+'</span>'+
-            '</div>'+
+            '<div class="calTop"><div class="calDay">'+day+'</div></div>'+
+            dots+
           '</div>'
         );
       }
-
       return head + '<div class="calGrid" id="calCells">'+cells.join("")+'</div>';
     }
 
@@ -1877,7 +1976,7 @@ function toast(msg){
               '<div class="heroTop">'+
                 '<div class="heroTitle">'+
                   '<div class="t1">HESAPLARIM</div>'+
-                  '<div class="t2">'+fmt.format(k.net)+'</div>'+
+                  '<div class="t2">'+fmtMoney(k.net)+'</div>'+
                 '</div>'+
                 '<span class="tag">Bu ay</span>'+
               '</div>'+
@@ -1885,11 +1984,11 @@ function toast(msg){
               '<div class="heroGrid">'+
                 '<div class="heroMini">'+
                   '<div class="lbl">💰 Gelir</div>'+
-                  '<div class="val good">'+fmt.format(k.inc)+'</div>'+
+                  '<div class="val good">'+fmtMoney(k.inc)+'</div>'+
                 '</div>'+
                 '<div class="heroMini">'+
                   '<div class="lbl">💸 Gider</div>'+
-                  '<div class="val bad">'+fmt.format(k.exp)+'</div>'+
+                  '<div class="val bad">'+fmtMoney(k.exp)+'</div>'+
                 '</div>'+
                 '<div class="heroBar" title="Gelir/Gider oranı">'+
                   '<div class="seg exp" style="height:'+expH+'px"></div>'+
@@ -1898,7 +1997,7 @@ function toast(msg){
               '</div>'+
 
               '<div class="heroFooter">'+
-                '<div class="muted">Genel Durum: <b>'+fmt.format(k.net)+'</b></div>'+
+                '<div class="muted">Genel Durum: <b>'+fmtMoney(k.net)+'</b></div>'+
                 '<div class="muted">'+incPct+'% gelir • '+expPct+'% gider</div>'+
               '</div>'+
             '</div>'+
