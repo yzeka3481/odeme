@@ -1,161 +1,188 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yoldaş Pro</title>
+    <title>Yoldaş Pro - Eksiksiz</title>
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
     <style>
         :root {
-            --bg: #080c14;
-            --surface: #0e1623;
-            --card: #131d2e;
-            --card2: #182236;
-            --border: rgba(99,160,255,0.12);
-            --accent: #4f8eff;
-            --accent2: #7fb3ff;
-            --glow: rgba(79,142,255,0.18);
-            --text: #e8f0ff;
-            --muted: #5a7299;
-            --low: #34d399;
-            --mid: #fbbf24;
-            --high: #f87171;
-            --low-bg: rgba(52,211,153,0.12);
-            --mid-bg: rgba(251,191,36,0.12);
-            --high-bg: rgba(248,113,113,0.12);
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --card-hover: #334155;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.4);
+            --text: #f8fafc;
+            --text-dark: #0f172a;
+            --muted: #94a3b8;
+            --low: #10b981;
+            --mid: #f59e0b;
+            --high: #ef4444;
+            --border: #334155;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
             background: var(--bg);
             color: var(--text);
-            min-height: 100vh;
+            margin: 0;
+            padding: 24px 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 28px 20px 120px;
-            background-image:
-                radial-gradient(ellipse 60% 40% at 70% -10%, rgba(79,142,255,0.07) 0%, transparent 70%),
-                radial-gradient(ellipse 50% 30% at -10% 80%, rgba(127,179,255,0.04) 0%, transparent 60%);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* ── HEADER ── */
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: relative;
+        }
+
+        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
-            max-width: 460px;
-            margin-bottom: 28px;
-            gap: 16px;
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
         }
 
-        .month-display {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.35rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            color: var(--text);
-            text-align: center;
-            flex: 1;
-        }
-
-        .month-display span {
-            display: block;
-            font-size: 0.7rem;
-            font-weight: 400;
-            font-family: 'DM Sans', sans-serif;
-            color: var(--muted);
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            margin-bottom: 2px;
+        .header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-transform: capitalize;
         }
 
         .nav-btn {
-            width: 42px; height: 42px;
-            background: var(--card);
+            background: transparent;
             border: 1px solid var(--border);
             color: var(--text);
-            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
             cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.8rem;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
-        .nav-btn:hover { background: var(--card2); border-color: rgba(79,142,255,0.3); color: var(--accent2); }
 
-        /* ── WEEKDAY LABELS ── */
-        .weekday-row {
+        .nav-btn:hover {
+            background: var(--card-hover);
+            border-color: var(--muted);
+            transform: scale(1.05);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Calendar */
+        .calendar-wrapper {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        .weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            width: 100%;
-            max-width: 460px;
-            margin-bottom: 8px;
-        }
-        .weekday-label {
+            gap: 8px;
             text-align: center;
-            font-size: 0.65rem;
-            font-weight: 500;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 600;
             color: var(--muted);
-            padding: 4px 0;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* ── CALENDAR GRID ── */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            width: 100%;
-            max-width: 460px;
-            margin-bottom: 24px;
+            gap: 8px;
         }
 
         .day-card {
-            background: var(--card);
             aspect-ratio: 1;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            border-radius: 14px;
+            border-radius: var(--radius-md);
             cursor: pointer;
             position: relative;
-            border: 1px solid var(--border);
-            transition: all 0.18s ease;
-            font-family: 'Syne', sans-serif;
-            font-size: 0.88rem;
-            font-weight: 600;
-            color: var(--text);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            font-weight: 500;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.02);
+            user-select: none;
         }
-        .day-card:hover { background: var(--card2); border-color: rgba(79,142,255,0.25); transform: translateY(-1px); }
 
-        .day-card.is-today {
-            border-color: var(--accent);
-            color: var(--accent2);
-            background: rgba(79,142,255,0.07);
+        .day-card:hover:not(.empty) {
+            background: var(--card-hover);
+            transform: translateY(-2px);
         }
-        .day-card.is-today::after {
+
+        .day-card.empty {
+            visibility: hidden;
+        }
+
+        .is-today {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .is-today::after {
             content: '';
             position: absolute;
-            inset: -1px;
-            border-radius: 14px;
-            box-shadow: 0 0 14px rgba(79,142,255,0.2);
-            pointer-events: none;
+            top: 4px;
+            right: 4px;
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--accent-glow);
         }
-        .day-card.selected-day {
+
+        .selected-day {
             background: var(--accent) !important;
-            border-color: var(--accent) !important;
-            color: #fff !important;
-            box-shadow: 0 4px 24px rgba(79,142,255,0.4);
+            color: var(--text-dark) !important;
+            box-shadow: 0 4px 10px var(--accent-glow);
+            transform: scale(1.05);
+            z-index: 2;
+            font-weight: 700;
         }
-        .day-card.selected-day .dot { opacity: 0.85; }
-        .day-card.has-tasks { background: var(--card2); }
+
+        .selected-day::after {
+            display: none;
+        }
 
         .dot-container {
             position: absolute;
@@ -163,608 +190,772 @@
             display: flex;
             gap: 3px;
         }
-        .dot { width: 4px; height: 4px; border-radius: 50%; }
 
-        /* ── STATS BAR ── */
-        .stats-bar {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            max-width: 460px;
-            margin-bottom: 18px;
+        .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            opacity: 0.9;
         }
-        .stat-chip {
-            flex: 1;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 14px 12px;
-            text-align: center;
-            transition: 0.2s;
-        }
-        .stat-chip .stat-num {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-        .stat-chip .stat-lbl {
-            font-size: 0.62rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--muted);
-        }
-        .stat-chip.done .stat-num { color: var(--low); }
-        .stat-chip.pending .stat-num { color: var(--mid); }
-        .stat-chip.total .stat-num { color: var(--accent2); }
 
-        /* ── INFO PANEL ── */
+        .selected-day .dot {
+            border: 1px solid rgba(0, 0, 0, 0.15);
+        }
+
+        /* Detail Panel */
         .info-panel {
-            width: 100%;
-            max-width: 460px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 22px;
-            overflow: hidden;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 90px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
         }
 
         .panel-header {
-            padding: 20px 22px 16px;
-            border-bottom: 1px solid var(--border);
             display: flex;
-            align-items: center;
             justify-content: space-between;
-        }
-
-        .panel-date {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--accent2);
-        }
-
-        .panel-body {
-            padding: 8px 0;
-            min-height: 80px;
-        }
-
-        .empty-state {
-            padding: 30px 22px;
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.85rem;
-        }
-        .empty-state .emoji { font-size: 2rem; display: block; margin-bottom: 8px; }
-
-        /* ── TASK ITEM ── */
-        .task-item {
-            display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 14px 22px;
-            border-bottom: 1px solid rgba(99,160,255,0.07);
-            transition: background 0.15s;
-            animation: slideIn 0.2s ease;
-        }
-        .task-item:last-child { border-bottom: none; }
-        .task-item:hover { background: rgba(79,142,255,0.04); }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
         }
 
-        .task-item.completed .task-text { text-decoration: line-through; opacity: 0.4; }
-
-        .priority-bar {
-            width: 3px;
-            height: 36px;
-            border-radius: 4px;
-            flex-shrink: 0;
-        }
-
-        .task-check {
-            width: 18px; height: 18px;
-            border-radius: 6px;
-            border: 1.5px solid var(--border);
-            cursor: pointer;
-            flex-shrink: 0;
-            appearance: none;
-            background: transparent;
-            position: relative;
-            transition: all 0.15s;
-        }
-        .task-check:checked {
-            background: var(--low);
-            border-color: var(--low);
-        }
-        .task-check:checked::after {
-            content: '✓';
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            color: #000;
-            font-weight: bold;
-        }
-
-        .task-content { flex: 1; min-width: 0; }
-        .task-time {
-            font-size: 0.65rem;
+        .panel-header h3 {
+            margin: 0;
             color: var(--accent);
-            font-weight: 500;
-            letter-spacing: 0.05em;
-            margin-bottom: 2px;
-        }
-        .task-text {
-            font-size: 0.875rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.3;
-        }
-
-        .task-actions {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            opacity: 0;
-            transition: opacity 0.15s;
-        }
-        .task-item:hover .task-actions { opacity: 1; }
-
-        .action-btn {
-            width: 28px; height: 28px;
-            border: none;
-            background: transparent;
-            color: var(--muted);
-            cursor: pointer;
-            border-radius: 7px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.8rem;
-            transition: all 0.15s;
-        }
-        .action-btn:hover { background: var(--card2); color: var(--text); }
-        .action-btn.del:hover { background: rgba(248,113,113,0.15); color: var(--high); }
-
-        .move-btns { display: flex; flex-direction: column; }
-        .move-btns .action-btn { height: 16px; font-size: 0.6rem; }
-
-        /* ── FAB ── */
-        .fab {
-            position: fixed;
-            bottom: 32px;
-            right: 50%;
-            transform: translateX(50%);
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 16px 32px;
-            font-family: 'Syne', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-            letter-spacing: 0.03em;
-            cursor: pointer;
-            box-shadow: 0 8px 32px rgba(79,142,255,0.45);
-            transition: all 0.2s;
+            font-size: 1.15rem;
             display: flex;
             align-items: center;
             gap: 8px;
-            z-index: 999;
         }
-        .fab:hover { transform: translateX(50%) translateY(-2px); box-shadow: 0 12px 40px rgba(79,142,255,0.55); }
-        .fab:active { transform: translateX(50%) translateY(0); }
 
-        /* ── MODAL ── */
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .progress-bar-bg {
+            width: 64px;
+            height: 6px;
+            background: var(--bg);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 10px;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--muted);
+            padding: 30px 10px;
+            font-size: 0.95rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            background: var(--bg);
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-item:hover {
+            border-color: var(--border);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            background: rgba(15, 23, 42, 0.4);
+            box-shadow: none;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: var(--muted);
+        }
+
+        .priority-indicator {
+            width: 4px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+        }
+
+        /* Custom Checkbox */
+        .custom-checkbox {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--muted);
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            margin: 0;
+        }
+
+        .custom-checkbox:hover {
+            border-color: var(--accent);
+        }
+
+        .custom-checkbox:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .custom-checkbox:checked::after {
+            content: '\2714';
+            font-size: 13px;
+            color: var(--text-dark);
+            font-weight: 800;
+        }
+
+        .task-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            gap: 4px;
+        }
+
+        .task-text {
+            font-size: 0.95rem;
+            word-break: break-word;
+            line-height: 1.4;
+            transition: color 0.2s;
+            font-weight: 500;
+        }
+
+        .task-time {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+            padding: 2px 6px;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Actions */
+        .task-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--card-hover);
+            color: var(--accent);
+            border-color: var(--border);
+        }
+
+        .action-btn.delete-btn:hover {
+            color: var(--high);
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .move-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .move-btns .action-btn {
+            width: 24px;
+            height: 15px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+
+        .move-btns .action-btn:hover {
+            background: var(--card-hover);
+            color: var(--text);
+        }
+
+        /* Modal */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(8,12,20,0.88);
+            background: rgba(15, 23, 42, 0.7);
             display: none;
             justify-content: center;
-            align-items: flex-end;
+            align-items: center;
             z-index: 1000;
             backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            padding: 20px;
         }
-        .modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
 
         .modal-content {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 28px 28px 0 0;
-            padding: 28px 24px 40px;
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: 24px;
             width: 100%;
-            max-width: 500px;
-            animation: slideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid var(--border);
         }
 
-        .modal-handle {
-            width: 40px; height: 4px;
-            background: var(--border);
-            border-radius: 4px;
-            margin: 0 auto 24px;
+        .modal-overlay.show .modal-content {
+            transform: translateY(0) scale(1);
         }
 
         .modal-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 800;
+            margin: 0 0 24px 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .modal-title i {
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        .input-group {
             margin-bottom: 20px;
         }
 
-        .field-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
+        .input-label {
+            display: block;
+            font-size: 0.85rem;
             color: var(--muted);
             margin-bottom: 8px;
             font-weight: 500;
         }
 
-        .input-row { display: flex; gap: 10px; margin-bottom: 20px; }
-
-        input[type="text"], input[type="time"] {
-            background: var(--surface);
+        textarea,
+        input[type="time"] {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text);
-            padding: 13px 16px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.9rem;
-            transition: border-color 0.2s;
-            outline: none;
+            background: var(--bg);
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
         }
-        input[type="text"] { flex: 1; }
-        input[type="time"] { width: 110px; color: var(--accent2); }
-        input:focus { border-color: var(--accent); }
 
-        .p-section { margin-bottom: 24px; }
-        .p-boxes { display: flex; gap: 10px; }
+        textarea:focus,
+        input[type="time"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        textarea::placeholder {
+            color: var(--muted);
+            opacity: 0.6;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .input-row>div:first-child {
+            flex: 1;
+        }
+
+        .input-row>div:last-child {
+            width: 130px;
+        }
+
+        .p-boxes {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
         .p-box {
             flex: 1;
-            padding: 12px 8px;
-            border-radius: 12px;
+            padding: 14px 8px;
+            border-radius: var(--radius-md);
             text-align: center;
             cursor: pointer;
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            transition: all 0.2s;
-            border: 1.5px solid transparent;
+            color: #fff;
+            letter-spacing: 0.5px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.4;
+            filter: grayscale(0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
         }
-        .p-box.low { background: var(--low-bg); color: var(--low); border-color: transparent; }
-        .p-box.mid { background: var(--mid-bg); color: var(--mid); border-color: transparent; }
-        .p-box.high { background: var(--high-bg); color: var(--high); border-color: transparent; }
-        .p-box.active.low { border-color: var(--low); box-shadow: 0 0 16px rgba(52,211,153,0.25); }
-        .p-box.active.mid { border-color: var(--mid); box-shadow: 0 0 16px rgba(251,191,36,0.25); }
-        .p-box.active.high { border-color: var(--high); box-shadow: 0 0 16px rgba(248,113,113,0.25); }
 
-        .modal-footer { display: flex; gap: 12px; }
-        .btn-cancel {
+        .p-box i {
+            font-size: 1.5rem;
+        }
+
+        .p-box:hover {
+            opacity: 0.7;
+        }
+
+        .p-box.active {
+            opacity: 1;
+            filter: grayscale(0);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+
+        .p-low {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .p-mid {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .p-high {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn {
             flex: 1;
-            padding: 14px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: transparent;
-            color: var(--muted);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.9rem;
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
-        .btn-cancel:hover { background: var(--card2); color: var(--text); }
+
+        .btn-cancel {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-cancel:hover {
+            background: var(--border);
+        }
 
         .btn-save {
-            flex: 2;
-            padding: 14px;
-            border: none;
-            border-radius: 14px;
             background: var(--accent);
-            color: white;
-            font-family: 'Syne', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 20px rgba(79,142,255,0.3);
+            color: var(--text-dark);
+            box-shadow: 0 4px 14px var(--accent-glow);
         }
-        .btn-save:hover { box-shadow: 0 6px 28px rgba(79,142,255,0.45); transform: translateY(-1px); }
 
-        /* scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .btn-save:hover {
+            background: #0ea5e9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-save:active {
+            transform: translateY(0);
+        }
+
+        /* FAB */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: max(30px, calc(50vw - 230px));
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            border: none;
+            color: white;
+            box-shadow: 0 8px 25px var(--accent-glow), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            z-index: 99;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        /* Select none for non inputs */
+        h2,
+        h3,
+        span,
+        div {
+            user-select: none;
+        }
+
+        .task-text {
+            user-select: text;
+        }
     </style>
 </head>
+
 <body>
 
-<!-- Header -->
-<div class="header">
-    <button class="nav-btn" onclick="changeMonth(-1)">&#10094;</button>
-    <div class="month-display">
-        <span>Takvim</span>
-        <span id="monthDisplay">Mart 2026</span>
-    </div>
-    <button class="nav-btn" onclick="changeMonth(1)">&#10095;</button>
-</div>
-
-<!-- Weekday Labels -->
-<div class="weekday-row">
-    <div class="weekday-label">Pt</div>
-    <div class="weekday-label">Sa</div>
-    <div class="weekday-label">Ça</div>
-    <div class="weekday-label">Pe</div>
-    <div class="weekday-label">Cu</div>
-    <div class="weekday-label" style="color:#f87171">Ct</div>
-    <div class="weekday-label" style="color:#f87171">Pz</div>
-</div>
-
-<!-- Calendar -->
-<div class="calendar-grid" id="grid"></div>
-
-<!-- Stats -->
-<div class="stats-bar" id="statsBar" style="display:none">
-    <div class="stat-chip total">
-        <div class="stat-num" id="statTotal">0</div>
-        <div class="stat-lbl">Toplam</div>
-    </div>
-    <div class="stat-chip done">
-        <div class="stat-num" id="statDone">0</div>
-        <div class="stat-lbl">Tamamlandı</div>
-    </div>
-    <div class="stat-chip pending">
-        <div class="stat-num" id="statPending">0</div>
-        <div class="stat-lbl">Bekliyor</div>
-    </div>
-</div>
-
-<!-- Panel -->
-<div class="info-panel" id="infoPanel">
-    <div class="panel-header">
-        <div class="panel-date" id="panelTitle">Bir Gün Seçin</div>
-    </div>
-    <div class="panel-body">
-        <div class="empty-state" id="emptyState">
-            <span class="emoji">📅</span>
-            Notlar için takvimden bir güne dokunun.
-        </div>
-        <div id="taskList"></div>
-    </div>
-</div>
-
-<!-- FAB -->
-<button class="fab" onclick="openAddModal()">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-    Not Ekle
-</button>
-
-<!-- Modal -->
-<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
-    <div class="modal-content">
-        <div class="modal-handle"></div>
-        <div class="modal-title" id="modalTitle">Yeni Not</div>
-
-        <div class="field-label">Not içeriği & Saat</div>
-        <div class="input-row">
-            <input type="text" id="taskIn" placeholder="Bugün ne yapacaksınız?">
-            <input type="time" id="timeIn">
+    <div class="container">
+        <div class="header">
+            <button class="nav-btn" onclick="changeMonth(-1)"><i class="ph ph-caret-left"></i></button>
+            <h2 id="monthDisplay">Mart 2026</h2>
+            <button class="nav-btn" onclick="changeMonth(1)"><i class="ph ph-caret-right"></i></button>
         </div>
 
-        <div class="p-section">
-            <div class="field-label">Öncelik</div>
-            <div class="p-boxes">
-                <div class="p-box low" id="p-low" onclick="setP('low')">Düşük</div>
-                <div class="p-box mid" id="p-mid" onclick="setP('mid')">Orta</div>
-                <div class="p-box high" id="p-high" onclick="setP('high')">Yüksek</div>
+        <div class="calendar-wrapper">
+            <div class="weekdays">
+                <div>Pzt</div>
+                <div>Sal</div>
+                <div>Çar</div>
+                <div>Per</div>
+                <div>Cum</div>
+                <div>Cmt</div>
+                <div>Paz</div>
+            </div>
+            <div class="calendar-grid" id="grid"></div>
+        </div>
+
+        <div class="info-panel">
+            <div class="panel-header">
+                <h3 id="panelTitle"><i class="ph ph-calendar-check"></i> Gün Seçin</h3>
+                <div class="progress-container" id="progressContainer" style="display:none;">
+                    <span id="progressText">0/0</span>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="task-list" id="taskList">
+                <div class="empty-state">
+                    <i class="ph ph-hand-pointing" style="font-size: 3rem; margin-bottom: 10px; opacity:0.5;"></i>
+                    Notları görmek için takvimden bir güne dokunun.
+                </div>
             </div>
         </div>
+    </div>
 
-        <div class="modal-footer">
-            <button class="btn-cancel" onclick="closeModal()">İptal</button>
-            <button class="btn-save" onclick="saveData()">Kaydet</button>
+    <button class="fab" onclick="openAddModal()"><i class="ph ph-plus"></i></button>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal" onclick="if(event.target === this) closeModal()">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modalTitle"><i id="modalTitleIcon" class="ph ph-plus-circle"></i> <span
+                    id="modalTitleText">Yeni Not Ekle</span></h3>
+
+            <div class="input-group">
+                <label class="input-label" for="taskIn">Görev / Not</label>
+                <textarea id="taskIn" placeholder="Ne yapmak istiyorsunuz veya notunuz nedir?" autocomplete="off"
+                    rows="3"
+                    style="resize: vertical; min-height: 80px; max-height: 200px; line-height: 1.4;"></textarea>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 24px;">
+                <label class="input-label" for="timeIn">Saat (Opsiyonel)</label>
+                <input type="time" id="timeIn" style="width: 100%; max-width: 150px;">
+            </div>
+
+            <label class="input-label">Öncelik Seviyesi</label>
+            <div class="p-boxes">
+                <div class="p-box p-low" id="p-low" onclick="setP('low')">
+                    <i class="ph ph-arrow-down-right"></i>
+                    DÜŞÜK
+                </div>
+                <div class="p-box p-mid" id="p-mid" onclick="setP('mid')">
+                    <i class="ph ph-minus"></i>
+                    ORTA
+                </div>
+                <div class="p-box p-high" id="p-high" onclick="setP('high')">
+                    <i class="ph ph-arrow-up-right"></i>
+                    YÜKSEK
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">İptal</button>
+                <button class="btn btn-save" onclick="saveData()"><i class="ph ph-check-circle"></i> Kaydet</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    let viewDate = new Date();
-    let selectedKey = null;
-    let selectedP = 'low';
-    let editIdx = null;
+    <script>
+        let viewDate = new Date();
+        // Default to today
+        let selectedKey = `${viewDate.getFullYear()}-${viewDate.getMonth() + 1}-${viewDate.getDate()}`;
+        let selectedP = 'low';
+        let editIdx = null;
 
-    function renderCalendar() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = "";
-        const y = viewDate.getFullYear(), m = viewDate.getMonth();
-        document.getElementById('monthDisplay').innerText =
-            new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric' }).format(viewDate);
+        function renderCalendar() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = "";
+            const y = viewDate.getFullYear(), m = viewDate.getMonth();
 
-        let firstDay = new Date(y, m, 1).getDay();
-        firstDay = firstDay === 0 ? 6 : firstDay - 1;
-        const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const monthName = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric' }).format(viewDate);
+            document.getElementById('monthDisplay').innerText = monthName;
 
-        for (let i = 0; i < firstDay; i++) {
-            const ph = document.createElement('div');
-            ph.className = 'day-card';
-            ph.style.visibility = 'hidden';
-            grid.appendChild(ph);
-        }
+            let firstDay = new Date(y, m, 1).getDay();
+            firstDay = (firstDay === 0 ? 6 : firstDay - 1); // Monday start
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
 
-        for (let d = 1; d <= daysInMonth; d++) {
-            const key = `${y}-${m + 1}-${d}`;
-            const card = document.createElement('div');
-            card.className = 'day-card';
+            const todayDate = new Date();
 
-            const today = new Date();
-            if (today.getFullYear() === y && today.getMonth() === m && today.getDate() === d)
-                card.classList.add('is-today');
-            if (selectedKey === key) card.classList.add('selected-day');
-
-            const tasks = JSON.parse(localStorage.getItem(key) || "[]");
-            card.innerHTML = `<span>${d}</span>`;
-
-            if (tasks.length > 0) {
-                card.classList.add('has-tasks');
-                const dots = document.createElement('div');
-                dots.className = 'dot-container';
-                const ps = [...new Set(tasks.map(t => t.p))];
-                ps.forEach(p => {
-                    const dot = document.createElement('div');
-                    dot.className = 'dot';
-                    dot.style.background = `var(--${p})`;
-                    dots.appendChild(dot);
-                });
-                card.appendChild(dots);
+            for (let i = 0; i < firstDay; i++) {
+                grid.appendChild(Object.assign(document.createElement('div'), { className: 'day-card empty' }));
             }
 
-            card.onclick = () => { selectedKey = key; updatePanel(); renderCalendar(); };
-            grid.appendChild(card);
+            for (let d = 1; d <= daysInMonth; d++) {
+                const key = `${y}-${m + 1}-${d}`;
+                const card = document.createElement('div');
+                card.className = 'day-card';
+
+                const isToday = todayDate.getDate() === d && todayDate.getMonth() === m && todayDate.getFullYear() === y;
+                if (isToday) card.classList.add('is-today');
+                if (selectedKey === key) card.classList.add('selected-day');
+
+                card.innerHTML = `<span>${d}</span>`;
+                const tasks = JSON.parse(localStorage.getItem(key) || "[]");
+                if (tasks.length > 0) {
+                    const dots = document.createElement('div'); dots.className = 'dot-container';
+                    const ps = [...new Set(tasks.map(t => t.p))];
+                    ps.forEach(p => dots.innerHTML += `<div class="dot" style="background:var(--${p})"></div>`);
+                    card.appendChild(dots);
+                }
+                card.onclick = () => { selectedKey = key; updatePanel(); renderCalendar(); };
+                grid.appendChild(card);
+            }
         }
-    }
 
-    function updatePanel() {
-        const list = document.getElementById('taskList');
-        const emptyState = document.getElementById('emptyState');
-        const statsBar = document.getElementById('statsBar');
+        function updatePanel() {
+            if (!selectedKey) return;
 
-        if (!selectedKey) return;
+            const listContainer = document.getElementById('taskList');
+            const [y, m, d] = selectedKey.split('-');
 
-        const [y, m, d] = selectedKey.split('-');
-        document.getElementById('panelTitle').innerText =
-            `${d} ${new Intl.DateTimeFormat('tr-TR', { month: 'long' }).format(new Date(y, m - 1, d))} ${y}`;
+            const dateObj = new Date(y, m - 1, d);
+            const dayName = new Intl.DateTimeFormat('tr-TR', { weekday: 'long' }).format(dateObj);
+            const monthName = new Intl.DateTimeFormat('tr-TR', { month: 'long' }).format(dateObj);
 
-        const tasks = JSON.parse(localStorage.getItem(selectedKey) || "[]");
+            document.getElementById('panelTitle').innerHTML = `${d} <span style="color:var(--text); font-weight:500;">${monthName}</span> <span style="font-size:0.85rem; color:var(--muted); font-weight:400; margin-left:6px;">${dayName}</span>`;
 
-        // Stats
-        const total = tasks.length;
-        const done = tasks.filter(t => t.c).length;
-        statsBar.style.display = total > 0 ? 'flex' : 'none';
-        document.getElementById('statTotal').textContent = total;
-        document.getElementById('statDone').textContent = done;
-        document.getElementById('statPending').textContent = total - done;
+            let tasks = JSON.parse(localStorage.getItem(selectedKey) || "[]");
 
-        list.innerHTML = '';
-        if (tasks.length === 0) {
-            emptyState.style.display = 'block';
-            emptyState.innerHTML = '<span class="emoji">✨</span>Bu gün için henüz not yok.';
-        } else {
-            emptyState.style.display = 'none';
+            const completed = tasks.filter(t => t.c).length;
+            const total = tasks.length;
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            if (total > 0) {
+                const percent = (completed / total) * 100;
+                progressFill.style.width = `${percent}%`;
+                progressText.innerText = `${completed}/${total}`;
+                document.getElementById('progressContainer').style.display = 'flex';
+            } else {
+                document.getElementById('progressContainer').style.display = 'none';
+            }
+
+            listContainer.innerHTML = "";
+
+            if (tasks.length === 0) {
+                listContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="ph ph-note-blank" style="font-size: 3rem; margin-bottom: 5px; opacity:0.5;"></i>
+                    Bu gün için not bulunmuyor.<br>Eklemek için + butonuna dokunun.
+                </div>
+            `;
+                return;
+            }
+
             tasks.forEach((t, i) => {
                 const div = document.createElement('div');
                 div.className = `task-item ${t.c ? 'completed' : ''}`;
+
+                let pColor = `var(--${t.p})`;
+
                 div.innerHTML = `
-                    <div class="priority-bar" style="background:var(--${t.p})"></div>
-                    <input type="checkbox" class="task-check" ${t.c ? 'checked' : ''} onchange="toggleStatus(${i})">
-                    <div class="task-content">
-                        ${t.t ? `<div class="task-time">⏰ ${t.t}</div>` : ''}
-                        <div class="task-text">${t.txt}</div>
+                <div class="priority-indicator" style="background-color: ${pColor}"></div>
+                <input type="checkbox" class="custom-checkbox" ${t.c ? 'checked' : ''} onclick="toggleStatus(${i})">
+                
+                <div class="task-content">
+                    <div class="task-text">${t.txt}</div>
+                    ${t.t ? `<div class="task-time"><i class="ph ph-clock"></i> ${t.t}</div>` : ''}
+                </div>
+                
+                <div class="task-actions">
+                    <div class="move-btns">
+                        <button class="action-btn" onclick="moveTask(${i}, -1)" title="Yukarı Taşı"><i class="ph ph-caret-up"></i></button>
+                        <button class="action-btn" onclick="moveTask(${i}, 1)" title="Aşağı Taşı"><i class="ph ph-caret-down"></i></button>
                     </div>
-                    <div class="task-actions">
-                        <div class="move-btns">
-                            <button class="action-btn" onclick="moveTask(${i}, -1)" title="Yukarı">▲</button>
-                            <button class="action-btn" onclick="moveTask(${i}, 1)" title="Aşağı">▼</button>
-                        </div>
-                        <button class="action-btn" onclick="openEdit(${i})" title="Düzenle">✎</button>
-                        <button class="action-btn del" onclick="deleteTask(${i})" title="Sil">✕</button>
-                    </div>
-                `;
-                list.appendChild(div);
+                    <button class="action-btn" onclick="openEdit(${i})" title="Düzenle"><i class="ph ph-pencil-simple"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteTask(${i})" title="Sil"><i class="ph ph-trash"></i></button>
+                </div>
+            `;
+                listContainer.appendChild(div);
             });
         }
-    }
 
-    function setP(p) {
-        selectedP = p;
-        document.querySelectorAll('.p-box').forEach(b => b.classList.remove('active'));
-        document.getElementById(`p-${p}`).classList.add('active');
-    }
+        function setP(p) {
+            selectedP = p;
+            document.querySelectorAll('.p-box').forEach(b => b.classList.remove('active'));
+            document.getElementById(`p-${p}`).classList.add('active');
+        }
 
-    function openAddModal() {
-        if (!selectedKey) { alert("Önce takvimden bir gün seçin!"); return; }
-        editIdx = null;
-        document.getElementById('modalTitle').innerText = "Yeni Not";
-        document.getElementById('taskIn').value = "";
-        document.getElementById('timeIn').value = "";
-        document.getElementById('modal').classList.add('open');
-        setP('low');
-        setTimeout(() => document.getElementById('taskIn').focus(), 300);
-    }
+        function openAddModal() {
+            if (!selectedKey) return alert("Önce takvimden bir gün seçin!");
+            editIdx = null;
+            document.getElementById('modalTitleText').innerText = "Yeni Not Ekle";
+            document.getElementById('modalTitleIcon').className = "ph ph-plus-circle";
+            document.getElementById('taskIn').value = "";
+            document.getElementById('timeIn').value = "";
 
-    function openEdit(i) {
-        editIdx = i;
-        const tasks = JSON.parse(localStorage.getItem(selectedKey));
-        const t = tasks[i];
-        document.getElementById('modalTitle').innerText = "Notu Düzenle";
-        document.getElementById('taskIn').value = t.txt;
-        document.getElementById('timeIn').value = t.t || "";
-        document.getElementById('modal').classList.add('open');
-        setP(t.p);
-    }
+            const modal = document.getElementById('modal');
+            modal.style.display = 'flex';
+            void modal.offsetWidth; // force reflow
+            modal.classList.add('show');
 
-    function saveData() {
-        const txt = document.getElementById('taskIn').value.trim();
-        const t = document.getElementById('timeIn').value;
-        if (!txt) return;
-        let tasks = JSON.parse(localStorage.getItem(selectedKey) || "[]");
-        if (editIdx !== null) tasks[editIdx] = { txt, t, p: selectedP, c: tasks[editIdx].c };
-        else tasks.push({ txt, t, p: selectedP, c: false });
-        localStorage.setItem(selectedKey, JSON.stringify(tasks));
-        closeModal(); updatePanel(); renderCalendar();
-    }
+            setP('low');
+            setTimeout(() => document.getElementById('taskIn').focus(), 100);
+        }
 
-    function deleteTask(i) {
-        if (!confirm("Bu notu silmek istiyor musunuz?")) return;
-        let tasks = JSON.parse(localStorage.getItem(selectedKey));
-        tasks.splice(i, 1);
-        localStorage.setItem(selectedKey, JSON.stringify(tasks));
-        updatePanel(); renderCalendar();
-    }
+        function openEdit(i) {
+            editIdx = i;
+            const tasks = JSON.parse(localStorage.getItem(selectedKey));
+            const t = tasks[i];
+            document.getElementById('modalTitleText').innerText = "Notu Düzenle";
+            document.getElementById('modalTitleIcon').className = "ph ph-pencil-circle";
+            document.getElementById('taskIn').value = t.txt;
+            document.getElementById('timeIn').value = t.t || "";
 
-    function moveTask(i, dir) {
-        let tasks = JSON.parse(localStorage.getItem(selectedKey));
-        const target = i + dir;
-        if (target < 0 || target >= tasks.length) return;
-        [tasks[i], tasks[target]] = [tasks[target], tasks[i]];
-        localStorage.setItem(selectedKey, JSON.stringify(tasks));
-        updatePanel();
-    }
+            const modal = document.getElementById('modal');
+            modal.style.display = 'flex';
+            void modal.offsetWidth;
+            modal.classList.add('show');
 
-    function toggleStatus(i) {
-        let tasks = JSON.parse(localStorage.getItem(selectedKey));
-        tasks[i].c = !tasks[i].c;
-        localStorage.setItem(selectedKey, JSON.stringify(tasks));
-        updatePanel();
-    }
+            setP(t.p);
+        }
 
-    function closeModal() {
-        document.getElementById('modal').classList.remove('open');
-    }
+        function saveData() {
+            const txt = document.getElementById('taskIn').value.trim();
+            const t = document.getElementById('timeIn').value;
+            if (!txt) return;
+            let tasks = JSON.parse(localStorage.getItem(selectedKey) || "[]");
+            if (editIdx !== null) tasks[editIdx] = { txt, t, p: selectedP, c: tasks[editIdx].c };
+            else tasks.push({ txt, t, p: selectedP, c: false });
+            localStorage.setItem(selectedKey, JSON.stringify(tasks));
+            closeModal(); updatePanel(); renderCalendar();
+        }
 
-    function handleOverlayClick(e) {
-        if (e.target === document.getElementById('modal')) closeModal();
-    }
+        function deleteTask(i) {
+            if (!confirm("Bu notu sileyim mi?")) return;
+            let tasks = JSON.parse(localStorage.getItem(selectedKey));
+            tasks.splice(i, 1);
+            localStorage.setItem(selectedKey, JSON.stringify(tasks));
+            updatePanel(); renderCalendar();
+        }
 
-    function changeMonth(v) {
-        viewDate.setMonth(viewDate.getMonth() + v);
+        function moveTask(i, dir) {
+            let tasks = JSON.parse(localStorage.getItem(selectedKey));
+            let target = i + dir;
+            if (target < 0 || target >= tasks.length) return;
+            [tasks[i], tasks[target]] = [tasks[target], tasks[i]];
+            localStorage.setItem(selectedKey, JSON.stringify(tasks));
+            updatePanel();
+        }
+
+        function toggleStatus(i) {
+            let tasks = JSON.parse(localStorage.getItem(selectedKey));
+            tasks[i].c = !tasks[i].c;
+            localStorage.setItem(selectedKey, JSON.stringify(tasks));
+            updatePanel();
+        }
+
+        // Modal iptal butonu ve dışa tıklama ile kapanması
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function changeMonth(v) {
+            viewDate.setMonth(viewDate.getMonth() + v);
+            renderCalendar();
+        }
+
+        // Init
         renderCalendar();
-    }
+        updatePanel();
 
-    // Enter to save
-    document.getElementById('taskIn').addEventListener('keydown', e => {
-        if (e.key === 'Enter') saveData();
-    });
-
-    renderCalendar();
-</script>
+    </script>
 </body>
+
 </html>
